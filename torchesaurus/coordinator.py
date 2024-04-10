@@ -27,7 +27,6 @@ class Coordinator:
 
     def prepare(self, primary_cb: tp.Optional[tp.Callable] = None) -> None:
         self_index = self.get_self_index()
-        print(self_index)
         if self_index == 0:
             self._prepare_primary(primary_cb)
         else:
@@ -49,6 +48,11 @@ class Coordinator:
         if self._epoch_client is None:
             raise RuntimeError('Torchesaurus coordinator is not prepared yet')
         return self._epoch_client
+    
+    def get_primary_endpoint(self) -> yt.YtClient:
+        if self._primary_endpoint is None:
+            raise RuntimeError('Torchesaurus coordinator is not prepared yet')
+        return self._primary_endpoint
 
     def _prepare_primary(self, primary_cb: tp.Optional[tp.Callable]) -> None:
         self._epoch_transaction_id = yt.start_transaction()
@@ -62,6 +66,7 @@ class Coordinator:
             yt.lock(
                 self._path + '/primary_lock',
                 mode='exclusive',
+                waitable=True,
                 wait_for=datetime.timedelta(minutes=5).total_seconds() * 1000,
                 client=self._client,
             )
@@ -107,6 +112,7 @@ class Coordinator:
                 self._primary_endpoint = yt.get(self._get_epoch_path() + '/@primary_endpoint', client=self._epoch_client)
             except:
                 time.sleep(1.0)
+                continue
             break
 
     def _make_transaction(self, transaction_id: str) -> yt.Transaction:
@@ -130,4 +136,4 @@ class Coordinator:
     
     @staticmethod
     def _get_self_address() -> str:
-        return socket.gethostbyname(socket.gethostname())
+        return socket.gethostname()

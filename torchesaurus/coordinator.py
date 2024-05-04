@@ -7,13 +7,19 @@ import os
 import socket
 import time
 import typing as tp
+import sys
+import torch
+
+from mesh import Mesh
 
 
 class Coordinator:
-    def __init__(self, client: yt.YtClient, path: str, peer_count: int, self_endpoint: str) -> None:
+    def __init__(self, client: yt.YtClient, path: str, self_endpoint: str, mesh: Mesh, node_index: int, process_index: int) -> None:
         self._client = client
         self._path = path
-        self._peer_count = peer_count
+        self._mesh = mesh
+        self._node_index = node_index
+        self._process_index = process_index
         self._self_endpoint = self_endpoint
 
         self._epoch_id = None
@@ -31,13 +37,13 @@ class Coordinator:
             self._prepare_primary(primary_cb)
         else:
             self._prepare_subordinate(self_index)
+        print("Self address:", self._get_self_address(), file=sys.stderr)
 
     def get_self_index(self) -> int:
-        if 'YT_JOB_COOKIE' not in os.environ:
-            raise RuntimeError('YT_JOB_COOKIE envionment variable not set. Torchesaurus coordinator should be run inside a training operation')
-        self_index = int(os.environ['YT_JOB_COOKIE'])
-        assert self_index >= 0 and self_index < self._peer_count
-        return self_index
+        return self._node_index * self._mesh.process_per_node + self._process_index
+    
+    def get_total_peer_count(self) -> int:
+        return self._mesh.node_count * self._mesh.process_per_node
 
     def get_epoch_id(self) -> int:
         if self._epoch_id is None:
@@ -53,6 +59,12 @@ class Coordinator:
         if self._primary_endpoint is None:
             raise RuntimeError('Torchesaurus coordinator is not prepared yet')
         return self._primary_endpoint
+    
+    def get_mesh(self) -> Mesh:
+        return self._mesh
+    
+    def get_process_index(self) -> int:
+        return self._process_index
 
     def _prepare_primary(self, primary_cb: tp.Optional[tp.Callable]) -> None:
         self._epoch_transaction_id = yt.start_transaction()
@@ -88,7 +100,7 @@ class Coordinator:
             yt.set(self._get_epoch_path() + '/@epoch_operation_id', self._get_operation_id(), client=self._epoch_client)
             yt.set(self._get_epoch_path() + '/@primary_endpoint', self._self_endpoint, client=self._epoch_client)
 
-            topology = [{'endpoint': self._self_endpoint, 'job_id': self._get_job_id()}] + [{'address': '', 'job_id': ''}] * (self._peer_count - 1)
+            topology = [{'endpoint': self._self_endpoint, 'job_id': self._get_job_id()}] + [{'address': '', 'job_id': ''}] * (self.get_total_peer_count() - 1)
             yt.set(self._get_epoch_path() + '/@topology', topology, client=self._epoch_client)
 
         self._primary_endpoint = self._self_endpoint
@@ -125,6 +137,7 @@ class Coordinator:
     
     def _get_epoch_path(self) -> str:
         return self._path + f'/epochs/{self._epoch_id:05d}'
+
     
     @staticmethod
     def _get_operation_id() -> str:

@@ -10,35 +10,80 @@ from pathlib import Path
 
 from coordinator import Coordinator
 from job_client import JobClient
+from mesh import Mesh
 
-import torch.distributed as dist
 
-
-def run(f: tp.Callable, path: str, peer_count: int, client: yt.YtClient = None) -> None:
+def run(f: tp.Callable, path: str, mesh: Mesh, client: yt.YtClient = None) -> None:
     yt.create("map_node", path, attributes={"epoch_id": -1}, ignore_existing=True)
     yt.create("map_node", path + "/primary_lock", ignore_existing=True)
     yt.create("map_node", path + "/epochs", ignore_existing=True)
 
     print(yt.config.get_config(client))
     c = yt.YtClient(config=deepcopy(yt.config.get_config(client)))
-    def wrapped() -> None:
+
+    def wrapped_bootstrap(mesh: Mesh) -> None:
         import os
+        import sys
+        import json
+        import subprocess
+
+        processes = []
+
+        for i in range(mesh.process_per_node):
+            proc_config = {}
+            proc_config['nnodes'] = mesh.node_count
+            proc_config['nproc'] = mesh.process_per_node
+            proc_config['ngpu_per_proc'] = mesh.gpu_per_process
+            proc_config['node_index'] = os.environ['YT_JOB_COOKIE']
+            proc_config['proc_index'] = i
+            proc_config['port'] = os.environ[f'YT_PORT_{i}']
+            with open(f'config_{i}.json', 'w') as f:
+                json.dump(proc_config, f)
+
+            command = ['python3'] + list(sys.argv)
+            process = subprocess.Popen(
+                command,
+                stdout=sys.stderr,
+                stderr=sys.stderr,
+                bufsize=1,
+                universal_newlines=True,
+                env={**os.environ, 'TRACTO_CONFIG': f'config_{i}.json'},
+            )
+            processes.append(process)
+
+        for process in processes:   
+            exit_code = process.wait()
+            if exit_code != 0:
+                sys.exit(exit_code)
+
+
+    def wrapped_run() -> None:
+        import os
+        import json
         import socket
 
-        port = int(os.environ['YT_PORT_0'])
+        config_path = os.environ['TRACTO_CONFIG']
+        with open(config_path, 'r') as ff:
+            config = json.load(ff)
+
+        port = int(config['port'])
         self_endpoint = socket.gethostname() + ":" + str(port)
-        coordinator = Coordinator(c, path, peer_count, self_endpoint)
-        coordinator.prepare()
+        mesh = Mesh(int(config['nnodes']), int(config['nproc']), int(config['ngpu_per_proc']))
+        coordinator = Coordinator(c, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
+        #TOOD: coordinator should be with prerequisites
+        job_client = JobClient(coordinator, c)
+        job_client.initialize()
 
-        dist.init_process_group(
-            backend='gloo',
-            init_method='tcp://' + coordinator.get_primary_endpoint(),
-            rank=coordinator.get_self_index(),
-            world_size=coordinator._peer_count,
-        )
-
-        job_client = JobClient(coordinator)
         f(job_client)
+
+
+    def wrapped() -> None:
+        import os
+        if 'TRACTO_CONFIG' in os.environ:
+            wrapped_run()
+        else:
+            wrapped_bootstrap(mesh)
+
 
     def _module_filter(module):
         if not hasattr(module, '__file__'):
@@ -64,9 +109,11 @@ def run(f: tp.Callable, path: str, peer_count: int, client: yt.YtClient = None) 
         yt.VanillaSpecBuilder()
             .begin_task("task")
                 .command(wrapped)
-                .job_count(peer_count)
-                .port_count(1)
-                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:5")
+                .job_count(mesh.node_count)
+                .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
+                .port_count(mesh.process_per_node)
+                .memory_limit(10*(1024**3))
+                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:6")
                 .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
             .end_task()
     )

@@ -3,9 +3,9 @@ import torch.utils.data
 
 import yt.wrapper as yt
 
-from utils import load_tensor
+from .utils import load_tensor
 
-from job_client import JobClient
+from .job_client import JobClient
 
 
 class YtDataset(torch.utils.data.IterableDataset):

@@ -1,4 +1,4 @@
-from helpers import create_prerequisite_client
+from .helpers import create_prerequisite_client
 
 import yt.wrapper as yt
 
@@ -10,7 +10,7 @@ import typing as tp
 import sys
 import torch
 
-from mesh import Mesh
+from .mesh import Mesh
 
 
 class Coordinator:

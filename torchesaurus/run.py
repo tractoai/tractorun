@@ -4,13 +4,34 @@ import typing as tp
 
 from copy import deepcopy
 
+import torch.multiprocessing
+
 import sys
 
 from pathlib import Path
 
-from coordinator import Coordinator
-from job_client import JobClient
-from mesh import Mesh
+from .coordinator import Coordinator
+from .job_client import JobClient
+from .mesh import Mesh
+
+
+def wrapped_run_mp(i, f, c, path) -> None:
+    import os
+    import json
+    import socket
+
+    with open(f"config_{i}.json", 'r') as ff:
+        config = json.load(ff)
+
+    port = int(config['port'])
+    self_endpoint = socket.gethostname() + ":" + str(port)
+    mesh = Mesh(int(config['nnodes']), int(config['nproc']), int(config['ngpu_per_proc']))
+    coordinator = Coordinator(c, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
+    #TOOD: coordinator should be with prerequisites
+    job_client = JobClient(coordinator, c)
+    job_client.initialize()
+
+    f(job_client)
 
 
 def run(f: tp.Callable, path: str, mesh: Mesh, client: yt.YtClient = None) -> None:
@@ -37,8 +58,8 @@ def run(f: tp.Callable, path: str, mesh: Mesh, client: yt.YtClient = None) -> No
             proc_config['node_index'] = os.environ['YT_JOB_COOKIE']
             proc_config['proc_index'] = i
             proc_config['port'] = os.environ[f'YT_PORT_{i}']
-            with open(f'config_{i}.json', 'w') as f:
-                json.dump(proc_config, f)
+            with open(f'config_{i}.json', 'w') as ff:
+                json.dump(proc_config, ff)
 
             command = ['python3'] + list(sys.argv)
             process = subprocess.Popen(
@@ -55,6 +76,9 @@ def run(f: tp.Callable, path: str, mesh: Mesh, client: yt.YtClient = None) -> No
             exit_code = process.wait()
             if exit_code != 0:
                 sys.exit(exit_code)
+
+        # TODO: torch multiprocessing is better, but pickling does not work.
+        #torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
     def wrapped_run() -> None:

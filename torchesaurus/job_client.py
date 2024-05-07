@@ -1,6 +1,7 @@
 import yt.wrapper as yt
 
-import coordinator
+from .coordinator import Coordinator
+
 import torch
 import torch.cuda
 
@@ -10,7 +11,7 @@ import torch.distributed as dist
 
 
 class JobClient:
-    def __init__(self, coordinator: coordinator.Coordinator, yt_client: yt.YtClient):
+    def __init__(self, coordinator: Coordinator, yt_client: yt.YtClient):
         self.coordinator = coordinator
         self.yt_client = yt_client
 

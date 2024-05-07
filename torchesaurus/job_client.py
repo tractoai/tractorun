@@ -33,6 +33,7 @@ class JobClient:
             assert device_index < torch.cuda.device_count()       
             torch.cuda.set_device(torch.cuda.device(self.coordinator.get_process_index()))
 
+        """
         backend = 'gloo' if mesh.gpu_per_process == 0 else 'nccl'
         dist.init_process_group(
             backend=backend,
@@ -40,3 +41,7 @@ class JobClient:
             rank=self.coordinator.get_self_index(),
             world_size=self.coordinator.get_total_peer_count(),
         )
+        """
+
+    def get_mesh(self):
+        return self.coordinator.get_mesh()

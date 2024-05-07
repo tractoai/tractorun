@@ -67,7 +67,7 @@ class Coordinator:
         return self._process_index
 
     def _prepare_primary(self, primary_cb: tp.Optional[tp.Callable]) -> None:
-        self._epoch_transaction_id = yt.start_transaction()
+        self._epoch_transaction_id = yt.start_transaction(client=self._client)
         self._epoch_transaction = yt.Transaction(
             transaction_id=self._epoch_transaction_id,
             acquire=False,

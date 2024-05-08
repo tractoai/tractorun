@@ -49,4 +49,4 @@ def train(job_client: JobClient) -> None:
 
 if __name__ == '__main__':
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, "//home/gritukan/mnist/train", mesh)
+    run(train, "//home/gritukan/mnist/trainings/dense", mesh)

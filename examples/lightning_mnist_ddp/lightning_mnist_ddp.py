@@ -20,10 +20,13 @@ from torchesaurus.run import run
 class MNISTModel(LightningModule):
     def __init__(self):
         super().__init__()
-        self.l1 = torch.nn.Linear(28 * 28, 10)
+        self.l1 = torch.nn.Linear(28 * 28, 50)
+        self.l2 = torch.nn.Linear(50, 10)
 
     def forward(self, x):
-        return torch.relu(self.l1(x.view(x.size(0), -1)))
+        x = torch.relu(self.l1(x.view(x.size(0), -1)))
+        x = torch.relu(self.l2(x))
+        return x
 
     def training_step(self, batch, batch_nb):
         x, y = batch
@@ -54,4 +57,4 @@ def train(job_client: JobClient) -> None:
 
 if __name__ == '__main__':
     mesh = Mesh(node_count=4, process_per_node=8, gpu_per_process=0)
-    run(train, "//home/gritukan/mnist/train", mesh)
+    run(train, "//home/gritukan/mnist/trainings/dense_two_layers", mesh)

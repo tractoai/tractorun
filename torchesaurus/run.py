@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from .coordinator import Coordinator
+from .checkpoints import CheckpointManager
 from .job_client import JobClient
 from .mesh import Mesh
 from .resources import Resources
@@ -55,8 +56,9 @@ def initialize() -> JobClient:
     mesh = Mesh(int(config['nnodes']), int(config['nproc']), int(config['ngpu_per_proc']))
     c = yt.YtClient(config=pickle.loads(base64.b64decode(config['yt_client_config'])))
     coordinator = Coordinator(c, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
+    checkpoint_manager = CheckpointManager(path + "/checkpoints", c)
     #TOOD: coordinator should be with prerequisites
-    job_client = JobClient(coordinator, c)
+    job_client = JobClient(coordinator, checkpoint_manager, c)
     job_client.initialize()
 
     ep = coordinator.get_primary_endpoint()
@@ -178,7 +180,7 @@ def run(f: tp.Callable, path: str, mesh: Mesh, resources: Resources = Resources(
                 .port_count(mesh.process_per_node)
                 .cpu_limit(cpu_limit)
                 .memory_limit(memory_limit)
-                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:6")
+                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:7")
                 .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
             .end_task()
     )
@@ -207,7 +209,7 @@ def run_script(args, script_name):
                 .port_count(args.nproc_per_node)
                 .cpu_limit(cpu_limit)
                 .memory_limit(memory_limit)
-                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:6")
+                .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:7")
                 .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
                 .file_paths(yt.LocalFile(args.training_script, file_name=script_name))
             .end_task()

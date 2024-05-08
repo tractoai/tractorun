@@ -83,7 +83,10 @@ class Coordinator:
                 client=self._client,
             )
 
-        last_epoch_id = yt.get(self._path + '/@epoch_id', client=self._client)
+        if yt.exists(self._path + '/@epoch_id', client=self._client):
+            last_epoch_id = yt.get(self._path + '/@epoch_id', client=self._client)
+        else:
+            last_epoch_id = -1
         self._epoch_id = last_epoch_id + 1
 
         self._epoch_client = create_prerequisite_client(self._client, [self._epoch_transaction_id])

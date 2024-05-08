@@ -1,6 +1,7 @@
 import yt.wrapper as yt
 
 from .coordinator import Coordinator
+from .checkpoints import CheckpointManager
 
 import torch
 import torch.cuda
@@ -11,8 +12,9 @@ import torch.distributed as dist
 
 
 class JobClient:
-    def __init__(self, coordinator: Coordinator, yt_client: yt.YtClient):
+    def __init__(self, coordinator: Coordinator, checkpoint_manager: CheckpointManager, yt_client: yt.YtClient):
         self.coordinator = coordinator
+        self.checkpoint_manager = checkpoint_manager
         self.yt_client = yt_client
 
     def initialize(self):
@@ -24,16 +26,10 @@ class JobClient:
             if mesh.gpu_per_process > 1:
                 raise RuntimeError('not supported')
 
-            import os
-            print(os.environ)
-            print('Device count:', torch.cuda.device_count())
-            print(os.listdir('/dev'))
-
             device_index = self.coordinator.get_process_index()     
             assert device_index < torch.cuda.device_count()       
             torch.cuda.set_device(torch.cuda.device(self.coordinator.get_process_index()))
 
-        """
         backend = 'gloo' if mesh.gpu_per_process == 0 else 'nccl'
         dist.init_process_group(
             backend=backend,
@@ -41,7 +37,8 @@ class JobClient:
             rank=self.coordinator.get_self_index(),
             world_size=self.coordinator.get_total_peer_count(),
         )
-        """
+
+        self.checkpoint_manager.initialize()
 
     def get_mesh(self):
         return self.coordinator.get_mesh()

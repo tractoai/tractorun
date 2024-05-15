@@ -1,0 +1,18 @@
+[project]
+name = "torchesaurus"
+authors = [{name = "TractoAI team"}]
+requires-python = ">=3.8"
+dependencies = [
+    "torch ~= 2.3.0",
+    "ytsaurus-client ~= 0.13.14",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "torchesaurus.__version__"}
+
+[project.scripts]
+tractorun = "torchesaurus.cli.tractorun:__main__"
+
+[tool.setuptools.packages.find]
+where = ["."]

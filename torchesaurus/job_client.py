@@ -1,14 +1,11 @@
+import torch
+import torch.cuda
+import torch.distributed as dist
+
 import yt.wrapper as yt
 
 from .coordinator import Coordinator
 from .checkpoints import CheckpointManager
-
-import torch
-import torch.cuda
-
-import typing as tp
-
-import torch.distributed as dist
 
 
 class JobClient:

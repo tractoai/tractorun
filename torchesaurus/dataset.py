@@ -1,10 +1,8 @@
-import torch
 import torch.utils.data
 
 import yt.wrapper as yt
 
 from .utils import load_tensor
-
 from .job_client import JobClient
 
 

@@ -1,7 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import (
+    ABC,
+    abstractmethod,
+)
 
 import attr
-
 import testcontainers_yt_local.container
 from yt.wrapper.client import YtClient
 
@@ -21,7 +23,7 @@ class YtInstanceExternal(YtInstance):
         return YtClient(
             proxy=self.proxy_url,
             token=self.token,
-            config={"proxy": {"enable_proxy_discovery": False}}
+            config={"proxy": {"enable_proxy_discovery": False}},
         )
 
 

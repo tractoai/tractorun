@@ -1,11 +1,12 @@
 import sys
 
+from pytorch_lightning import (
+    LightningModule,
+    Trainer,
+)
 import torch
-
-from pytorch_lightning import LightningModule, Trainer
-from torch import nn
-from torch.utils.data import DataLoader
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
 
 from torchesaurus.dataset import YtDataset
 from torchesaurus.job_client import JobClient
@@ -34,8 +35,8 @@ class MNISTModel(LightningModule):
 
 
 def train(job_client: JobClient) -> None:
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Running on device:', device, file=sys.stderr)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
     train_dataset = YtDataset(job_client, "//home/gritukan/mnist/datasets/train", device=device)
@@ -51,6 +52,6 @@ def train(job_client: JobClient) -> None:
     trainer.fit(mnist_model, train_loader)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mesh = Mesh(node_count=4, process_per_node=8, gpu_per_process=0)
     run(train, "//home/gritukan/mnist/trainings/dense_two_layers", mesh)

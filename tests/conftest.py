@@ -2,11 +2,16 @@ import os
 from typing import Optional
 
 import pytest
-
 from yt.wrapper import yt_dataclass
 
-from .yt_instances import YtInstanceExternal, YtInstanceTestContainers
-from .utils import get_random_string, get_data_path
+from .utils import (
+    get_data_path,
+    get_random_string,
+)
+from .yt_instances import (
+    YtInstanceExternal,
+    YtInstanceTestContainers,
+)
 
 
 @pytest.fixture(scope="session")

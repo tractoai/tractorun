@@ -1,22 +1,19 @@
 import sys
-import os
-module_locations = ["./tmpfs/modules", "./modules"]
-sys.path = sys.path + module_locations
 
-import sys
-
+from pytorch_lightning import (
+    LightningModule,
+    Trainer,
+)
 import torch
-
-from pytorch_lightning import LightningModule, Trainer
-from torch import nn
-from torch.utils.data import DataLoader
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
 
 from torchesaurus.dataset import YtDataset
-from torchesaurus.job_client import JobClient
-from torchesaurus.mesh import Mesh
-
 import torchesaurus.run
+
+
+module_locations = ["./tmpfs/modules", "./modules"]
+sys.path = sys.path + module_locations
 
 
 class MNISTModel(LightningModule):
@@ -40,8 +37,8 @@ class MNISTModel(LightningModule):
 
 
 job_client = torchesaurus.run.initialize()
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print('Running on device:', device, file=sys.stderr)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Running on device:", device, file=sys.stderr)
 
 mnist_model = MNISTModel()
 train_dataset = YtDataset(job_client, "//home/gritukan/mnist/datasets/train", device=device)

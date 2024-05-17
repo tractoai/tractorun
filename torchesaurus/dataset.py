@@ -1,13 +1,20 @@
 import torch.utils.data
-
 import yt.wrapper as yt
 
-from .utils import load_tensor
 from .job_client import JobClient
+from .utils import load_tensor
 
 
 class YtDataset(torch.utils.data.IterableDataset):
-    def __init__(self, client: JobClient, path: str, device: torch.device, start=0, end=None, columns=None):
+    def __init__(
+        self,
+        client: JobClient,
+        path: str,
+        device: torch.device,
+        start=0,
+        end=None,
+        columns=None,
+    ):
         self._client = client.yt_client
         self._device = device
 
@@ -26,7 +33,7 @@ class YtDataset(torch.utils.data.IterableDataset):
             all_columns = set(all_columns)
             for column in columns:
                 assert column in all_columns
-        
+
         # TODO: pass list of columns
         read_path = f"{path}[#{start}:#{end}]"
         self._len = end - start
@@ -36,7 +43,8 @@ class YtDataset(torch.utils.data.IterableDataset):
     def __iter__(self):
         def transform(row):
             return tuple([load_tensor(yt.yson.get_bytes(row[name]), device=self._device) for name in self._columns])
+
         return map(transform, yt.read_table(self._read_path, client=self._client))
-    
+
     def __len__(self) -> int:
         return self._len

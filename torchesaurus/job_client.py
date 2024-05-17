@@ -1,19 +1,24 @@
-from typing import Dict, Any
+from typing import (
+    Any,
+    Dict,
+)
 
 import torch
 import torch.cuda
 import torch.distributed as dist
-
 import yt.wrapper as yt
 
-from .coordinator import Coordinator
 from .checkpoints import CheckpointManager
+from .coordinator import Coordinator
 
 
 class JobClient:
     def __init__(
-        self, coordinator: Coordinator, checkpoint_manager: CheckpointManager,
-        yt_client: yt.YtClient, user_config: Dict[Any, Any],
+        self,
+        coordinator: Coordinator,
+        checkpoint_manager: CheckpointManager,
+        yt_client: yt.YtClient,
+        user_config: Dict[Any, Any],
     ):
         self.coordinator = coordinator
         self.checkpoint_manager = checkpoint_manager
@@ -27,16 +32,16 @@ class JobClient:
             assert torch.cuda.is_available()
 
             if mesh.gpu_per_process > 1:
-                raise RuntimeError('not supported')
+                raise RuntimeError("not supported")
 
-            device_index = self.coordinator.get_process_index()     
-            assert device_index < torch.cuda.device_count()       
+            device_index = self.coordinator.get_process_index()
+            assert device_index < torch.cuda.device_count()
             torch.cuda.set_device(torch.cuda.device(self.coordinator.get_process_index()))
 
-        backend = 'gloo' if mesh.gpu_per_process == 0 else 'nccl'
+        backend = "gloo" if mesh.gpu_per_process == 0 else "nccl"
         dist.init_process_group(
             backend=backend,
-            init_method='tcp://' + self.coordinator.get_primary_endpoint(),
+            init_method="tcp://" + self.coordinator.get_primary_endpoint(),
             rank=self.coordinator.get_self_index(),
             world_size=self.coordinator.get_total_peer_count(),
         )

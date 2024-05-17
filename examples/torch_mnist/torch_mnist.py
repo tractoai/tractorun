@@ -6,11 +6,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data
-
 import yt.wrapper as yt
 
-from torchesaurus.job_client import JobClient
 from torchesaurus.dataset import YtDataset
+from torchesaurus.job_client import JobClient
 from torchesaurus.mesh import Mesh
 from torchesaurus.run import run
 from torchesaurus.utils import save_tensor
@@ -46,10 +45,16 @@ class Net(nn.Module):
 
 def train(job_client: JobClient) -> None:
     yt_home_dir = job_client.user_config["yt_home_dir"]
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print('Running on device:', device, file=sys.stderr)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Running on device:", device, file=sys.stderr)
 
-    train_dataset = YtDataset(job_client, "//home/gritukan/mnist/datasets/train", device=device, start=0, end=2000)
+    train_dataset = YtDataset(
+        job_client,
+        "//home/gritukan/mnist/datasets/train",
+        device=device,
+        start=0,
+        end=2000,
+    )
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
 
     model = Net().to(device)
@@ -63,9 +68,15 @@ def train(job_client: JobClient) -> None:
         loss.backward()
         optimizer.step()
         if batch_idx % 10 == 0:
-            print('Train[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()), file=sys.stderr)
+            print(
+                "Train[{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+                    batch_idx * len(data),
+                    len(train_loader.dataset),
+                    100.0 * batch_idx / len(train_loader),
+                    loss.item(),
+                ),
+                file=sys.stderr,
+            )
 
     # Save the model
     yt.create("map_node", f"{yt_home_dir}/mnist/models", recursive=True, ignore_existing=True)
@@ -75,10 +86,15 @@ def train(job_client: JobClient) -> None:
     print("Model saved to", model_path, file=sys.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--yt-home-dir", required=True)
     args = parser.parse_args()
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, f"{args.yt_home_dir}/mnist/trainings/dense", mesh, user_config={"yt_home_dir": args.yt_home_dir})
+    run(
+        train,
+        f"{args.yt_home_dir}/mnist/trainings/dense",
+        mesh,
+        user_config={"yt_home_dir": args.yt_home_dir},
+    )

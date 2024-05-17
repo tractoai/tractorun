@@ -1,4 +1,5 @@
 import io
+
 import torch
 
 
@@ -8,6 +9,6 @@ def save_tensor(tensor):
     return buffer.getvalue()
 
 
-def load_tensor(tensor, device: torch.device = torch.device('cpu')):
+def load_tensor(tensor, device: torch.device = torch.device("cpu")):
     buffer = io.BytesIO(tensor)
     return torch.load(buffer, map_location=device)

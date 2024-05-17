@@ -35,7 +35,7 @@ from .resources import Resources
     f(job_client) """
 
 
-def initialize() -> JobClient:
+def initialize(user_config: tp.Dict[tp.Any, tp.Any]) -> JobClient:
     import os
     import json
     import socket
@@ -48,11 +48,11 @@ def initialize() -> JobClient:
     path = config['path']
     self_endpoint = socket.gethostname() + ":" + str(port)
     mesh = Mesh(int(config['nnodes']), int(config['nproc']), int(config['ngpu_per_proc']))
-    c = yt.YtClient(config=pickle.loads(base64.b64decode(config['yt_client_config'])))
-    coordinator = Coordinator(c, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
-    checkpoint_manager = CheckpointManager(path + "/checkpoints", c)
-    #TOOD: coordinator should be with prerequisites
-    job_client = JobClient(coordinator, checkpoint_manager, c)
+    yt_cli = yt.YtClient(config=pickle.loads(base64.b64decode(config['yt_client_config'])))
+    coordinator = Coordinator(yt_cli, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
+    checkpoint_manager = CheckpointManager(path + "/checkpoints", yt_cli)
+    # TOOD: coordinator should be with prerequisites
+    job_client = JobClient(coordinator, checkpoint_manager, yt_cli, user_config=user_config)
     job_client.initialize()
 
     ep = coordinator.get_primary_endpoint()
@@ -143,21 +143,30 @@ def fix_module_import() -> None:
     })
 
 
-def run(f: tp.Callable, path: str, mesh: Mesh, resources: Resources = Resources(), client: yt.YtClient = None) -> None:
+def run(
+        user_function: tp.Callable,
+        path: str,
+        mesh: Mesh,
+        user_config: tp.Optional[tp.Dict[tp.Any, tp.Any]] = None,
+        resources: tp.Optional[Resources] = None,
+        client: tp.Optional[yt.YtClient] = None,
+) -> None:
+    resources = resources if resources is not None else Resources()
+    user_config = user_config or {}
+
     yt.create("map_node", path, attributes={"epoch_id": -1}, ignore_existing=True)
     yt.create("map_node", path + "/primary_lock", ignore_existing=True)
     yt.create("map_node", path + "/epochs", ignore_existing=True)
 
-    c = yt.YtClient(config=deepcopy(yt.config.get_config(client)))
+    yt_cli = yt.YtClient(config=deepcopy(yt.config.get_config(client)))
 
     def wrapped() -> None:
         import os
         if 'TRACTO_CONFIG' in os.environ:
-            job_client = initialize()
-            f(job_client)
+            job_client = initialize(user_config=user_config)
+            user_function(job_client)
         else:
-            bootstrap(mesh, path, c)
-
+            bootstrap(mesh, path, yt_cli)
 
     # antiaffinity! =)
     cpu_limit = resources.cpu_limit or 150

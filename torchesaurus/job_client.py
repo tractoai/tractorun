@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 import torch
 import torch.cuda
 import torch.distributed as dist
@@ -9,10 +11,14 @@ from .checkpoints import CheckpointManager
 
 
 class JobClient:
-    def __init__(self, coordinator: Coordinator, checkpoint_manager: CheckpointManager, yt_client: yt.YtClient):
+    def __init__(
+        self, coordinator: Coordinator, checkpoint_manager: CheckpointManager,
+        yt_client: yt.YtClient, user_config: Dict[Any, Any],
+    ):
         self.coordinator = coordinator
         self.checkpoint_manager = checkpoint_manager
         self.yt_client = yt_client
+        self.user_config = user_config
 
     def initialize(self):
         self.coordinator.prepare()

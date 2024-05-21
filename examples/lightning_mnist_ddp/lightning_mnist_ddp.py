@@ -53,5 +53,5 @@ def train(job_client: JobClient) -> None:
 
 
 if __name__ == "__main__":
-    mesh = Mesh(node_count=4, process_per_node=8, gpu_per_process=0)
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=1)
     run(train, "//home/gritukan/mnist/trainings/dense_two_layers", mesh)

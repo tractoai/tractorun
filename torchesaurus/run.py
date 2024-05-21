@@ -114,7 +114,7 @@ def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs=None) -> None:
             stderr=sys.stderr,
             bufsize=1,
             universal_newlines=True,
-            env={**os.environ, "TRACTO_CONFIG": f"config_{i}.json"},
+            env={**os.environ, "TRACTO_CONFIG": f"config_{i}.json", "NCCL_DEBUG": "TRACE", "NCCL_SHM_DISABLE": "1"},
         )
         processes.append(process)
 
@@ -181,8 +181,10 @@ def run(
             bootstrap(mesh, path, yt_cli)
 
     # antiaffinity! =)
-    cpu_limit = resources.cpu_limit or 150
+    cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
+    #cpu_limit = resources.cpu_limit or 1
+    #memory_limit = resources.memory_limit or (1024**3)
 
     fix_module_import()
 
@@ -212,8 +214,10 @@ def run_script(args, script_name):
 
     # TODO: parse from args.
     resources = Resources()
-    cpu_limit = resources.cpu_limit or 150
+    cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
+    #cpu_limit = resources.cpu_limit or 150
+    #memory_limit = resources.memory_limit or 300 * (1024**3)
 
     yt.run_operation(
         yt.VanillaSpecBuilder()

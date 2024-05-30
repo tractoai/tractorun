@@ -7,8 +7,8 @@ import typing as tp
 
 import yt.wrapper as yt
 
-from .helpers import create_prerequisite_client
-from .mesh import Mesh
+from tractorun.helpers import create_prerequisite_client
+from tractorun.mesh import Mesh
 
 
 class Coordinator:

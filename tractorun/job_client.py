@@ -8,8 +8,8 @@ import torch.cuda
 import torch.distributed as dist
 import yt.wrapper as yt
 
-from .checkpoints import CheckpointManager
-from .coordinator import Coordinator
+from tractorun.checkpoints import CheckpointManager
+from tractorun.coordinator import Coordinator
 
 
 class JobClient:

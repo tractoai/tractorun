@@ -8,8 +8,8 @@ import torch
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from torchesaurus.dataset import YtDataset
-import torchesaurus.run
+from tractorun.dataset import YtDataset
+import tractorun.run
 
 
 module_locations = ["./tmpfs/modules", "./modules"]
@@ -36,7 +36,7 @@ class MNISTModel(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 
-job_client = torchesaurus.run.initialize()
+job_client = tractorun.run.initialize()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Running on device:", device, file=sys.stderr)
 

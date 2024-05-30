@@ -1,8 +1,8 @@
 import torch.utils.data
 import yt.wrapper as yt
 
-from .job_client import JobClient
-from .utils import load_tensor
+from tractorun.job_client import JobClient
+from tractorun.utils import load_tensor
 
 
 class YtDataset(torch.utils.data.IterableDataset):

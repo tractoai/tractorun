@@ -8,10 +8,10 @@ import torch
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from torchesaurus.dataset import YtDataset
-from torchesaurus.job_client import JobClient
-from torchesaurus.mesh import Mesh
-from torchesaurus.run import run
+from tractorun.dataset import YtDataset
+from tractorun.job_client import JobClient
+from tractorun.mesh import Mesh
+from tractorun.run import run
 
 
 class MNISTModel(LightningModule):

@@ -1,5 +1,5 @@
 [project]
-name = "torchesaurus"
+name = "tractorun"
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.8"
 dependencies = [
@@ -11,10 +11,10 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
-version = {attr = "torchesaurus.__version__"}
+version = {attr = "tractorun.__version__"}
 
 [project.scripts]
-tractorun = "torchesaurus.cli.tractorun:__main__"
+tractorun = "tractorun.cli.tractorun:__main__"
 
 [project.optional-dependencies]
 tests = [
@@ -25,6 +25,10 @@ dev = [
     "isort ~= 5.13.2",
     "black ~= 24.4.2",
     "ruff ~= 0.4.4",
+]
+all = [
+    "tractorun[tests]",
+    "tractorun[dev]",
 ]
 
 [tool.black]

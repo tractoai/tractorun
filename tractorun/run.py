@@ -8,11 +8,11 @@ import typing as tp
 import yt.wrapper as yt
 from yt.wrapper.common import update_inplace
 
-from .checkpoints import CheckpointManager
-from .coordinator import Coordinator
-from .job_client import JobClient
-from .mesh import Mesh
-from .resources import Resources
+from tractorun.checkpoints import CheckpointManager
+from tractorun.coordinator import Coordinator
+from tractorun.job_client import JobClient
+from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 
 
 """ def wrapped_run_mp(i, f, c, path) -> None:
@@ -132,7 +132,7 @@ def fix_module_import() -> None:
         if not hasattr(module, "__file__"):
             return False
 
-        if "torchesaurus" in str(module.__file__):
+        if "tractorun" in str(module.__file__):
             return True
 
         # This is really bad.
@@ -183,8 +183,8 @@ def run(
     # antiaffinity! =)
     cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
-    #cpu_limit = resources.cpu_limit or 1
-    #memory_limit = resources.memory_limit or (1024**3)
+    # cpu_limit = resources.cpu_limit or 1
+    # memory_limit = resources.memory_limit or (1024**3)
 
     fix_module_import()
 
@@ -216,8 +216,8 @@ def run_script(args, script_name):
     resources = Resources()
     cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
-    #cpu_limit = resources.cpu_limit or 150
-    #memory_limit = resources.memory_limit or 300 * (1024**3)
+    # cpu_limit = resources.cpu_limit or 150
+    # memory_limit = resources.memory_limit or 300 * (1024**3)
 
     yt.run_operation(
         yt.VanillaSpecBuilder()

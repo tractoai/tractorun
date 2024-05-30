@@ -4,11 +4,11 @@ from typing import Optional
 import pytest
 from yt.wrapper import yt_dataclass
 
-from .utils import (
+from tractorun.utils import (
     get_data_path,
     get_random_string,
 )
-from .yt_instances import (
+from tractorun.yt_instances import (
     YtInstanceExternal,
     YtInstanceTestContainers,
 )

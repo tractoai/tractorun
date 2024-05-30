@@ -1,6 +1,6 @@
 import argparse
 
-from torchesaurus.run import run_script
+from tractorun.run import run_script
 
 
 if __name__ == "__main__":

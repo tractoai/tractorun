@@ -1,9 +1,9 @@
 import torch
 import torch.distributed as dist
 
-from torchesaurus.job_client import JobClient
-from torchesaurus.mesh import Mesh
-from torchesaurus.run import run
+from tractorun.job_client import JobClient
+from tractorun.mesh import Mesh
+from tractorun.run import run
 
 
 def train(job_client: JobClient) -> None:

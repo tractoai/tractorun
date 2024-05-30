@@ -8,11 +8,11 @@ import torch.optim as optim
 import torch.utils.data
 import yt.wrapper as yt
 
-from torchesaurus.dataset import YtDataset
-from torchesaurus.job_client import JobClient
-from torchesaurus.mesh import Mesh
-from torchesaurus.run import run
-from torchesaurus.utils import save_tensor
+from tractorun.dataset import YtDataset
+from tractorun.job_client import JobClient
+from tractorun.mesh import Mesh
+from tractorun.run import run
+from tractorun.utils import save_tensor
 
 
 class Net(nn.Module):

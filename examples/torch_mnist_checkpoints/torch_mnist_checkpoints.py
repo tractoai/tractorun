@@ -56,6 +56,7 @@ def train(job_client: JobClient) -> None:
         start=0,
         end=4000,
     )
+    dataset_len = len(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
 
     model.train()
@@ -77,7 +78,7 @@ def train(job_client: JobClient) -> None:
             print(
                 "Train[{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
                     batch_idx * len(data),
-                    len(train_loader.dataset),
+                    dataset_len,
                     100.0 * batch_idx / len(train_loader),
                     loss.item(),
                 ),

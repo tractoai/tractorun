@@ -25,10 +25,16 @@ dev = [
     "isort ~= 5.13.2",
     "black ~= 24.4.2",
     "ruff ~= 0.4.4",
+    "mypy ~= 1.10.0",
+    "mypy-extensions ~= 1.0.0",
+]
+examples = [
+    "pytorch-lightning ~= 2.2.5"
 ]
 all = [
     "tractorun[tests]",
     "tractorun[dev]",
+    "tractorun[examples]",
 ]
 
 [tool.black]
@@ -48,3 +54,15 @@ sections = [
   "FIRSTPARTY",
   "LOCALFOLDER"
 ]
+
+[tool.mypy]
+#disallow_untyped_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "yt.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "testcontainers_yt_local.*"
+ignore_missing_imports = true

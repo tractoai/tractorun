@@ -2,6 +2,7 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from typing import Any
 
 import attr
 import testcontainers_yt_local.container
@@ -16,7 +17,7 @@ class YtInstance(ABC):
 
 @attr.define
 class YtInstanceExternal(YtInstance):
-    proxy_url: str = attr.ib()
+    proxy_url: str
     token: str = attr.ib(repr=False)
 
     def get_client(self) -> YtClient:
@@ -28,14 +29,14 @@ class YtInstanceExternal(YtInstance):
 
 
 class YtInstanceTestContainers(YtInstance):
-    def __init__(self):
+    def __init__(self) -> None:
         self.yt_container = testcontainers_yt_local.container.YtLocalContainer()
 
-    def __enter__(self):
+    def __enter__(self) -> "YtInstanceTestContainers":
         self.yt_container.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.yt_container.stop()
 
     def get_client(self) -> YtClient:

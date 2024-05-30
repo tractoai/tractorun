@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+import attrs
 
 
-@dataclass
+@attrs.define
 class Mesh:
     node_count: int
     process_per_node: int

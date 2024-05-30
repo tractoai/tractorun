@@ -3,6 +3,7 @@ from typing import (
     Dict,
 )
 
+import attrs
 import torch
 import torch.cuda
 import torch.distributed as dist
@@ -12,18 +13,12 @@ from tractorun.checkpoints import CheckpointManager
 from tractorun.coordinator import Coordinator
 
 
+@attrs.define
 class JobClient:
-    def __init__(
-        self,
-        coordinator: Coordinator,
-        checkpoint_manager: CheckpointManager,
-        yt_client: yt.YtClient,
-        user_config: Dict[Any, Any],
-    ):
-        self.coordinator = coordinator
-        self.checkpoint_manager = checkpoint_manager
-        self.yt_client = yt_client
-        self.user_config = user_config
+    coordinator: Coordinator
+    checkpoint_manager: CheckpointManager
+    yt_client: yt.YtClient
+    user_config: Dict[Any, Any]
 
     def initialize(self):
         self.coordinator.prepare()
@@ -36,7 +31,7 @@ class JobClient:
 
             device_index = self.coordinator.get_process_index()
             assert device_index < torch.cuda.device_count()
-            torch.cuda.set_device(torch.cuda.device(self.coordinator.get_process_index()))
+            torch.cuda.set_device(self.coordinator.get_process_index())
 
         backend = "gloo" if mesh.gpu_per_process == 0 else "nccl"
         dist.init_process_group(

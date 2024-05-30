@@ -1,3 +1,6 @@
+from collections.abc import Sized
+from typing import Optional
+
 import torch.utils.data
 import yt.wrapper as yt
 
@@ -5,15 +8,15 @@ from tractorun.job_client import JobClient
 from tractorun.utils import load_tensor
 
 
-class YtDataset(torch.utils.data.IterableDataset):
+class YtDataset(torch.utils.data.IterableDataset, Sized):
     def __init__(
         self,
         client: JobClient,
         path: str,
         device: torch.device,
-        start=0,
-        end=None,
-        columns=None,
+        start: int = 0,
+        end: Optional[int] = None,
+        columns: Optional[list] = None,
     ):
         self._client = client.yt_client
         self._device = device
@@ -24,13 +27,12 @@ class YtDataset(torch.utils.data.IterableDataset):
         else:
             assert end <= row_count
 
-        all_columns = []
+        all_columns = set()
         for column in yt.get(path + "/@schema", client=self._client):
-            all_columns.append(column["name"])
+            all_columns.add(column["name"])
         if columns is None:
-            columns = all_columns
+            columns = list(all_columns)
         else:
-            all_columns = set(all_columns)
             for column in columns:
                 assert column in all_columns
 

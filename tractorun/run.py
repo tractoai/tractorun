@@ -49,12 +49,12 @@ def initialize(user_config: tp.Dict[tp.Any, tp.Any]) -> JobClient:
     mesh = Mesh(int(config["nnodes"]), int(config["nproc"]), int(config["ngpu_per_proc"]))
     yt_cli = yt.YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
     coordinator = Coordinator(
-        yt_cli,
-        path,
-        self_endpoint,
-        mesh,
-        int(config["node_index"]),
-        int(config["proc_index"]),
+        client=yt_cli,
+        path=path,
+        self_endpoint=self_endpoint,
+        mesh=mesh,
+        node_index=int(config["node_index"]),
+        process_index=int(config["proc_index"]),
     )
     checkpoint_manager = CheckpointManager(path + "/checkpoints", yt_cli)
     # TOOD: coordinator should be with prerequisites
@@ -80,14 +80,20 @@ def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs=None) -> None:
     processes = []
 
     for i in range(mesh.process_per_node):
-        proc_config = {}
-        proc_config["nnodes"] = mesh.node_count
-        proc_config["nproc"] = mesh.process_per_node
-        proc_config["ngpu_per_proc"] = mesh.gpu_per_process
-        proc_config["node_index"] = os.environ["YT_JOB_COOKIE"]
-        proc_config["proc_index"] = i
-        proc_config["port"] = os.environ[f"YT_PORT_{i}"]
-        proc_config["path"] = path
+        from typing import (
+            Dict,
+            Union,
+        )
+
+        proc_config: Dict[str, Union[str, int]] = {
+            "nnodes": mesh.node_count,
+            "nproc": mesh.process_per_node,
+            "ngpu_per_proc": mesh.gpu_per_process,
+            "node_index": os.environ["YT_JOB_COOKIE"],
+            "proc_index": i,
+            "port": os.environ[f"YT_PORT_{i}"],
+            "path": path,
+        }
 
         conf = yt.config.get_config(c)
         update_inplace(

@@ -4,11 +4,11 @@ from typing import Optional
 import pytest
 from yt.wrapper import yt_dataclass
 
-from tractorun.utils import (
+from tests.utils import (
     get_data_path,
     get_random_string,
 )
-from tractorun.yt_instances import (
+from tests.yt_instances import (
     YtInstanceExternal,
     YtInstanceTestContainers,
 )
@@ -23,6 +23,7 @@ def yt_instance():
     elif yt_mode == "external":
         proxy_url = os.environ["YT_PROXY"]
         yt_token = os.environ.get("YT_TOKEN")
+        assert yt_token is not None
         yield YtInstanceExternal(proxy_url=proxy_url, token=yt_token)
     else:
         raise ValueError(f"Unknown yt_mode: {yt_mode}")
@@ -44,7 +45,7 @@ def mnist_ds_path(yt_instance):
     with open(get_data_path("mnist_small"), "rb") as mnist_file:
         for line in mnist_file:
             pairs = [p.split(b"=") for p in line.split(b"\t")]
-            parsed_data.append(Row(data=pairs[0][1], labels=pairs[1][1]))
+            parsed_data.append(Row(data=pairs[0][1], labels=pairs[1][1]))  # type: ignore  # error: Unexpected keyword argument "data" for "Row"  [call-arg]
 
     yt_cli.write_table_structured(
         table=table_path,

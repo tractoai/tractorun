@@ -1,21 +1,21 @@
-from dataclasses import dataclass
 import typing as tp
 
+import attrs
 import yt.wrapper as yt
 
 
-@dataclass
+@attrs.define
 class Checkpoint:
     index: int
     value: bytes
     metadata: dict
 
 
+@attrs.define
 class CheckpointManager:
-    def __init__(self, path: str, client: yt.YtClient) -> None:
-        self._path = path
-        self._client = client
-        self._last_checkpoint_index = None
+    _path: str
+    _client: yt.YtClient
+    _last_checkpoint_index: int = -1
 
     def initialize(self) -> None:
         yt.create("map_node", self._path, ignore_existing=True, client=self._client)

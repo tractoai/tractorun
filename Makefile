@@ -15,9 +15,12 @@ ruff-fix:
 isort-check:
 	isort --check-only .
 
+mypy-check:
+	mypy .
+
 isort-fix:
 	isort .
 
-all-check: black-check ruff-check isort-check
+all-check: black-check ruff-check isort-check mypy-check
 
 all-fix: black-fix ruff-fix isort-fix

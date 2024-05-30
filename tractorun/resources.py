@@ -1,7 +1,9 @@
-from dataclasses import dataclass
+from typing import Optional
+
+import attrs
 
 
-@dataclass
+@attrs.define
 class Resources:
-    cpu_limit: float = None
-    memory_limit: int = None
+    cpu_limit: Optional[float] = None
+    memory_limit: Optional[int] = None

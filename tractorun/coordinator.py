@@ -3,41 +3,37 @@ import os
 import socket
 import sys
 import time
-import typing as tp
+from typing import (
+    Callable,
+    Optional,
+)
 
+import attr
 import yt.wrapper as yt
 
 from tractorun.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
 
 
+@attr.define(kw_only=True)
 class Coordinator:
-    def __init__(
-        self,
-        client: yt.YtClient,
-        path: str,
-        self_endpoint: str,
-        mesh: Mesh,
-        node_index: int,
-        process_index: int,
-    ) -> None:
-        self._client = client
-        self._path = path
-        self._mesh = mesh
-        self._node_index = node_index
-        self._process_index = process_index
-        self._self_endpoint = self_endpoint
+    _client: yt.YtClient
+    _path: str
+    _mesh: Mesh
+    _node_index: int
+    _process_index: int
+    _self_endpoint: str
 
-        self._epoch_id = None
+    _epoch_id: Optional[int] = None
 
-        self._primary_endpoint = None
+    _primary_endpoint: Optional[str] = None
 
-        self._epoch_transaction = None
-        self._epoch_transaction_id = None
+    _epoch_transaction: Optional[yt.Transaction] = None
+    _epoch_transaction_id: Optional[str] = None
 
-        self._epoch_client = None
+    _epoch_client: Optional[yt.YtClient] = None
 
-    def prepare(self, primary_cb: tp.Optional[tp.Callable] = None) -> None:
+    def prepare(self, primary_cb: Optional[Callable] = None) -> None:
         self_index = self.get_self_index()
         if self_index == 0:
             self._prepare_primary(primary_cb)
@@ -61,7 +57,7 @@ class Coordinator:
             raise RuntimeError("Torchesaurus coordinator is not prepared yet")
         return self._epoch_client
 
-    def get_primary_endpoint(self) -> yt.YtClient:
+    def get_primary_endpoint(self) -> str:
         if self._primary_endpoint is None:
             raise RuntimeError("Torchesaurus coordinator is not prepared yet")
         return self._primary_endpoint
@@ -72,8 +68,9 @@ class Coordinator:
     def get_process_index(self) -> int:
         return self._process_index
 
-    def _prepare_primary(self, primary_cb: tp.Optional[tp.Callable]) -> None:
+    def _prepare_primary(self, primary_cb: Optional[Callable]) -> None:
         self._epoch_transaction_id = yt.start_transaction(client=self._client)
+        assert self._epoch_transaction_id is not None
         self._epoch_transaction = yt.Transaction(
             transaction_id=self._epoch_transaction_id,
             acquire=False,
@@ -85,7 +82,7 @@ class Coordinator:
                 self._path + "/primary_lock",
                 mode="exclusive",
                 waitable=True,
-                wait_for=datetime.timedelta(minutes=5).total_seconds() * 1000,
+                wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
                 client=self._client,
             )
 
@@ -149,10 +146,11 @@ class Coordinator:
                 ):
                     raise RuntimeError("Operation id mismatch")
 
-                self._epoch_transaction_id = yt.get(
+                self._epoch_transaction_id: str = yt.get(
                     self._get_epoch_path() + "/@epoch_transaction_id",
                     client=self._client,
                 )
+                assert self._epoch_transaction_id is not None
                 self._epoch_client = create_prerequisite_client(self._client, [self._epoch_transaction_id])
 
                 yt.set(

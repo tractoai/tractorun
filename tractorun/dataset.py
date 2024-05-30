@@ -1,5 +1,8 @@
 from collections.abc import Sized
-from typing import Optional
+from typing import (
+    Iterator,
+    Optional,
+)
 
 import torch.utils.data
 import yt.wrapper as yt
@@ -17,7 +20,7 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         start: int = 0,
         end: Optional[int] = None,
         columns: Optional[list] = None,
-    ):
+    ) -> None:
         self._client = client.yt_client
         self._device = device
 
@@ -42,8 +45,8 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         self._read_path = read_path
         self._columns = columns
 
-    def __iter__(self):
-        def transform(row):
+    def __iter__(self) -> Iterator:
+        def transform(row: dict) -> tuple:
             return tuple([load_tensor(yt.yson.get_bytes(row[name]), device=self._device) for name in self._columns])
 
         return map(transform, yt.read_table(self._read_path, client=self._client))

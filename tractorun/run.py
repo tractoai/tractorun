@@ -1,9 +1,16 @@
+import argparse
 import base64
 from copy import deepcopy
 from pathlib import Path
 import pickle  # TODO: kill with fire!
 import sys
-import typing as tp
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Optional,
+)
 
 import yt.wrapper as yt
 from yt.wrapper.common import update_inplace
@@ -34,7 +41,7 @@ from tractorun.resources import Resources
     f(job_client) """
 
 
-def initialize(user_config: tp.Dict[tp.Any, tp.Any]) -> JobClient:
+def initialize(user_config: Dict[Any, Any]) -> JobClient:
     import json
     import os
     import socket
@@ -71,7 +78,7 @@ def initialize(user_config: tp.Dict[tp.Any, tp.Any]) -> JobClient:
     return job_client
 
 
-def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs=None) -> None:
+def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs: Optional[list] = None) -> None:
     import json
     import os
     import subprocess
@@ -134,8 +141,10 @@ def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs=None) -> None:
 
 
 def fix_module_import() -> None:
-    def _module_filter(module):
+    def _module_filter(module: ModuleType) -> bool:
         if not hasattr(module, "__file__"):
+            return False
+        if module.__file__ is None:
             return False
 
         if "tractorun" in str(module.__file__):
@@ -161,12 +170,12 @@ def fix_module_import() -> None:
 
 
 def run(
-    user_function: tp.Callable,
+    user_function: Callable,
     path: str,
     mesh: Mesh,
-    user_config: tp.Optional[tp.Dict[tp.Any, tp.Any]] = None,
-    resources: tp.Optional[Resources] = None,
-    client: tp.Optional[yt.YtClient] = None,
+    user_config: Optional[Dict[Any, Any]] = None,
+    resources: Optional[Resources] = None,
+    client: Optional[yt.YtClient] = None,
 ) -> None:
     resources = resources if resources is not None else Resources()
     user_config = user_config or {}
@@ -209,7 +218,8 @@ def run(
     )
 
 
-def run_script(args, script_name):
+def run_script(args: argparse.Namespace, script_name: str) -> None:
+    # we shouldn't use argparse.Namespace here
     # Pickling fix.
 
     def wrapped() -> None:

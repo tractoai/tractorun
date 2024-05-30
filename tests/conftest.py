@@ -1,5 +1,8 @@
 import os
-from typing import Optional
+from typing import (
+    Generator,
+    Optional,
+)
 
 import pytest
 from yt.wrapper import yt_dataclass
@@ -9,13 +12,14 @@ from tests.utils import (
     get_random_string,
 )
 from tests.yt_instances import (
+    YtInstance,
     YtInstanceExternal,
     YtInstanceTestContainers,
 )
 
 
 @pytest.fixture(scope="session")
-def yt_instance():
+def yt_instance() -> Generator[YtInstance, None, None]:
     yt_mode = os.environ.get("YT_MODE", "testcontainers")
     if yt_mode == "testcontainers":
         with YtInstanceTestContainers() as yt_instance:
@@ -30,7 +34,7 @@ def yt_instance():
 
 
 @pytest.fixture(scope="session")
-def mnist_ds_path(yt_instance):
+def mnist_ds_path(yt_instance: YtInstance) -> Generator[str, None, None]:
     @yt_dataclass
     class Row:
         data: Optional[bytes]

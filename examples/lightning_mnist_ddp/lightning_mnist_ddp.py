@@ -1,10 +1,16 @@
 import sys
+from typing import (
+    Any,
+    Tuple,
+)
 
 from pytorch_lightning import (
     LightningModule,
     Trainer,
 )
+from pytorch_lightning.utilities.types import STEP_OUTPUT
 import torch
+from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
@@ -15,22 +21,22 @@ from tractorun.run import run
 
 
 class MNISTModel(LightningModule):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.l1 = torch.nn.Linear(28 * 28, 50)
         self.l2 = torch.nn.Linear(50, 10)
 
-    def forward(self, x):
+    def forward(self, x: Any) -> torch.Tensor:
         x = torch.relu(self.l1(x.view(x.size(0), -1)))
         x = torch.relu(self.l2(x))
         return x
 
-    def training_step(self, batch, batch_nb):
+    def training_step(self, batch: Tuple[Tensor, ...], batch_nb: Any) -> STEP_OUTPUT:
         x, y = batch
         loss = F.cross_entropy(self(x), y)
         return loss
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> torch.optim.Adam:
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 

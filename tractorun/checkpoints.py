@@ -1,4 +1,4 @@
-import typing as tp
+from typing import Optional
 
 import attrs
 import yt.wrapper as yt
@@ -29,7 +29,7 @@ class CheckpointManager:
             last_checkpoint_index = max(last_checkpoint_index, index)
         self._last_checkpoint_index = last_checkpoint_index
 
-    def get_last_checkpoint(self) -> tp.Optional[Checkpoint]:
+    def get_last_checkpoint(self) -> Optional[Checkpoint]:
         if self._last_checkpoint_index == -1:
             return None
 
@@ -41,7 +41,9 @@ class CheckpointManager:
 
         return Checkpoint(self._last_checkpoint_index, value, metadata)
 
-    def save_checkpoint(self, value: str, metadata: dict = {}) -> None:
+    def save_checkpoint(self, value: bytes, metadata: Optional[dict] = None) -> None:
+        if metadata is None:
+            metadata = {}
         # TODO: prerequisites
         with yt.Transaction(client=self._client):
             checkpoint_index = self._last_checkpoint_index + 1

@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -18,11 +19,11 @@ from tractorun.utils import (
 
 
 class Net(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super(Net, self).__init__()
         self.l1 = torch.nn.Linear(28 * 28, 10)
 
-    def forward(self, x):
+    def forward(self, x: Any) -> torch.Tensor:
         return torch.relu(self.l1(x.view(x.size(0), -1)))
 
 

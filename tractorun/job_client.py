@@ -11,6 +11,7 @@ import yt.wrapper as yt
 
 from tractorun.checkpoints import CheckpointManager
 from tractorun.coordinator import Coordinator
+from tractorun.mesh import Mesh
 
 
 @attrs.define
@@ -20,7 +21,7 @@ class JobClient:
     yt_client: yt.YtClient
     user_config: Dict[Any, Any]
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.coordinator.prepare()
         mesh = self.coordinator.get_mesh()
         if mesh.gpu_per_process > 0:
@@ -43,5 +44,5 @@ class JobClient:
 
         self.checkpoint_manager.initialize()
 
-    def get_mesh(self):
+    def get_mesh(self) -> Mesh:
         return self.coordinator.get_mesh()

@@ -3,6 +3,9 @@ import random
 import string
 
 
+DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-05-31-12-07-26"
+
+
 def get_data_path(filename: str) -> str:
     return os.path.join(os.path.dirname(__file__), "data", filename)
 

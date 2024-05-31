@@ -1,0 +1,3 @@
+attrs ~= 23.2.0
+ytsaurus-client ~= 0.13.15
+ytsaurus-yson ~= 0.4.5

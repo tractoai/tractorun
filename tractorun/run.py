@@ -22,6 +22,9 @@ from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 
 
+DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-05-31-12-26-50"
+
+
 """ def wrapped_run_mp(i, f, c, path) -> None:
     import os
     import json
@@ -176,7 +179,9 @@ def run(
     user_config: Optional[Dict[Any, Any]] = None,
     resources: Optional[Resources] = None,
     client: Optional[yt.YtClient] = None,
+    docker_image: Optional[str] = None,
 ) -> None:
+    docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
     user_config = user_config or {}
 
@@ -203,7 +208,7 @@ def run(
 
     fix_module_import()
 
-    yt.run_operation(
+    yt_cli.run_operation(
         yt.VanillaSpecBuilder()
         .begin_task("task")
         .command(wrapped)
@@ -212,7 +217,7 @@ def run(
         .port_count(mesh.process_per_node)
         .cpu_limit(cpu_limit)
         .memory_limit(memory_limit)
-        .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:7")
+        .docker_image(docker_image)
         .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
         .end_task()
     )
@@ -244,7 +249,7 @@ def run_script(args: argparse.Namespace, script_name: str) -> None:
         .port_count(args.nproc_per_node)
         .cpu_limit(cpu_limit)
         .memory_limit(memory_limit)
-        .docker_image("cr.nemax.nebius.cloud/crnf2coti090683j5ssi/gritukan_ml:7")
+        .docker_image(DEFAULT_DOCKER_IMAGE)
         .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
         .file_paths(yt.LocalFile(args.training_script, file_name=script_name))
         .end_task()

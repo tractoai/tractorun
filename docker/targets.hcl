@@ -1,0 +1,49 @@
+target "jammy_python_sys" {
+  platforms = ["linux/amd64"]
+  dockerfile-inline = <<EOT
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    python3 -m pip install --upgrade pip
+EOT
+}
+
+target "torchesaurus_tests" {
+  platforms = ["linux/amd64"]
+  contexts = {
+    base_image = "target:jammy_python_sys"
+  }
+  context           = "${PROJECT_ROOT}"
+  tags = [
+    "${DOCKER_REPO}/torchesaurus_tests:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM base_image
+COPY requirements.txt requirements_tests.txt requirements_torch.txt /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_tests.txt
+RUN python3 -m pip install --index-url https://download.pytorch.org/whl/cpu -r "/tmp/requirements_torch.txt"
+EOT
+}
+
+target "torchesaurus_runtime" {  # TODO: find out if it is possible to reduce its size
+  platforms = ["linux/amd64"]
+  contexts = {
+    base_image = "target:jammy_python_sys"
+  }
+  context           = "${PROJECT_ROOT}"
+  tags = [
+    "${DOCKER_REPO}/torchesaurus_runtime:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM base_image
+COPY requirements.txt requirements_torch.txt requirements_lightning.txt /tmp
+RUN ls /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_torch.txt \
+  -r /tmp/requirements_lightning.txt
+EOT
+}

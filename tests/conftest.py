@@ -1,11 +1,8 @@
 import os
-from typing import (
-    Generator,
-    Optional,
-)
+from typing import Generator
 
 import pytest
-from yt.wrapper import yt_dataclass
+import yt_yson_bindings
 
 from tests.utils import (
     get_data_path,
@@ -35,27 +32,26 @@ def yt_instance() -> Generator[YtInstance, None, None]:
 
 @pytest.fixture(scope="session")
 def mnist_ds_path(yt_instance: YtInstance) -> Generator[str, None, None]:
-    @yt_dataclass
-    class Row:
-        data: Optional[bytes]
-        labels: Optional[bytes]
-
     table_path = f"//tmp/{get_random_string(13)}"
 
     yt_cli = yt_instance.get_client()
-
-    # TODO: generalize and move to utils
-    parsed_data = []
-    with open(get_data_path("mnist_small"), "rb") as mnist_file:
-        for line in mnist_file:
-            pairs = [p.split(b"=") for p in line.split(b"\t")]
-            parsed_data.append(Row(data=pairs[0][1], labels=pairs[1][1]))  # type: ignore  # error: Unexpected keyword argument "data" for "Row"  [call-arg]
-
-    yt_cli.write_table_structured(
-        table=table_path,
-        input_stream=parsed_data,
-        row_type=Row,
+    yt_cli.create(
+        "table",
+        table_path,
+        attributes={  # TODO: type_v3?
+            "schema": [
+                {"name": "data", "type": "string"},
+                {"name": "labels", "type": "string"},
+            ]
+        },
     )
+
+    with open(get_data_path("mnist_small.yson"), "rb") as mnist_file:
+        parsed_data = yt_yson_bindings.load(mnist_file, yson_type="list_fragment")
+        yt_cli.write_table(
+            table=table_path,
+            input_stream=parsed_data,
+        )
 
     yield table_path
 

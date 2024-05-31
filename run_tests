@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -x
+
+exec docker run -it \
+  --mount type=bind,source=.,target=/source \
+  -e YT_MODE=external \
+  -e YT_PROXY="${YT_PROXY}" \
+  -e YT_TOKEN="${YT_TOKEN}" \
+  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-05-31-12-07-26 \
+  pytest /source/tests/$1 ${@:2}

@@ -24,7 +24,9 @@ class YtInstanceExternal(YtInstance):
         return YtClient(
             proxy=self.proxy_url,
             token=self.token,
-            config={"proxy": {"enable_proxy_discovery": False}},
+            config={
+                "pickling": {"ignore_system_modules": True},  # otherwise fat torch will be sent
+            },
         )
 
 

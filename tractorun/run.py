@@ -1,10 +1,6 @@
 import argparse
 import base64
-from copy import deepcopy
-from pathlib import Path
 import pickle  # TODO: kill with fire!
-import sys
-from types import ModuleType
 from typing import (
     Any,
     Callable,
@@ -44,7 +40,8 @@ DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torche
     f(job_client) """
 
 
-def initialize(user_config: Dict[Any, Any]) -> JobClient:
+def get_job_client(user_config: Dict[Any, Any]) -> JobClient:
+    # Runs in a job
     import json
     import os
     import socket
@@ -59,7 +56,7 @@ def initialize(user_config: Dict[Any, Any]) -> JobClient:
     mesh = Mesh(int(config["nnodes"]), int(config["nproc"]), int(config["ngpu_per_proc"]))
     yt_cli = yt.YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
     coordinator = Coordinator(
-        client=yt_cli,
+        yt_cli=yt_cli,
         path=path,
         self_endpoint=self_endpoint,
         mesh=mesh,
@@ -81,7 +78,9 @@ def initialize(user_config: Dict[Any, Any]) -> JobClient:
     return job_client
 
 
-def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs: Optional[list] = None) -> None:
+def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list] = None) -> None:
+    # Runs in a job
+
     import json
     import os
     import subprocess
@@ -105,7 +104,7 @@ def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs: Optional[list] = No
             "path": path,
         }
 
-        conf = yt.config.get_config(c)
+        conf = yt.config.get_config(yt_cli)
         update_inplace(
             conf,
             {
@@ -143,59 +142,31 @@ def bootstrap(mesh: Mesh, path: str, c: yt.YtClient, pyargs: Optional[list] = No
     # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
-def fix_module_import() -> None:
-    def _module_filter(module: ModuleType) -> bool:
-        if not hasattr(module, "__file__"):
-            return False
-        if module.__file__ is None:
-            return False
-
-        if "tractorun" in str(module.__file__):
-            return True
-
-        # This is really bad.
-        system_paths = [Path(p) for p in sys.path[2:]]
-        for path in system_paths:
-            if path in Path(module.__file__).parents:
-                return False
-
-        return True
-
-    yt.update_config(
-        {
-            "pickling": {
-                # "python_binary": "/opt/conda/bin/python3.11",
-                "force_using_py_instead_of_pyc": True,
-                "module_filter": _module_filter,
-            },
-        }
-    )
-
-
 def run(
     user_function: Callable,
     path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     resources: Optional[Resources] = None,
-    client: Optional[yt.YtClient] = None,
+    yt_cli: Optional[yt.YtClient] = None,
     docker_image: Optional[str] = None,
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
     user_config = user_config or {}
 
-    yt.create("map_node", path, attributes={"epoch_id": -1}, ignore_existing=True)
-    yt.create("map_node", path + "/primary_lock", ignore_existing=True)
-    yt.create("map_node", path + "/epochs", ignore_existing=True)
+    yt_cli: yt.YtClient = yt_cli or yt.YtClient()
+    yt_cli.config["pickling"]["ignore_system_modules"] = True
 
-    yt_cli = yt.YtClient(config=deepcopy(yt.config.get_config(client)))
+    yt_cli.create("map_node", path, attributes={"epoch_id": -1}, ignore_existing=True)
+    yt_cli.create("map_node", path + "/primary_lock", ignore_existing=True)
+    yt_cli.create("map_node", path + "/epochs", ignore_existing=True)
 
     def wrapped() -> None:
         import os
 
         if "TRACTO_CONFIG" in os.environ:
-            job_client = initialize(user_config=user_config)
+            job_client = get_job_client(user_config=user_config)
             user_function(job_client)
         else:
             bootstrap(mesh, path, yt_cli)
@@ -203,10 +174,6 @@ def run(
     # antiaffinity! =)
     cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
-    # cpu_limit = resources.cpu_limit or 1
-    # memory_limit = resources.memory_limit or (1024**3)
-
-    fix_module_import()
 
     yt_cli.run_operation(
         yt.VanillaSpecBuilder()
@@ -227,20 +194,18 @@ def run_script(args: argparse.Namespace, script_name: str) -> None:
     # we shouldn't use argparse.Namespace here
     # Pickling fix.
 
+    yt_cli = yt.YtClient()
+
     def wrapped() -> None:
         mesh = Mesh(args.nnodes, args.nproc_per_node, args.ngpu_per_proc)
-        return bootstrap(mesh, args.path, c=None, pyargs=[script_name])
-
-    fix_module_import()
+        return bootstrap(mesh, args.path, yt_cli=yt_cli, pyargs=[script_name])
 
     # TODO: parse from args.
     resources = Resources()
     cpu_limit = resources.cpu_limit or 50
     memory_limit = resources.memory_limit or 300 * (1024**3)
-    # cpu_limit = resources.cpu_limit or 150
-    # memory_limit = resources.memory_limit or 300 * (1024**3)
 
-    yt.run_operation(
+    yt_cli.run_operation(
         yt.VanillaSpecBuilder()
         .begin_task("task")
         .command(wrapped)

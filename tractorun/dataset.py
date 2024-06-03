@@ -21,17 +21,17 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         end: Optional[int] = None,
         columns: Optional[list] = None,
     ) -> None:
-        self._client = client.yt_client
+        self._yt_cli = client.yt_client
         self._device = device
 
-        row_count = yt.get(path + "/@row_count", client=self._client)
+        row_count = self._yt_cli.get(path + "/@row_count")
         if end is None:
             end = row_count
         else:
             assert end <= row_count
 
         all_columns = set()
-        for column in yt.get(path + "/@schema", client=self._client):
+        for column in self._yt_cli.get(path + "/@schema"):
             all_columns.add(column["name"])
         if columns is None:
             columns = list(all_columns)
@@ -49,7 +49,7 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         def transform(row: dict) -> tuple:
             return tuple([load_tensor(yt.yson.get_bytes(row[name]), device=self._device) for name in self._columns])
 
-        return map(transform, yt.read_table(self._read_path, client=self._client))
+        return map(transform, self._yt_cli.read_table(self._read_path))
 
     def __len__(self) -> int:
         return self._len

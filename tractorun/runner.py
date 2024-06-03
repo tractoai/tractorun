@@ -15,12 +15,13 @@ ngpu_per_proc = config["ngpu_per_proc"]
 processes = []
 
 for i in range(nproc):
-    proc_config = {}
-    proc_config["nnodes"] = nnodes
-    proc_config["nproc"] = nproc
-    proc_config["ngpu_per_proc"] = ngpu_per_proc
-    proc_config["node_index"] = os.environ["YT_JOB_COOKIE"]
-    proc_config["proc_index"] = i
+    proc_config = {
+        "nnodes": nnodes,
+        "nproc": nproc,
+        "ngpu_per_proc": ngpu_per_proc,
+       "node_index": os.environ["YT_JOB_COOKIE"],
+        "proc_index": i
+    }
     with open(f"config_{i}.json", "w") as f:
         json.dump(proc_config, f)
 

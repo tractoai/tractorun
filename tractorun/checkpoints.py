@@ -14,14 +14,14 @@ class Checkpoint:
 @attrs.define
 class CheckpointManager:
     _path: str
-    _client: yt.YtClient
+    _yt_cli: yt.YtClient
     _last_checkpoint_index: int = -1
 
     def initialize(self) -> None:
-        yt.create("map_node", self._path, ignore_existing=True, client=self._client)
+        self._yt_cli.create("map_node", self._path, ignore_existing=True)
 
         last_checkpoint_index = -1
-        for index in yt.list(self._path, client=self._client):
+        for index in self._yt_cli.list(self._path):
             try:
                 index = int(index)
             except Exception:
@@ -34,8 +34,8 @@ class CheckpointManager:
             return None
 
         checkpoint_path = self._path + "/" + str(self._last_checkpoint_index)
-        value = yt.read_file(checkpoint_path + "/value", client=self._client).read()
-        metadata = yt.read_file(checkpoint_path + "/metadata", client=self._client).read()
+        value = self._yt_cli.read_file(checkpoint_path + "/value").read()
+        metadata = self._yt_cli.read_file(checkpoint_path + "/metadata").read()
         # TODO: do it normally.
         metadata = eval(metadata.decode("utf-8"))
 
@@ -45,15 +45,14 @@ class CheckpointManager:
         if metadata is None:
             metadata = {}
         # TODO: prerequisites
-        with yt.Transaction(client=self._client):
+        with self._yt_cli.Transaction():
             checkpoint_index = self._last_checkpoint_index + 1
             checkpoint_path = self._path + "/" + str(checkpoint_index)
-            yt.create("map_node", checkpoint_path, client=self._client)
-            yt.write_file(checkpoint_path + "/value", value, client=self._client)
-            yt.write_file(
+            self._yt_cli.create("map_node", checkpoint_path)
+            self._yt_cli.write_file(checkpoint_path + "/value", value)
+            self._yt_cli.write_file(
                 checkpoint_path + "/metadata",
                 str(metadata).encode("utf-8"),
-                client=self._client,
             )
 
         self._last_checkpoint_index = checkpoint_index

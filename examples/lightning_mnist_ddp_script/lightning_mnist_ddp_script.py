@@ -42,7 +42,7 @@ class MNISTModel(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 
-job_client = tractorun.run.initialize(user_config={})
+job_client = tractorun.run.get_job_client(user_config={})
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Running on device:", device, file=sys.stderr)
 

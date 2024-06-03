@@ -1,5 +1,6 @@
-import argparse
 import base64
+import json
+import os
 import pickle  # TODO: kill with fire!
 from typing import (
     Any,
@@ -11,6 +12,7 @@ from typing import (
 import yt.wrapper as yt
 from yt.wrapper.common import update_inplace
 
+from tractorun import constants as const
 from tractorun.checkpoints import CheckpointManager
 from tractorun.coordinator import Coordinator
 from tractorun.job_client import JobClient
@@ -144,7 +146,7 @@ def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list]
 
 def run(
     user_function: Callable,
-    path: str,
+    yt_path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     resources: Optional[Resources] = None,
@@ -155,21 +157,19 @@ def run(
     resources = resources if resources is not None else Resources()
     user_config = user_config or {}
 
-    yt_cli: yt.YtClient = yt_cli or yt.YtClient()
+    yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_cli.config["pickling"]["ignore_system_modules"] = True
 
-    yt_cli.create("map_node", path, attributes={"epoch_id": -1}, ignore_existing=True)
-    yt_cli.create("map_node", path + "/primary_lock", ignore_existing=True)
-    yt_cli.create("map_node", path + "/epochs", ignore_existing=True)
+    yt_cli.create("map_node", yt_path, attributes={"epoch_id": -1}, ignore_existing=True)
+    yt_cli.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
+    yt_cli.create("map_node", yt_path + "/epochs", ignore_existing=True)
 
     def wrapped() -> None:
-        import os
-
         if "TRACTO_CONFIG" in os.environ:
             job_client = get_job_client(user_config=user_config)
             user_function(job_client)
         else:
-            bootstrap(mesh, path, yt_cli)
+            bootstrap(mesh, yt_path, yt_cli)
 
     # antiaffinity! =)
     cpu_limit = resources.cpu_limit or 50
@@ -190,15 +190,22 @@ def run(
     )
 
 
-def run_script(args: argparse.Namespace, script_name: str) -> None:
-    # we shouldn't use argparse.Namespace here
-    # Pickling fix.
+def run_script(
+    mesh: Mesh,
+    training_script: str,
+    yt_path: str,
+    docker_image: Optional[str] = None,
+    user_config: Optional[Dict[Any, Any]] = None,
+) -> None:
+    docker_image = docker_image or DEFAULT_DOCKER_IMAGE
+    user_config = user_config or {}
 
-    yt_cli = yt.YtClient()
+    yt_cli = yt.YtClient(config=yt.default_config.get_config_from_env())
+    yt_cli.config["pickling"]["ignore_system_modules"] = True
+    script_name = training_script.split("/")[-1]
 
     def wrapped() -> None:
-        mesh = Mesh(args.nnodes, args.nproc_per_node, args.ngpu_per_proc)
-        return bootstrap(mesh, args.path, yt_cli=yt_cli, pyargs=[script_name])
+        return bootstrap(mesh, yt_path, yt_cli=yt_cli, pyargs=[script_name])
 
     # TODO: parse from args.
     resources = Resources()
@@ -209,14 +216,18 @@ def run_script(args: argparse.Namespace, script_name: str) -> None:
         yt.VanillaSpecBuilder()
         .begin_task("task")
         .command(wrapped)
-        .job_count(args.nnodes)
-        .gpu_limit(args.nproc_per_node * args.ngpu_per_proc)
-        .port_count(args.nproc_per_node)
+        .job_count(mesh.node_count)
+        .gpu_limit(mesh.process_per_node * mesh.gpu_per_process)
+        .port_count(mesh.process_per_node)
         .cpu_limit(cpu_limit)
         .memory_limit(memory_limit)
-        .docker_image(DEFAULT_DOCKER_IMAGE)
-        .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
-        .file_paths(yt.LocalFile(args.training_script, file_name=script_name))
+        .docker_image(docker_image)
+        .environment(
+            {
+                "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
+                const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
+            }
+        )
+        .file_paths(yt.LocalFile(training_script, file_name=script_name))
         .end_task()
-        .max_failed_job_count(1)
     )

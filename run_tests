@@ -7,5 +7,6 @@ exec docker run -it \
   -e YT_MODE=external \
   -e YT_PROXY="${YT_PROXY}" \
   -e YT_TOKEN="${YT_TOKEN}" \
+  -e PYTHONPATH="/source:$PYTHONPATH" \
   cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-05-31-12-07-26 \
   pytest /source/tests/$1 ${@:2}

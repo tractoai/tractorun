@@ -17,7 +17,7 @@ optional-dependencies.lightning = { file = ["requirements_lightning.txt"] }
 optional-dependencies.all = { file = ["requirements_torch.txt", "requirements_tests.txt", "requirements_dev.txt", "requirements_lightning.txt"] }
 
 [project.scripts]
-tractorun = "tractorun.cli.tractorun:__main__"
+tractorun = "tractorun.cli.tractorun_runner:__main__"
 
 [tool.black]
 line-length = 120

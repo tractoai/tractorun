@@ -19,8 +19,8 @@ for i in range(nproc):
         "nnodes": nnodes,
         "nproc": nproc,
         "ngpu_per_proc": ngpu_per_proc,
-       "node_index": os.environ["YT_JOB_COOKIE"],
-        "proc_index": i
+        "node_index": os.environ["YT_JOB_COOKIE"],
+        "proc_index": i,
     }
     with open(f"config_{i}.json", "w") as f:
         json.dump(proc_config, f)

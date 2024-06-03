@@ -1,3 +1,5 @@
+import json
+import subprocess
 from typing import Any
 
 import torch
@@ -8,6 +10,8 @@ import torch.utils.data
 
 from tests.utils import (
     DOCKER_IMAGE,
+    DOCKER_IMAGE_TRTRCH,
+    get_data_path,
     get_random_string,
 )
 from tests.yt_instances import YtInstance
@@ -62,3 +66,26 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     # TODO: figure out why
     # Jobs may fail with `RuntimeError: mat1 and mat2 must have the same dtype, but got Long and Float`
     # but eventually finish successfully. Problems with `mnist_ds_path`?
+
+
+def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+    process = subprocess.Popen(
+        [
+            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+            "--nnodes",
+            "1",
+            "--nproc_per_node",
+            "1",
+            "--ngpu_per_proc",
+            "0",
+            "--yt-path",
+            "//tmp",
+            "--docker-image",
+            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            "--user-config",
+            json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
+            get_data_path("../data/torch_run_script.py"),
+        ]
+    )
+    process.wait()
+    assert process.returncode == 0

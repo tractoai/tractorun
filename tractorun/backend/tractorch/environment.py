@@ -4,6 +4,7 @@ from typing import (
 )
 
 import torch
+import torch.distributed
 
 from tractorun.environment import prepare_environment as common_prepare_environment
 from tractorun.job_client import JobClient
@@ -26,7 +27,7 @@ def prepare_environment(user_config: Dict[Any, Any]) -> JobClient:
         torch.cuda.set_device(coordinator.get_process_index())
 
     backend = "gloo" if mesh.gpu_per_process == 0 else "nccl"
-    torch.distributed.dist.init_process_group(
+    torch.distributed.init_process_group(
         backend=backend,
         init_method="tcp://" + coordinator.get_primary_endpoint(),
         rank=coordinator.get_self_index(),

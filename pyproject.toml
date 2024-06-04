@@ -4,8 +4,10 @@ authors = [{name = "TractoAI team"}]
 requires-python = ">=3.8"
 dynamic = ["version", "dependencies", "optional-dependencies"]
 
-[tool.setuptools]
-packages = ["tractorun"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*", "tractorun.*"]
+exclude = ["__pycache__", "*.pyc", ".mypy_cache"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tractorun.__version__"}

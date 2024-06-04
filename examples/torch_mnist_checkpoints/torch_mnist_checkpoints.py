@@ -8,14 +8,11 @@ import torch.optim as optim
 import torch.utils.data
 import yt.wrapper as yt
 
-from tractorun.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
-from tractorun.utils import (
-    load_tensor,
-    save_tensor,
-)
 
 
 class Net(nn.Module):
@@ -29,6 +26,7 @@ class Net(nn.Module):
 
 def train(job_client: JobClient) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
 
     model = Net().to(device)
@@ -46,7 +44,7 @@ def train(job_client: JobClient) -> None:
             file=sys.stderr,
         )
 
-        checkpoint_dict = load_tensor(checkpoint.value)
+        checkpoint_dict = serializer.load_tensor(checkpoint.value)
         model.load_state_dict(checkpoint_dict["model"])
         optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
@@ -94,14 +92,14 @@ def train(job_client: JobClient) -> None:
                 "first_batch_index": batch_idx + 1,
                 "loss": loss.item(),
             }
-            job_client.checkpoint_manager.save_checkpoint(save_tensor(state_dict), metadata_dict)
+            job_client.checkpoint_manager.save_checkpoint(serializer.save_tensor(state_dict), metadata_dict)
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     # Save the model
     yt.create("map_node", "//home/gritukan/mnist/models", recursive=True, ignore_existing=True)
     epoch_id = job_client.coordinator.get_epoch_id()
     model_path = f"//home/gritukan/mnist/models/model_{epoch_id}.pt"
-    yt.write_file(model_path, save_tensor(model.state_dict()))
+    yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 
 

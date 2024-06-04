@@ -7,77 +7,19 @@ from typing import (
     Callable,
     Dict,
     Optional,
+    Union,
 )
 
 import yt.wrapper as yt
 from yt.wrapper.common import update_inplace
 
 from tractorun import constants as const
-from tractorun.checkpoints import CheckpointManager
-from tractorun.coordinator import Coordinator
-from tractorun.job_client import JobClient
+from tractorun.backend.tractorch.environment import prepare_environment
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 
 
 DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-05-31-12-26-50"
-
-
-""" def wrapped_run_mp(i, f, c, path) -> None:
-    import os
-    import json
-    import socket
-
-    with open(f"config_{i}.json", 'r') as ff:
-        config = json.load(ff)
-
-    port = int(config['port'])
-    self_endpoint = socket.gethostname() + ":" + str(port)
-    mesh = Mesh(int(config['nnodes']), int(config['nproc']), int(config['ngpu_per_proc']))
-    coordinator = Coordinator(c, path, self_endpoint, mesh, int(config['node_index']), int(config['proc_index']))
-    #TOOD: coordinator should be with prerequisites
-    job_client = JobClient(coordinator, c)
-    job_client.initialize()
-
-    f(job_client) """
-
-
-def get_job_client(user_config: Dict[Any, Any]) -> JobClient:
-    # Runs in a job
-    import json
-    import os
-    import socket
-
-    config_path = os.environ["TRACTO_CONFIG"]
-    with open(config_path, "r") as ff:
-        config = json.load(ff)
-
-    port = int(config["port"])
-    path = config["path"]
-    self_endpoint = socket.gethostname() + ":" + str(port)
-    mesh = Mesh(int(config["nnodes"]), int(config["nproc"]), int(config["ngpu_per_proc"]))
-    yt_cli = yt.YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
-    coordinator = Coordinator(
-        yt_cli=yt_cli,
-        path=path,
-        self_endpoint=self_endpoint,
-        mesh=mesh,
-        node_index=int(config["node_index"]),
-        process_index=int(config["proc_index"]),
-    )
-    checkpoint_manager = CheckpointManager(path + "/checkpoints", yt_cli)
-    # TOOD: coordinator should be with prerequisites
-    job_client = JobClient(coordinator, checkpoint_manager, yt_cli, user_config=user_config)
-    job_client.initialize()
-
-    ep = coordinator.get_primary_endpoint()
-    os.environ["MASTER_ADDR"] = ep.split(":")[0]
-    os.environ["MASTER_PORT"] = ep.split(":")[1]
-    os.environ["WORLD_SIZE"] = str(coordinator.get_total_peer_count())
-    os.environ["NODE_RANK"] = str(coordinator.get_self_index() // mesh.process_per_node)
-    os.environ["LOCAL_RANK"] = str(coordinator.get_self_index() % mesh.process_per_node)
-
-    return job_client
 
 
 def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list] = None) -> None:
@@ -91,11 +33,6 @@ def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list]
     processes = []
 
     for i in range(mesh.process_per_node):
-        from typing import (
-            Dict,
-            Union,
-        )
-
         proc_config: Dict[str, Union[str, int]] = {
             "nnodes": mesh.node_count,
             "nproc": mesh.process_per_node,
@@ -131,7 +68,12 @@ def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list]
             stderr=sys.stderr,
             bufsize=1,
             universal_newlines=True,
-            env={**os.environ, "TRACTO_CONFIG": f"config_{i}.json", "NCCL_DEBUG": "TRACE", "NCCL_SHM_DISABLE": "1"},
+            env={
+                **os.environ,
+                "TRACTO_CONFIG": f"config_{i}.json",
+                "NCCL_DEBUG": "TRACE",
+                "NCCL_SHM_DISABLE": "1",
+            },
         )
         processes.append(process)
 
@@ -166,7 +108,7 @@ def run(
 
     def wrapped() -> None:
         if "TRACTO_CONFIG" in os.environ:
-            job_client = get_job_client(user_config=user_config)
+            job_client = prepare_environment(user_config=user_config)
             user_function(job_client)
         else:
             bootstrap(mesh, yt_path, yt_cli)

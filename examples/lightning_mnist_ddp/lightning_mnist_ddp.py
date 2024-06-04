@@ -14,7 +14,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from tractorun.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtDataset
 from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run

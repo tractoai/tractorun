@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 import attrs
@@ -35,9 +36,7 @@ class CheckpointManager:
 
         checkpoint_path = self._path + "/" + str(self._last_checkpoint_index)
         value = self._yt_cli.read_file(checkpoint_path + "/value").read()
-        metadata = self._yt_cli.read_file(checkpoint_path + "/metadata").read()
-        # TODO: do it normally.
-        metadata = eval(metadata.decode("utf-8"))
+        metadata = json.loads(self._yt_cli.read_file(checkpoint_path + "/metadata").read())
 
         return Checkpoint(self._last_checkpoint_index, value, metadata)
 
@@ -50,9 +49,10 @@ class CheckpointManager:
             checkpoint_path = self._path + "/" + str(checkpoint_index)
             self._yt_cli.create("map_node", checkpoint_path)
             self._yt_cli.write_file(checkpoint_path + "/value", value)
+            serialized_metadata = json.dumps(metadata)
             self._yt_cli.write_file(
                 checkpoint_path + "/metadata",
-                str(metadata).encode("utf-8"),
+                serialized_metadata,
             )
 
         self._last_checkpoint_index = checkpoint_index

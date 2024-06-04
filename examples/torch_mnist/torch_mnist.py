@@ -9,11 +9,11 @@ import torch.optim as optim
 import torch.utils.data
 import yt.wrapper as yt
 
-from tractorun.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
-from tractorun.utils import save_tensor
 
 
 class Net(nn.Module):
@@ -47,6 +47,7 @@ class Net(nn.Module):
 def train(job_client: JobClient) -> None:
     yt_home_dir = job_client.user_config["yt_home_dir"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
 
     train_dataset = YtDataset(
@@ -85,7 +86,7 @@ def train(job_client: JobClient) -> None:
     yt.create("map_node", f"{yt_home_dir}/mnist/models", recursive=True, ignore_existing=True)
     epoch_id = job_client.coordinator.get_epoch_id()
     model_path = f"{yt_home_dir}/mnist/models/model_{epoch_id}.pt"
-    yt.write_file(model_path, save_tensor(model.state_dict()))
+    yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 
 

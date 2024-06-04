@@ -15,11 +15,11 @@ from tests.utils import (
     get_random_string,
 )
 from tests.yt_instances import YtInstance
-from tractorun.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
-from tractorun.utils import save_tensor
 
 
 def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
@@ -44,6 +44,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
                 return torch.relu(self.l1(x.view(x.size(0), -1)))
 
         device = torch.device("cpu")
+        serializer = TensorSerializer()
         train_dataset = YtDataset(job_client, mnist_ds_path, device=device)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
         model = Net().to(device)
@@ -56,7 +57,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             loss = F.nll_loss(output, target)
             loss.backward()
             optimizer.step()
-        job_client.yt_client.write_file(model_path, save_tensor(model.state_dict()))
+        job_client.yt_client.write_file(model_path, serializer.save_tensor(model.state_dict()))
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(train, "//tmp", mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)

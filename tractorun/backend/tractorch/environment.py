@@ -25,4 +25,12 @@ def prepare_environment(user_config: Dict[Any, Any]) -> JobClient:
         assert device_index < torch.cuda.device_count()
         torch.cuda.set_device(coordinator.get_process_index())
 
+    backend = "gloo" if mesh.gpu_per_process == 0 else "nccl"
+    torch.distributed.dist.init_process_group(
+        backend=backend,
+        init_method="tcp://" + coordinator.get_primary_endpoint(),
+        rank=coordinator.get_self_index(),
+        world_size=coordinator.get_total_peer_count(),
+    )
+
     return job_client

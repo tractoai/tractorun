@@ -15,14 +15,17 @@ from yt.wrapper.common import update_inplace
 
 from tractorun import constants as const
 from tractorun.backend.tractorch.environment import prepare_environment
+from tractorun.closet import get_closet
+from tractorun.environment import get_toolbox
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
+from tractorun.toolbox import Toolbox
 
 
 DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-05-31-12-26-50"
 
 
-def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list] = None) -> None:
+def _bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list] = None) -> None:
     # Runs in a job
 
     import json
@@ -86,6 +89,12 @@ def bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list]
     # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
+def prepare_and_get_toolbox() -> Toolbox:
+    closet = get_closet()
+    prepare_environment(closet)
+    return get_toolbox(closet)
+
+
 def run(
     user_function: Callable,
     yt_path: str,
@@ -97,7 +106,6 @@ def run(
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
-    user_config = user_config or {}
 
     yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_cli.config["pickling"]["ignore_system_modules"] = True
@@ -108,10 +116,10 @@ def run(
 
     def wrapped() -> None:
         if "TRACTO_CONFIG" in os.environ:
-            job_client = prepare_environment(user_config=user_config)
-            user_function(job_client)
+            toolbox = prepare_and_get_toolbox()
+            user_function(toolbox)
         else:
-            bootstrap(mesh, yt_path, yt_cli)
+            _bootstrap(mesh, yt_path, yt_cli)
 
     # antiaffinity! =)
     cpu_limit = resources.cpu_limit or 50
@@ -127,7 +135,12 @@ def run(
         .cpu_limit(cpu_limit)
         .memory_limit(memory_limit)
         .docker_image(docker_image)
-        .environment({"YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1"})
+        .environment(
+            {
+                "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
+                const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
+            }
+        )
         .end_task()
     )
 
@@ -147,7 +160,7 @@ def run_script(
     script_name = training_script.split("/")[-1]
 
     def wrapped() -> None:
-        return bootstrap(mesh, yt_path, yt_cli=yt_cli, pyargs=[script_name])
+        _bootstrap(mesh, yt_path, yt_cli=yt_cli, pyargs=[script_name])
 
     # TODO: parse from args.
     resources = Resources()

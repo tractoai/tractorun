@@ -1,17 +1,17 @@
 import torch
 import torch.distributed as dist
 
-from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
+from tractorun.toolbox import Toolbox
 
 
-def train(job_client: JobClient) -> None:
+def train(toolbox: Toolbox) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # device = torch.device('cpu')
     print("Running on device:", device)
 
-    if job_client.coordinator.get_self_index() == 0:
+    if toolbox.coordinator.get_self_index() == 0:
         x = torch.as_tensor([2.0], device=device)
         y = torch.as_tensor([3.0], device=device)
         print(f"Sending summands to peer 1 (X = {x}, Y = {y})")

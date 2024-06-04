@@ -7,8 +7,7 @@ import torch.optim as optim
 import torch.utils.data
 
 from tractorun.backend.tractorch.dataset import YtDataset
-from tractorun.backend.tractorch.environment import prepare_environment
-from tractorun.utils import get_user_config
+from tractorun.run import prepare_and_get_toolbox
 
 
 class Net(nn.Module):
@@ -21,11 +20,11 @@ class Net(nn.Module):
 
 
 if __name__ == "__main__":
-    user_config = get_user_config()
+    toolbox = prepare_and_get_toolbox()
+    user_config = toolbox.get_user_config()
     mnist_ds_path = user_config["MNIST_DS_PATH"]
-    job_client = prepare_environment(user_config={})
     device = torch.device("cpu")
-    train_dataset = YtDataset(job_client, mnist_ds_path, device=device)
+    train_dataset = YtDataset(toolbox, mnist_ds_path, device=device)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)

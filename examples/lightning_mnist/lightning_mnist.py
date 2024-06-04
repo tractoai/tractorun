@@ -15,9 +15,9 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
 from tractorun.backend.tractorch.dataset import YtDataset
-from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
+from tractorun.toolbox import Toolbox
 
 
 class MNISTModel(LightningModule):
@@ -37,13 +37,13 @@ class MNISTModel(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 
-def train(job_client: JobClient) -> None:
+def train(toolbox: Toolbox) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
     train_dataset = YtDataset(
-        job_client,
+        toolbox,
         "//home/gritukan/mnist/datasets/train",
         start=0,
         end=1000,

@@ -10,9 +10,9 @@ import yt.wrapper as yt
 
 from tractorun.backend.tractorch.dataset import YtDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
-from tractorun.job_client import JobClient
 from tractorun.mesh import Mesh
 from tractorun.run import run
+from tractorun.toolbox import Toolbox
 
 
 class Net(nn.Module):
@@ -24,7 +24,7 @@ class Net(nn.Module):
         return torch.relu(self.l1(x.view(x.size(0), -1)))
 
 
-def train(job_client: JobClient) -> None:
+def train(toolbox: Toolbox) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
@@ -32,7 +32,7 @@ def train(job_client: JobClient) -> None:
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)
 
-    checkpoint = job_client.checkpoint_manager.get_last_checkpoint()
+    checkpoint = toolbox.checkpoint_manager.get_last_checkpoint()
     first_batch_index = 0
     if checkpoint is not None:
         first_batch_index = checkpoint.metadata["first_batch_index"]
@@ -49,7 +49,7 @@ def train(job_client: JobClient) -> None:
         optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
     train_dataset = YtDataset(
-        job_client,
+        toolbox,
         "//home/gritukan/mnist/datasets/train",
         device=device,
         start=0,
@@ -92,12 +92,12 @@ def train(job_client: JobClient) -> None:
                 "first_batch_index": batch_idx + 1,
                 "loss": loss.item(),
             }
-            job_client.checkpoint_manager.save_checkpoint(serializer.save_tensor(state_dict), metadata_dict)
+            toolbox.checkpoint_manager.save_checkpoint(serializer.save_tensor(state_dict), metadata_dict)
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     # Save the model
     yt.create("map_node", "//home/gritukan/mnist/models", recursive=True, ignore_existing=True)
-    epoch_id = job_client.coordinator.get_epoch_id()
+    epoch_id = toolbox.coordinator.get_epoch_id()
     model_path = f"//home/gritukan/mnist/models/model_{epoch_id}.pt"
     yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)

@@ -8,20 +8,20 @@ import torch.utils.data
 from yt import wrapper as yt
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
-from tractorun.job_client import JobClient
+from tractorun.toolbox import Toolbox
 
 
 class YtDataset(torch.utils.data.IterableDataset, Sized):
     def __init__(
         self,
-        client: JobClient,
+        toolbox: Toolbox,
         path: str,
         device: torch.device,
         start: int = 0,
         end: Optional[int] = None,
         columns: Optional[list] = None,
     ) -> None:
-        self._yt_cli = client.yt_client
+        self._yt_cli = toolbox.yt_client
         self._device = device
 
         row_count = self._yt_cli.get(path + "/@row_count")

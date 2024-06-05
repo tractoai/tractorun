@@ -99,8 +99,8 @@ def _run(
     else:
         pool_tree = const.DEFAULT_POOLTREE
 
-    # if mesh.node_count > 1 and mesh.gpu_per_process not in (0, 8):
-    #     raise exc.TractorunInvalidConfiguration("gpu_per_process can only be 0 or 8")
+    # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
+    #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
 
     yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_cli.config["pickling"]["ignore_system_modules"] = True

@@ -49,7 +49,7 @@ class CheckpointManager:
             checkpoint_path = self._path + "/" + str(checkpoint_index)
             self._yt_cli.create("map_node", checkpoint_path)
             self._yt_cli.write_file(checkpoint_path + "/value", value)
-            serialized_metadata = json.dumps(metadata)
+            serialized_metadata = json.dumps(metadata).encode("utf-8")
             self._yt_cli.write_file(
                 checkpoint_path + "/metadata",
                 serialized_metadata,

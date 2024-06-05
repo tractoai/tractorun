@@ -7,4 +7,4 @@ GPU_TYPE_TO_POOLTREE: Dict[str, str] = {
     "H100": "H100",
 }
 DEFAULT_POOLTREE: str = "default"
-DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-05-31-12-26-50"
+DEFAULT_DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-06-05-19-24-41"

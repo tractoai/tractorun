@@ -55,7 +55,12 @@ target "torchesaurus_runtime" {  # TODO: find out if it is possible to reduce it
   ]
   dockerfile-inline = <<EOT
 FROM base_image
+COPY requirements.txt requirements_lightning.txt requirements_torch.txt /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_torch.txt \
+  -r /tmp/requirements_lightning.txt
 COPY . /src
-RUN python3 -m pip install "/src[torch,lightning]"
+RUN python3 -m pip install --no-deps "/src"
 EOT
 }

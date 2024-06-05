@@ -10,7 +10,12 @@ def get_toolbox(closet: Closet) -> Toolbox:
     # TODO: make CheckpointFactory instead of the mystical initialize method
     checkpoint_manager.initialize()
     # TODO: coordinator should be with prerequisites
-    toolbox = Toolbox(closet.coordinator, checkpoint_manager, closet.yt_cli)
+    toolbox = Toolbox(
+        coordinator=closet.coordinator,
+        checkpoint_manager=checkpoint_manager,
+        yt_client=closet.yt_cli,
+        mesh=closet.mesh,
+    )
 
     return toolbox
 

@@ -97,8 +97,8 @@ def train(toolbox: Toolbox) -> None:
 
     # Save the model
     yt.create("map_node", "//home/gritukan/mnist/models", recursive=True, ignore_existing=True)
-    epoch_id = toolbox.coordinator.get_epoch_id()
-    model_path = f"//home/gritukan/mnist/models/model_{epoch_id}.pt"
+    incarnation_id = toolbox.coordinator.get_incarnation_id()
+    model_path = f"//home/gritukan/mnist/models/model_{incarnation_id}.pt"
     yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 

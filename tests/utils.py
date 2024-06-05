@@ -5,7 +5,7 @@ import string
 
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-05-31-12-07-26"
 DOCKER_IMAGE_TRTRCH = (
-    "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests_with_tractorch:2024-06-04-19-14-43"
+    "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests_with_tractorch:2024-06-05-15-11-08"
 )
 
 

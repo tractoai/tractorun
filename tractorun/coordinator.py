@@ -1,12 +1,6 @@
 import datetime
-import os
-import socket
 import sys
 import time
-from typing import (
-    Callable,
-    Optional,
-)
 
 import attr
 import yt.wrapper as yt
@@ -17,164 +11,220 @@ from tractorun.mesh import Mesh
 
 @attr.define(kw_only=True)
 class Coordinator:
-    _yt_cli: yt.YtClient
-    _path: str
     _mesh: Mesh
+    _self_index: int
     _node_index: int
     _process_index: int
     _self_endpoint: str
+    _incarnation_id: int
+    _primary_endpoint: str
 
-    _epoch_id: Optional[int] = None
-
-    _primary_endpoint: Optional[str] = None
-
-    _epoch_transaction: Optional[yt.Transaction] = None
-    _epoch_transaction_id: Optional[str] = None
-
-    _epoch_client: Optional[yt.YtClient] = None
-
-    def prepare(self, primary_cb: Optional[Callable] = None) -> None:
-        self_index = self.get_self_index()
+    @classmethod
+    def create(
+        cls,
+        self_endpoint: str,
+        node_index: int,
+        mesh: Mesh,
+        process_index: int,
+        yt_client: yt.YtClient,
+        yt_path: str,
+        operation_id: str,
+        job_id: str,
+    ) -> "Coordinator":
+        self_index = node_index * mesh.process_per_node + process_index
+        print("Self address:", self_endpoint, file=sys.stderr)
         if self_index == 0:
-            self._prepare_primary(primary_cb)
+            return cls._make_primary(
+                self_endpoint=self_endpoint,
+                node_index=node_index,
+                mesh=mesh,
+                process_index=process_index,
+                yt_client=yt_client,
+                yt_path=yt_path,
+                operation_id=operation_id,
+                job_id=job_id,
+                self_index=self_index,
+            )
         else:
-            self._prepare_subordinate(self_index)
-        print("Self address:", self._get_self_address(), file=sys.stderr)
+            return cls._make_subordinate(
+                self_endpoint=self_endpoint,
+                node_index=node_index,
+                mesh=mesh,
+                process_index=process_index,
+                yt_client=yt_client,
+                yt_path=yt_path,
+                self_index=self_index,
+                operation_id=operation_id,
+                job_id=job_id,
+            )
 
     def get_self_index(self) -> int:
-        return self._node_index * self._mesh.process_per_node + self._process_index
+        return self._self_index
+
+    @classmethod
+    def _get_total_peer_count(cls, mesh: Mesh) -> int:
+        return mesh.node_count * mesh.process_per_node
 
     def get_total_peer_count(self) -> int:
-        return self._mesh.node_count * self._mesh.process_per_node
+        return self._get_total_peer_count(self._mesh)
 
-    def get_epoch_id(self) -> int:
-        if self._epoch_id is None:
-            raise RuntimeError("Torchesaurus coordinator is not prepared yet")
-        return self._epoch_id
-
-    def get_epoch_client(self) -> yt.YtClient:
-        if self._epoch_client is None:
-            raise RuntimeError("Torchesaurus coordinator is not prepared yet")
-        return self._epoch_client
+    def get_incarnation_id(self) -> int:
+        return self._incarnation_id
 
     def get_primary_endpoint(self) -> str:
         if self._primary_endpoint is None:
             raise RuntimeError("Torchesaurus coordinator is not prepared yet")
         return self._primary_endpoint
 
-    def get_mesh(self) -> Mesh:
-        return self._mesh
-
     def get_process_index(self) -> int:
         return self._process_index
 
-    def _prepare_primary(self, primary_cb: Optional[Callable]) -> None:
-        self._epoch_transaction_id = self._yt_cli.start_transaction()
-        assert self._epoch_transaction_id is not None
-        self._epoch_transaction = self._yt_cli.Transaction(
-            transaction_id=self._epoch_transaction_id,
+    @classmethod
+    def _make_primary(
+        cls,
+        self_index: int,
+        self_endpoint: str,
+        node_index: int,
+        mesh: Mesh,
+        process_index: int,
+        operation_id: str,
+        job_id: str,
+        yt_client: yt.YtClient,
+        yt_path: str,
+    ) -> "Coordinator":
+        incarnation_transaction_id = yt_client.start_transaction()
+        assert incarnation_transaction_id is not None
+        yt_client.Transaction(
+            transaction_id=incarnation_transaction_id,
             acquire=False,
         )
 
-        with self._make_transaction(self._epoch_transaction_id):
-            self._yt_cli.lock(
-                self._path + "/primary_lock",
+        with yt_client.Transaction(
+            transaction_id=incarnation_transaction_id,
+            acquire=False,
+            ping=False,
+        ):
+            yt_client.lock(
+                yt_path + "/primary_lock",
                 mode="exclusive",
                 waitable=True,
                 wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
             )
 
-        if self._yt_cli.exists(self._path + "/@epoch_id"):
-            last_epoch_id = self._yt_cli.get(self._path + "/@epoch_id")
+        if yt_client.exists(yt_path + "/@incarnation_id"):
+            last_incarnation_id = yt_client.get(yt_path + "/@incarnation_id")
         else:
-            last_epoch_id = -1
-        self._epoch_id = last_epoch_id + 1
+            last_incarnation_id = -1
+        incarnation_id = last_incarnation_id + 1
 
-        self._epoch_client = create_prerequisite_client(self._yt_cli, [self._epoch_transaction_id])
+        incarnation_yt_client = create_prerequisite_client(
+            yt_client,
+            [incarnation_transaction_id],
+        )
 
-        with self._epoch_client.Transaction():
-            self._epoch_client.set(
-                self._path + "/@epoch_id",
-                self.get_epoch_id(),
+        with incarnation_yt_client.Transaction():
+            incarnation_yt_client.set(
+                yt_path + "/@incarnation_id",
+                incarnation_id,
             )
 
-        if primary_cb:
-            primary_cb()
+        with incarnation_yt_client.Transaction():
+            incarnation_path = cls._get_incarnation_path(
+                yt_path=yt_path,
+                incarnation_id=incarnation_id,
+            )
+            incarnation_yt_client.create("map_node", incarnation_path)
+            incarnation_yt_client.set(
+                incarnation_path + "/@incarnation_transaction_id",
+                incarnation_transaction_id,
+            )
+            incarnation_yt_client.set(
+                incarnation_path + "/@incarnation_operation_id",
+                operation_id,
+            )
+            incarnation_yt_client.set(
+                incarnation_path + "/@primary_endpoint",
+                self_endpoint,
+            )
 
-        with self._epoch_client.Transaction():
-            self._epoch_client.create("map_node", self._get_epoch_path())
-            self._epoch_client.set(
-                self._get_epoch_path() + "/@epoch_transaction_id",
-                self._epoch_transaction_id,
-            )
-            self._epoch_client.set(
-                self._get_epoch_path() + "/@epoch_operation_id",
-                self._get_operation_id(),
-            )
-            self._epoch_client.set(
-                self._get_epoch_path() + "/@primary_endpoint",
-                self._self_endpoint,
-            )
-
-            topology = [{"endpoint": self._self_endpoint, "job_id": self._get_job_id()}] + [
+            topology = [
+                {
+                    "endpoint": self_endpoint,
+                    "job_id": job_id,
+                },
+            ] + [
                 {"address": "", "job_id": ""}
-            ] * (self.get_total_peer_count() - 1)
-            self._epoch_client.set(
-                self._get_epoch_path() + "/@topology",
+            ] * (cls._get_total_peer_count(mesh) - 1)
+            incarnation_yt_client.set(
+                incarnation_path + "/@topology",
                 topology,
             )
 
-        self._primary_endpoint = self._self_endpoint
+        return Coordinator(
+            self_index=self_index,
+            incarnation_id=incarnation_id,
+            mesh=mesh,
+            node_index=node_index,
+            process_index=process_index,
+            self_endpoint=self_endpoint,
+            primary_endpoint=self_endpoint,
+        )
 
-    def _prepare_subordinate(self, self_index: int) -> None:
+    @classmethod
+    def _make_subordinate(
+        cls,
+        self_index: int,
+        self_endpoint: str,
+        node_index: int,
+        mesh: Mesh,
+        process_index: int,
+        operation_id: str,
+        job_id: str,
+        yt_client: yt.YtClient,
+        yt_path: str,
+    ) -> "Coordinator":
         while True:
             try:
-                self._epoch_id = self._yt_cli.get(self._path + "/@epoch_id")
+                incarnation_id = yt_client.get(yt_path + "/@incarnation_id")
+                incarnation_path = cls._get_incarnation_path(yt_path=yt_path, incarnation_id=incarnation_id)
                 if (
-                    self._yt_cli.get(
-                        self._get_epoch_path() + "/@epoch_operation_id",
+                    yt_client.get(
+                        incarnation_path + "/@incarnation_operation_id",
                     )
-                    != self._get_operation_id()
+                    != operation_id
                 ):
                     raise RuntimeError("Operation id mismatch")
 
-                self._epoch_transaction_id: str = self._yt_cli.get(
-                    self._get_epoch_path() + "/@epoch_transaction_id",
+                incarnation_transaction_id: str = yt_client.get(
+                    incarnation_path + "/@incarnation_transaction_id",
                 )
-                assert self._epoch_transaction_id is not None
-                self._epoch_client = create_prerequisite_client(self._yt_cli, [self._epoch_transaction_id])
-
-                self._epoch_client.set(
-                    self._get_epoch_path() + f"/@topology/{self_index}",
-                    {"address": self._self_endpoint, "job_id": self._get_job_id()},
+                assert incarnation_transaction_id is not None
+                incarnation_yt_client = create_prerequisite_client(
+                    yt_client,
+                    [incarnation_transaction_id],
                 )
 
-                self._primary_endpoint = self._epoch_client.get(
-                    self._get_epoch_path() + "/@primary_endpoint",
+                incarnation_yt_client.set(
+                    incarnation_path + f"/@topology/{self_index}",
+                    {"address": self_endpoint, "job_id": job_id},
+                )
+
+                primary_endpoint = incarnation_yt_client.get(
+                    incarnation_path + "/@primary_endpoint",
                 )
             except Exception:
                 time.sleep(1.0)
                 continue
-            break
+            return Coordinator(
+                self_index=self_index,
+                incarnation_id=incarnation_id,
+                mesh=mesh,
+                node_index=node_index,
+                process_index=process_index,
+                self_endpoint=self_endpoint,
+                primary_endpoint=primary_endpoint,
+            )
 
-    def _make_transaction(self, transaction_id: str) -> yt.Transaction:
-        return self._yt_cli.Transaction(
-            transaction_id=transaction_id,
-            acquire=False,
-            ping=False,
-        )
-
-    def _get_epoch_path(self) -> str:
-        return self._path + f"/epochs/{self._epoch_id:05d}"
-
-    @staticmethod
-    def _get_operation_id() -> str:
-        return os.environ["YT_OPERATION_ID"]
-
-    @staticmethod
-    def _get_job_id() -> str:
-        return os.environ["YT_JOB_ID"]
-
-    @staticmethod
-    def _get_self_address() -> str:
-        return socket.gethostname()
+    @classmethod
+    def _get_incarnation_path(cls, yt_path: str, incarnation_id: int) -> str:
+        return yt_path + f"/incarnations/{incarnation_id:05d}"

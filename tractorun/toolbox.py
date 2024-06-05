@@ -19,9 +19,7 @@ class Toolbox:
     coordinator: Coordinator
     checkpoint_manager: CheckpointManager
     yt_client: yt.YtClient
-
-    def get_mesh(self) -> Mesh:
-        return self.coordinator.get_mesh()
+    mesh: Mesh
 
     @staticmethod
     def get_user_config() -> Dict[Any, Any]:

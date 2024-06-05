@@ -52,8 +52,8 @@ train_loader = DataLoader(train_dataset, batch_size=64)
 
 trainer = Trainer(
     max_epochs=3,
-    devices=toolbox.get_mesh().process_per_node,
-    num_nodes=toolbox.get_mesh().node_count,
+    devices=toolbox.mesh.process_per_node,
+    num_nodes=toolbox.mesh.node_count,
     strategy="ddp",
 )
 

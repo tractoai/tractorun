@@ -110,9 +110,9 @@ def run(
     yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_cli.config["pickling"]["ignore_system_modules"] = True
 
-    yt_cli.create("map_node", yt_path, attributes={"epoch_id": -1}, ignore_existing=True)
+    yt_cli.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
     yt_cli.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
-    yt_cli.create("map_node", yt_path + "/epochs", ignore_existing=True)
+    yt_cli.create("map_node", yt_path + "/incarnations", ignore_existing=True)
 
     def wrapped() -> None:
         if "TRACTO_CONFIG" in os.environ:

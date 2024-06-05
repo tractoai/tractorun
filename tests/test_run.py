@@ -60,7 +60,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
         toolbox.yt_client.write_file(model_path, serializer.save_tensor(model.state_dict()))
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, "//tmp", mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)
+    run(train, yt_path="//tmp", mesh=mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)
 
     # The operation did not fail => success!
 

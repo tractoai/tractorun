@@ -37,4 +37,4 @@ def train(toolbox: Toolbox) -> None:
 
 if __name__ == "__main__":
     mesh = Mesh(1, 2, 0)
-    run(train, "//home/gritukan/train", mesh)
+    run(train, yt_path="//home/gritukan/train", mesh=mesh)

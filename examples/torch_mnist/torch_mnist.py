@@ -98,7 +98,7 @@ if __name__ == "__main__":
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(
         train,
-        f"{args.yt_home_dir}/mnist/trainings/dense",
-        mesh,
+        yt_path=f"{args.yt_home_dir}/mnist/trainings/dense",
+        mesh=mesh,
         user_config={"yt_home_dir": args.yt_home_dir},
     )

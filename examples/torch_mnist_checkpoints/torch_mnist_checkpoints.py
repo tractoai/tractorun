@@ -109,4 +109,4 @@ if __name__ == "__main__":
         yt.remove("//home/gritukan/mnist/trainings/dense/checkpoints", recursive=True)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, "//home/gritukan/mnist/trainings/dense", mesh)
+    run(train, yt_path="//home/gritukan/mnist/trainings/dense", mesh=mesh)

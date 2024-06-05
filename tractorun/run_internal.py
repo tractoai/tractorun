@@ -105,9 +105,9 @@ def _run(
     yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_cli.config["pickling"]["ignore_system_modules"] = True
 
-    yt_cli.create("map_node", yt_path, attributes={"epoch_id": -1}, ignore_existing=True)
+    yt_cli.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
     yt_cli.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
-    yt_cli.create("map_node", yt_path + "/epochs", ignore_existing=True)
+    yt_cli.create("map_node", yt_path + "/incarnations", ignore_existing=True)
 
     wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_cli=yt_cli)
 

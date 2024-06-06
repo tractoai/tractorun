@@ -63,7 +63,7 @@ def train(toolbox: Toolbox) -> None:
     trainer.fit(mnist_model, train_loader)
 
 
-def main():
+def main() -> None:
     workdir = "//home/yt-team/chiffa/tractorun/mnist"
     mesh = Mesh(node_count=1, process_per_node=3, gpu_per_process=1)
     run(

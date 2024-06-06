@@ -21,6 +21,9 @@ from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
+DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
+
+
 class MNISTModel(LightningModule):
     def __init__(self) -> None:
         super().__init__()
@@ -47,7 +50,7 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtDataset(toolbox, "//home/yt-team/chiffa/tractorun/mnist/datasets/train")
+    train_dataset = YtDataset(toolbox, DATASET_PATH)
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(
@@ -61,10 +64,11 @@ def train(toolbox: Toolbox) -> None:
 
 
 def main():
+    workdir = "//home/yt-team/chiffa/tractorun/mnist"
     mesh = Mesh(node_count=1, process_per_node=3, gpu_per_process=1)
     run(
         train,
-        yt_path="//home/yt-team/chiffa/tractorun/mnist/trainings/dense_two_layers",
+        yt_path=f"{workdir}/trainings/dense_two_layers",
         mesh=mesh,
         resources=Resources(
             memory_limit=8076021002,

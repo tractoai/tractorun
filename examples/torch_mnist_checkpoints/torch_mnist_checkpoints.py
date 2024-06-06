@@ -15,6 +15,9 @@ from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
+DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
+
+
 class Net(nn.Module):
     def __init__(self) -> None:
         super(Net, self).__init__()
@@ -25,6 +28,8 @@ class Net(nn.Module):
 
 
 def train(toolbox: Toolbox) -> None:
+    user_config = toolbox.get_user_config()
+    workdir = user_config["workdir"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
@@ -50,7 +55,7 @@ def train(toolbox: Toolbox) -> None:
 
     train_dataset = YtDataset(
         toolbox,
-        "//home/gritukan/mnist/datasets/train",
+        path=DATASET_PATH,
         start=0,
         end=4000,
     )
@@ -95,17 +100,18 @@ def train(toolbox: Toolbox) -> None:
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     # Save the model
-    yt.create("map_node", "//home/gritukan/mnist/models", recursive=True, ignore_existing=True)
+    yt.create("map_node", f"{workdir}/models", recursive=True, ignore_existing=True)
     incarnation_id = toolbox.coordinator.get_incarnation_id()
-    model_path = f"//home/gritukan/mnist/models/model_{incarnation_id}.pt"
+    model_path = f"{workdir}/models/model_{incarnation_id}.pt"
     yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 
 
 if __name__ == "__main__":
     # Remove old checkpoints.
-    if yt.exists("//home/gritukan/mnist/trainings/dense/checkpoints"):
-        yt.remove("//home/gritukan/mnist/trainings/dense/checkpoints", recursive=True)
+    workdir = "//home/yt-team/chiffa/tractorun/mnist"
+    if yt.exists(f"{workdir}/trainings/dense/checkpoints"):
+        yt.remove(f"{workdir}/trainings/dense/checkpoints", recursive=True)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path="//home/gritukan/mnist/trainings/dense", mesh=mesh)
+    run(train, yt_path=f"{workdir}/trainings/dense", mesh=mesh, user_config={"workdir": workdir})

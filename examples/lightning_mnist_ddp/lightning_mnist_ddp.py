@@ -20,8 +20,6 @@ from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
-import yt.wrapper as yt
-
 
 class MNISTModel(LightningModule):
     def __init__(self) -> None:
@@ -29,7 +27,7 @@ class MNISTModel(LightningModule):
         self.l1 = torch.nn.Linear(28 * 28, 50)
         self.l2 = torch.nn.Linear(50, 10)
 
-    def forward(self, x: Any) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.relu(self.l1(x.view(x.size(0), -1)))
         x = torch.relu(self.l2(x))
         return x
@@ -44,6 +42,7 @@ class MNISTModel(LightningModule):
 
 
 def train(toolbox: Toolbox) -> None:
+    print("Mesh", toolbox.mesh, file=sys.stderr)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Running on device:", device, file=sys.stderr)
 
@@ -62,13 +61,13 @@ def train(toolbox: Toolbox) -> None:
 
 
 def main():
-    mesh = Mesh(node_count=1, process_per_node=2, gpu_per_process=1)
+    mesh = Mesh(node_count=1, process_per_node=3, gpu_per_process=1)
     run(
         train,
         yt_path="//home/yt-team/chiffa/tractorun/mnist/trainings/dense_two_layers",
         mesh=mesh,
         resources=Resources(
-            memory_limit=2076021002,
+            memory_limit=8076021002,
         ),
     )
 

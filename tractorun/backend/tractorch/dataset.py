@@ -28,11 +28,11 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         else:
             assert end <= row_count
 
-        all_columns = set()
+        all_columns = []
         for column in self._yt_cli.get(path + "/@schema"):
-            all_columns.add(column["name"])
+            all_columns.append(column["name"])
         if columns is None:
-            columns = list(all_columns)
+            columns = all_columns
         else:
             for column in columns:
                 assert column in all_columns

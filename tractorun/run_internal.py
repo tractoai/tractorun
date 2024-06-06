@@ -16,7 +16,6 @@ from yt import wrapper as yt
 from yt.common import update_inplace
 
 from tractorun import constants as const
-from tractorun import exceptions as exc
 from tractorun.backend.tractorch.environment import prepare_environment
 from tractorun.closet import get_closet
 from tractorun.constants import DEFAULT_DOCKER_IMAGE

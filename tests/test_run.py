@@ -45,7 +45,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
         device = torch.device("cpu")
         serializer = TensorSerializer()
-        train_dataset = YtDataset(toolbox, mnist_ds_path, device=device)
+        train_dataset = YtDataset(toolbox, mnist_ds_path)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
         model = Net().to(device)
         optimizer = optim.Adadelta(model.parameters(), lr=1.0)

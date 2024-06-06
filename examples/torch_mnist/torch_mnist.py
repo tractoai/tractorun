@@ -53,7 +53,6 @@ def train(toolbox: Toolbox) -> None:
     train_dataset = YtDataset(
         toolbox,
         "//home/gritukan/mnist/datasets/train",
-        device=device,
         start=0,
         end=2000,
     )

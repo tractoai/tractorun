@@ -16,8 +16,11 @@ from torch.utils.data import DataLoader
 
 from tractorun.backend.tractorch.dataset import YtDataset
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
+
+import yt.wrapper as yt
 
 
 class MNISTModel(LightningModule):
@@ -45,7 +48,7 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtDataset(toolbox, "//home/gritukan/mnist/datasets/train", device=device)
+    train_dataset = YtDataset(toolbox, "//home/yt-team/chiffa/tractorun/mnist/datasets/train")
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(
@@ -58,6 +61,17 @@ def train(toolbox: Toolbox) -> None:
     trainer.fit(mnist_model, train_loader)
 
 
+def main():
+    mesh = Mesh(node_count=1, process_per_node=2, gpu_per_process=1)
+    run(
+        train,
+        yt_path="//home/yt-team/chiffa/tractorun/mnist/trainings/dense_two_layers",
+        mesh=mesh,
+        resources=Resources(
+            memory_limit=2076021002,
+        ),
+    )
+
+
 if __name__ == "__main__":
-    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=1)
-    run(train, yt_path="//home/gritukan/mnist/trainings/dense_two_layers", mesh=mesh)
+    main()

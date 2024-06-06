@@ -16,13 +16,11 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
         self,
         toolbox: Toolbox,
         path: str,
-        device: torch.device,
         start: int = 0,
         end: Optional[int] = None,
         columns: Optional[list] = None,
     ) -> None:
         self._yt_cli = toolbox.yt_client
-        self._device = device
 
         row_count = self._yt_cli.get(path + "/@row_count")
         if end is None:
@@ -48,12 +46,7 @@ class YtDataset(torch.utils.data.IterableDataset, Sized):
 
     def __iter__(self) -> Iterator:
         def transform(row: dict) -> tuple:
-            return tuple(
-                [
-                    self._serializer.load_tensor(yt.yson.get_bytes(row[name]), device=self._device)
-                    for name in self._columns
-                ]
-            )
+            return tuple([self._serializer.load_tensor(yt.yson.get_bytes(row[name])) for name in self._columns])
 
         return map(transform, self._yt_cli.read_table(self._read_path))
 

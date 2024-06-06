@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 
 from tractorun.backend.tractorch.dataset import YtDataset
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -47,7 +48,6 @@ def train(toolbox: Toolbox) -> None:
         "//home/gritukan/mnist/datasets/train",
         start=0,
         end=1000,
-        device=device,
     )
     train_loader = DataLoader(train_dataset, batch_size=64)
 
@@ -58,4 +58,11 @@ def train(toolbox: Toolbox) -> None:
 
 if __name__ == "__main__":
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path="//home/gritukan/mnist/trainings/dense", mesh=mesh)
+    run(
+        train,
+        yt_path="//home/gritukan/mnist/trainings/dense",
+        mesh=mesh,
+        resources=Resources(
+            memory_limit=1076021002,
+        ),
+    )

@@ -15,7 +15,7 @@ from tractorun.mesh import Mesh
 class Closet:
     mesh: Mesh
     coordinator: Coordinator
-    yt_cli: YtClient
+    yt_client: YtClient
     yt_path: str
 
 
@@ -28,9 +28,9 @@ def get_closet() -> Closet:
     path = config["path"]
     self_endpoint = socket.gethostname() + ":" + str(port)
     mesh = Mesh(int(config["nnodes"]), int(config["nproc"]), int(config["ngpu_per_proc"]))
-    yt_cli = YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
+    yt_client = YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
     coordinator = Coordinator.create(
-        yt_client=yt_cli,
+        yt_client=yt_client,
         yt_path=path,
         self_endpoint=self_endpoint,
         mesh=mesh,
@@ -40,4 +40,4 @@ def get_closet() -> Closet:
         job_id=os.environ["YT_JOB_ID"],
     )
 
-    return Closet(mesh=mesh, coordinator=coordinator, yt_cli=yt_cli, yt_path=path)
+    return Closet(mesh=mesh, coordinator=coordinator, yt_client=yt_client, yt_path=path)

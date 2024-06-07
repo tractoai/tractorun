@@ -24,17 +24,17 @@ from tractorun.toolbox import Toolbox
 
 
 def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    yt_cli = yt_instance.get_client()
-    row_count = yt_cli.get_attribute(mnist_ds_path, "row_count")
+    yt_client = yt_instance.get_client()
+    row_count = yt_client.get_attribute(mnist_ds_path, "row_count")
     assert row_count == 100
-    schema = yt_cli.get_attribute(mnist_ds_path, "schema")
+    schema = yt_client.get_attribute(mnist_ds_path, "schema")
     assert len(schema) == 2
 
 
 def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     model_path = f"//tmp/{get_random_string(13)}"
     yt_training_dir = f"//tmp/{get_random_string(13)}"
-    yt_cli = yt_instance.get_client()
+    yt_client = yt_instance.get_client()
 
     def train(toolbox: Toolbox) -> None:
         class Net(nn.Module):
@@ -62,13 +62,13 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
         toolbox.yt_client.write_file(model_path, serializer.serialize(model.state_dict()))
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path=yt_training_dir, mesh=mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)
+    run(train, yt_path=yt_training_dir, mesh=mesh, yt_client=yt_client, docker_image=DOCKER_IMAGE)
 
     # The operation did not fail => success!
 
 
 def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    yt_cli = yt_instance.get_client()
+    yt_client = yt_instance.get_client()
     yt_training_dir = f"//tmp/{get_random_string(13)}"
 
     def train(toolbox: Toolbox) -> None:
@@ -133,7 +133,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
                 print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path=yt_training_dir, mesh=mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)
+    run(train, yt_path=yt_training_dir, mesh=mesh, yt_client=yt_client, docker_image=DOCKER_IMAGE)
 
 
 def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:

@@ -34,16 +34,16 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
         end: Optional[int] = None,
         columns: Optional[list] = None,
     ) -> None:
-        self._yt_cli = toolbox.yt_client
+        self._yt_client = toolbox.yt_client
 
-        row_count = self._yt_cli.get(path + "/@row_count")
+        row_count = self._yt_client.get(path + "/@row_count")
         if end is None:
             end = row_count
         else:
             assert end <= row_count
 
         all_columns = []
-        for column in self._yt_cli.get(path + "/@schema"):
+        for column in self._yt_client.get(path + "/@schema"):
             if TYPE_CHECKING:
                 assert isinstance(column["name"], str)
             all_columns.append(column["name"])
@@ -61,7 +61,7 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
         self._transform = transform
 
     def __iter__(self) -> Iterator[T_co]:
-        return (self._transform(self._columns, row) for row in self._yt_cli.read_table(self._read_path))
+        return (self._transform(self._columns, row) for row in self._yt_client.read_table(self._read_path))
 
     def __len__(self) -> int:
         return self._len

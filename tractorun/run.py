@@ -26,7 +26,7 @@ def run(
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
     resources: Optional[Resources] = None,
-    yt_cli: Optional[yt.YtClient] = None,
+    yt_client: Optional[yt.YtClient] = None,
 ) -> None:
     _run(
         UserFunction(function=user_function),
@@ -34,7 +34,7 @@ def run(
         mesh=mesh,
         user_config=user_config,
         resources=resources,
-        yt_cli=yt_cli,
+        yt_client=yt_client,
         docker_image=docker_image,
     )
 
@@ -53,7 +53,7 @@ def run_script(
         mesh=mesh,
         user_config=user_config,
         resources=None,
-        yt_cli=None,
+        yt_client=None,
         docker_image=docker_image,
     )
 

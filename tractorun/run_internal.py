@@ -35,7 +35,7 @@ class Runnable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_cli: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
         pass
 
 
@@ -53,9 +53,9 @@ class TrainingScript(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_cli: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
         def wrapped() -> None:
-            _bootstrap(mesh, yt_path, yt_cli=yt_cli, pyargs=[self.script_name])
+            _bootstrap(mesh, yt_path, yt_client=yt_client, pyargs=[self.script_name])
 
         return wrapped
 
@@ -70,13 +70,13 @@ class UserFunction(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_cli: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
         def wrapped() -> None:
             if "TRACTO_CONFIG" in os.environ:
                 toolbox = _prepare_and_get_toolbox()
                 self.function(toolbox)
             else:
-                _bootstrap(mesh, yt_path, yt_cli=yt_cli)
+                _bootstrap(mesh, yt_path, yt_client=yt_client)
 
         return wrapped
 
@@ -89,7 +89,7 @@ def _run(
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
     resources: Optional[Resources] = None,
-    yt_cli: Optional[yt.YtClient] = None,
+    yt_client: Optional[yt.YtClient] = None,
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
@@ -101,14 +101,14 @@ def _run(
     # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
 
-    yt_cli = yt_cli or yt.YtClient(config=yt.default_config.get_config_from_env())
-    yt_cli.config["pickling"]["ignore_system_modules"] = True
+    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
+    yt_client.config["pickling"]["ignore_system_modules"] = True
 
-    yt_cli.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
-    yt_cli.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
-    yt_cli.create("map_node", yt_path + "/incarnations", ignore_existing=True)
+    yt_client.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
+    yt_client.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
+    yt_client.create("map_node", yt_path + "/incarnations", ignore_existing=True)
 
-    wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_cli=yt_cli)
+    wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
 
     task_spec = runnable.modify_task(
         yt.VanillaSpecBuilder()
@@ -130,10 +130,10 @@ def _run(
 
     operation_spec = runnable.modify_operation(task_spec.end_task().pool_trees([pool_tree]))
 
-    yt_cli.run_operation(operation_spec)
+    yt_client.run_operation(operation_spec)
 
 
-def _bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list] = None) -> None:
+def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[list] = None) -> None:
     # Runs in a job
 
     import json
@@ -154,7 +154,7 @@ def _bootstrap(mesh: Mesh, path: str, yt_cli: yt.YtClient, pyargs: Optional[list
             "path": path,
         }
 
-        conf = yt.config.get_config(yt_cli)
+        conf = yt.config.get_config(yt_client)
         update_inplace(
             conf,
             {

@@ -34,8 +34,8 @@ def yt_instance() -> Generator[YtInstance, None, None]:
 def mnist_ds_path(yt_instance: YtInstance) -> Generator[str, None, None]:
     table_path = f"//tmp/{get_random_string(13)}"
 
-    yt_cli = yt_instance.get_client()
-    yt_cli.create(
+    yt_client = yt_instance.get_client()
+    yt_client.create(
         "table",
         table_path,
         attributes={  # TODO: type_v3?
@@ -48,11 +48,11 @@ def mnist_ds_path(yt_instance: YtInstance) -> Generator[str, None, None]:
 
     with open(get_data_path("mnist_small.yson"), "rb") as mnist_file:
         parsed_data = yt_yson_bindings.load(mnist_file, yson_type="list_fragment")
-        yt_cli.write_table(
+        yt_client.write_table(
             table=table_path,
             input_stream=parsed_data,
         )
 
     yield table_path
 
-    yt_cli.remove(table_path)
+    yt_client.remove(table_path)

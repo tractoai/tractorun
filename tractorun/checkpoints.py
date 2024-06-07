@@ -78,10 +78,10 @@ class CheckpointManager:
         serialized_metadata = json.dumps(metadata).encode("utf-8")
         self._last_checkpoint_index = checkpoint_index
 
-        yt_cli = yt.YtClient(config=copy.deepcopy(self._yt_client.config))
+        yt_client = yt.YtClient(config=copy.deepcopy(self._yt_client.config))
         save_checkpoint_task = partial(
             _save_checkpoint,
-            yt_client=yt_cli,
+            yt_client=yt_client,
             path=checkpoint_path,
             metadata=serialized_metadata,
             value=value,

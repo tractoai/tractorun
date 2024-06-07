@@ -6,14 +6,14 @@ from tractorun.toolbox import Toolbox
 
 
 def get_toolbox(closet: Closet) -> Toolbox:
-    checkpoint_manager = CheckpointManager(closet.yt_path + "/checkpoints", closet.yt_cli)
+    checkpoint_manager = CheckpointManager(closet.yt_path + "/checkpoints", closet.yt_client)
     # TODO: make CheckpointFactory instead of the mystical initialize method
     checkpoint_manager.initialize()
     # TODO: coordinator should be with prerequisites
     toolbox = Toolbox(
         coordinator=closet.coordinator,
         checkpoint_manager=checkpoint_manager,
-        yt_client=closet.yt_cli,
+        yt_client=closet.yt_client,
         mesh=closet.mesh,
     )
 

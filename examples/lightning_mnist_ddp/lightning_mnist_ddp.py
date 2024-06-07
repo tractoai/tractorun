@@ -14,7 +14,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
@@ -50,7 +50,7 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtDataset(toolbox, DATASET_PATH)
+    train_dataset = YtTensorDataset(toolbox, DATASET_PATH)
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(

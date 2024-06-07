@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.utils.data
 import yt.wrapper as yt
 
-from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
 from tractorun.run import run
@@ -50,7 +50,7 @@ def train(toolbox: Toolbox) -> None:
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
 
-    train_dataset = YtDataset(
+    train_dataset = YtTensorDataset(
         toolbox,
         "//home/gritukan/mnist/datasets/train",
         start=0,
@@ -85,7 +85,7 @@ def train(toolbox: Toolbox) -> None:
     yt.create("map_node", f"{yt_home_dir}/mnist/models", recursive=True, ignore_existing=True)
     incarnation_id = toolbox.coordinator.get_incarnation_id()
     model_path = f"{yt_home_dir}/mnist/models/model_{incarnation_id}.pt"
-    yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
+    yt.write_file(model_path, serializer.serialize(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 
 

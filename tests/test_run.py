@@ -16,7 +16,7 @@ from tests.utils import (
     get_random_string,
 )
 from tests.yt_instances import YtInstance
-from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
 from tractorun.run import run
@@ -47,7 +47,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
         device = torch.device("cpu")
         serializer = TensorSerializer()
-        train_dataset = YtDataset(toolbox, mnist_ds_path)
+        train_dataset = YtTensorDataset(toolbox, mnist_ds_path)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
         model = Net().to(device)
         optimizer = optim.Adadelta(model.parameters(), lr=1.0)
@@ -59,7 +59,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             loss = F.nll_loss(output, target)
             loss.backward()
             optimizer.step()
-        toolbox.yt_client.write_file(model_path, serializer.save_tensor(model.state_dict()))
+        toolbox.yt_client.write_file(model_path, serializer.serialize(model.state_dict()))
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(train, yt_path=yt_training_dir, mesh=mesh, yt_cli=yt_cli, docker_image=DOCKER_IMAGE)
@@ -97,11 +97,11 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
                 file=sys.stderr,
             )
 
-            checkpoint_dict = serializer.load_tensor(checkpoint.value)
+            checkpoint_dict = serializer.desirialize(checkpoint.value)
             model.load_state_dict(checkpoint_dict["model"])
             optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
-        train_dataset = YtDataset(toolbox, mnist_ds_path)
+        train_dataset = YtTensorDataset(toolbox, mnist_ds_path)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=10)
 
         model.train()
@@ -129,7 +129,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
                     "first_batch_index": batch_idx + 1,
                     "loss": loss.item(),
                 }
-                toolbox.checkpoint_manager.save_checkpoint(serializer.save_tensor(state_dict), metadata_dict)
+                toolbox.checkpoint_manager.save_checkpoint(serializer.serialize(state_dict), metadata_dict)
                 print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)

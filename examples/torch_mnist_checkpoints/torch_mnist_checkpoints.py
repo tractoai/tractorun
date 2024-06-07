@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.utils.data
 import yt.wrapper as yt
 
-from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
 from tractorun.run import run
@@ -49,11 +49,11 @@ def train(toolbox: Toolbox) -> None:
             file=sys.stderr,
         )
 
-        checkpoint_dict = serializer.load_tensor(checkpoint.value)
+        checkpoint_dict = serializer.desirialize(checkpoint.value)
         model.load_state_dict(checkpoint_dict["model"])
         optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
-    train_dataset = YtDataset(
+    train_dataset = YtTensorDataset(
         toolbox,
         path=DATASET_PATH,
         start=0,
@@ -96,14 +96,14 @@ def train(toolbox: Toolbox) -> None:
                 "first_batch_index": batch_idx + 1,
                 "loss": loss.item(),
             }
-            toolbox.checkpoint_manager.save_checkpoint(serializer.save_tensor(state_dict), metadata_dict)
+            toolbox.checkpoint_manager.save_checkpoint(serializer.serialize(state_dict), metadata_dict)
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     # Save the model
     yt.create("map_node", f"{workdir}/models", recursive=True, ignore_existing=True)
     incarnation_id = toolbox.coordinator.get_incarnation_id()
     model_path = f"{workdir}/models/model_{incarnation_id}.pt"
-    yt.write_file(model_path, serializer.save_tensor(model.state_dict()))
+    yt.write_file(model_path, serializer.serialize(model.state_dict()))
     print("Model saved to", model_path, file=sys.stderr)
 
 

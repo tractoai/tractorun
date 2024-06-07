@@ -14,7 +14,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from tractorun.backend.tractorch.dataset import YtDataset
+from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.run import prepare_and_get_toolbox
 
 
@@ -47,7 +47,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Running on device:", device, file=sys.stderr)
 
 mnist_model = MNISTModel()
-train_dataset = YtDataset(toolbox, "//home/gritukan/mnist/datasets/train")
+train_dataset = YtTensorDataset(toolbox, "//home/gritukan/mnist/datasets/train")
 train_loader = DataLoader(train_dataset, batch_size=64)
 
 trainer = Trainer(

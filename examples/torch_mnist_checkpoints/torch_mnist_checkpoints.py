@@ -97,6 +97,9 @@ def train(toolbox: Toolbox) -> None:
                 "loss": loss.item(),
             }
             toolbox.checkpoint_manager.save_checkpoint(serializer.serialize(state_dict), metadata_dict)
+            # save checkpoint synchronously
+            # task = toolbox.checkpoint_manager.save_checkpoint(serializer.serialize(state_dict), metadata_dict)
+            # task.wait(timeout=10)
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     # Save the model

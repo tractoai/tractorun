@@ -1,21 +1,26 @@
+import argparse
+import os
 import sys
 from typing import Any
+import uuid
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data
+import wandb
 import yt.wrapper as yt
 
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
-DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
+DEFAULT_DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
 
 
 class Net(nn.Module):
@@ -30,6 +35,15 @@ class Net(nn.Module):
 def train(toolbox: Toolbox) -> None:
     user_config = toolbox.get_user_config()
     workdir = user_config["workdir"]
+    dataset_path = user_config["dataset_path"]
+    wandb_enabled = user_config["wandb_enabled"]
+    if wandb_enabled:
+        wandb.init(
+            project="tractorun",
+            name="torch_mnist_checkpoints",
+            id=user_config["wandb_run_id"],
+        )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
@@ -55,7 +69,7 @@ def train(toolbox: Toolbox) -> None:
 
     train_dataset = YtTensorDataset(
         toolbox,
-        path=DATASET_PATH,
+        path=dataset_path,
         start=0,
         end=4000,
     )
@@ -63,6 +77,8 @@ def train(toolbox: Toolbox) -> None:
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
 
     model.train()
+    if wandb_enabled:
+        wandb.watch(model, log_freq=100)
     for batch_idx, (data, target) in enumerate(train_loader):
         # TODO: Do it normally. YT dataloader?
         if batch_idx < first_batch_index:
@@ -87,6 +103,9 @@ def train(toolbox: Toolbox) -> None:
                 ),
                 file=sys.stderr,
             )
+            if wandb_enabled:
+                wandb.log({"loss": loss.item(), "batch_idx": batch_idx})
+
         if batch_idx % 3 == 0:
             state_dict = {
                 "model": model.state_dict(),
@@ -111,10 +130,29 @@ def train(toolbox: Toolbox) -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--yt-home-dir", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default=DEFAULT_DATASET_PATH)
+    parser.add_argument("--wandb", action=argparse.BooleanOptionalAction, default=False)
+    args = parser.parse_args()
+
     # Remove old checkpoints.
-    workdir = "//home/yt-team/chiffa/tractorun/mnist"
-    if yt.exists(f"{workdir}/trainings/dense/checkpoints"):
-        yt.remove(f"{workdir}/trainings/dense/checkpoints", recursive=True)
+    workdir = args.yt_home_dir
+    if yt.exists(f"{workdir}/checkpoints"):
+        yt.remove(f"{workdir}/checkpoints", recursive=True)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path=f"{workdir}/trainings/dense", mesh=mesh, user_config={"workdir": workdir})
+    run(
+        train,
+        yt_path=workdir,
+        mesh=mesh,
+        user_config={
+            "workdir": workdir,
+            "dataset_path": args.dataset_path,
+            "wandb_run_id": str(uuid.uuid4()),
+            "wandb_enabled": args.wandb,
+        },
+        resources=Resources(memory_limit=4 * (1024**3)),
+        wandb_enabled=args.wandb,
+        wandb_api_key=os.environ.get("WANDB_API_KEY"),
+    )

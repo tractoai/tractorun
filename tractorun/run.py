@@ -27,6 +27,8 @@ def run(
     docker_image: Optional[str] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
+    wandb_enabled: bool = False,
+    wandb_api_key: Optional[str] = None,
 ) -> None:
     _run(
         UserFunction(function=user_function),
@@ -36,6 +38,8 @@ def run(
         resources=resources,
         yt_client=yt_client,
         docker_image=docker_image,
+        wandb_enabled=wandb_enabled,
+        wandb_api_key=wandb_api_key,
     )
 
 

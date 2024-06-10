@@ -90,6 +90,8 @@ def _run(
     docker_image: Optional[str] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
+    wandb_enabled: bool = False,
+    wandb_api_key: Optional[str] = None,
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
@@ -124,11 +126,18 @@ def _run(
             {
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
                 const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
+                "WANDB_ENABLED": str(int(wandb_enabled)),
             }
         )
     )
 
     operation_spec = runnable.modify_operation(task_spec.end_task().pool_trees([pool_tree]))
+    if wandb_enabled:
+        operation_spec = operation_spec.secure_vault(
+            {
+                "WANDB_API_KEY": wandb_api_key,
+            }
+        )
 
     yt_client.run_operation(operation_spec)
 

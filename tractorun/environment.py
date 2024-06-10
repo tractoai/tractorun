@@ -15,6 +15,8 @@ def get_toolbox(closet: Closet) -> Toolbox:
         checkpoint_manager=checkpoint_manager,
         yt_client=closet.yt_client,
         mesh=closet.mesh,
+        yt_path=closet.yt_path,
+        training_metadata=closet.training_metadata,
     )
 
     return toolbox

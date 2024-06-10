@@ -71,6 +71,9 @@ class Coordinator:
     def get_incarnation_id(self) -> int:
         return self._incarnation_id
 
+    def is_primary(self) -> bool:
+        return self._self_index == 0
+
     def get_primary_endpoint(self) -> str:
         if self._primary_endpoint is None:
             raise RuntimeError("Torchesaurus coordinator is not prepared yet")

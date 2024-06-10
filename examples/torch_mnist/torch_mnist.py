@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data
-import yt.wrapper as yt
 
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
@@ -45,14 +44,14 @@ class Net(nn.Module):
 
 
 def train(toolbox: Toolbox) -> None:
-    yt_home_dir = toolbox.get_user_config()["yt_home_dir"]
+    dataset_path = "//home/gritukan/mnist/datasets/train"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
 
     train_dataset = YtTensorDataset(
         toolbox,
-        "//home/gritukan/mnist/datasets/train",
+        dataset_path,
         start=0,
         end=2000,
     )
@@ -81,11 +80,11 @@ def train(toolbox: Toolbox) -> None:
                 file=sys.stderr,
             )
 
-    # Save the model
-    yt.create("map_node", f"{yt_home_dir}/mnist/models", recursive=True, ignore_existing=True)
-    incarnation_id = toolbox.coordinator.get_incarnation_id()
-    model_path = f"{yt_home_dir}/mnist/models/model_{incarnation_id}.pt"
-    yt.write_file(model_path, serializer.serialize(model.state_dict()))
+    model_path = toolbox.save_model(
+        data=serializer.serialize(model.state_dict()),
+        dataset_path=dataset_path,
+        metadata={},
+    )
     print("Model saved to", model_path, file=sys.stderr)
 
 

@@ -32,7 +32,6 @@ def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
 
 def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    model_path = f"//tmp/{get_random_string(13)}"
     yt_training_dir = f"//tmp/{get_random_string(13)}"
     yt_client = yt_instance.get_client()
 
@@ -52,6 +51,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
         model = Net().to(device)
         optimizer = optim.Adadelta(model.parameters(), lr=1.0)
         model.train()
+        final_loss = None
         for batch_idx, (data, target) in enumerate(train_loader):
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
@@ -59,7 +59,14 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             loss = F.nll_loss(output, target)
             loss.backward()
             optimizer.step()
-        toolbox.yt_client.write_file(model_path, serializer.serialize(model.state_dict()))
+            final_loss = loss.item()
+        toolbox.save_model(
+            data=serializer.serialize(model.state_dict()),
+            dataset_path=mnist_ds_path,
+            metadata={
+                "loss": str(final_loss),
+            },
+        )
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(train, yt_path=yt_training_dir, mesh=mesh, yt_client=yt_client, docker_image=DOCKER_IMAGE)

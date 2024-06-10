@@ -34,7 +34,6 @@ class Net(nn.Module):
 
 def train(toolbox: Toolbox) -> None:
     user_config = toolbox.get_user_config()
-    workdir = user_config["workdir"]
     dataset_path = user_config["dataset_path"]
     wandb_enabled = user_config["wandb_enabled"]
     if wandb_enabled:
@@ -79,8 +78,11 @@ def train(toolbox: Toolbox) -> None:
     model.train()
     if wandb_enabled:
         wandb.watch(model, log_freq=100)
+
+    final_loss = None
+
     for batch_idx, (data, target) in enumerate(train_loader):
-        # TODO: Do it normally. YT dataloader?
+        # TODO: Do it normally. YT dataloader? YT loader!
         if batch_idx < first_batch_index:
             continue
 
@@ -120,12 +122,16 @@ def train(toolbox: Toolbox) -> None:
             # task = toolbox.checkpoint_manager.save_checkpoint(serializer.serialize(state_dict), metadata_dict)
             # task.wait(timeout=10)
             print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
+        final_loss = loss.item()
 
     # Save the model
-    yt.create("map_node", f"{workdir}/models", recursive=True, ignore_existing=True)
-    incarnation_id = toolbox.coordinator.get_incarnation_id()
-    model_path = f"{workdir}/models/model_{incarnation_id}.pt"
-    yt.write_file(model_path, serializer.serialize(model.state_dict()))
+    model_path = toolbox.save_model(
+        data=serializer.serialize(model.state_dict()),
+        dataset_path=dataset_path,
+        metadata={
+            "loss": str(final_loss),
+        },
+    )
     print("Model saved to", model_path, file=sys.stderr)
 
 

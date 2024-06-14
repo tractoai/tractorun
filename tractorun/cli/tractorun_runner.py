@@ -3,7 +3,6 @@
 import argparse
 import json
 
-from tractorun import constants as const
 from tractorun.mesh import Mesh
 from tractorun.run import run_script
 
@@ -16,7 +15,7 @@ def main() -> None:
     parser.add_argument("--yt-path", type=str, required=True)
     parser.add_argument("--docker-image", type=str)
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
-    parser.add_argument("--gpu-type", type=str, required=False, choices=const.GPU_TYPE_TO_POOLTREE.keys())
+    parser.add_argument("--pool-trees", action="append", required=False)
     parser.add_argument("training_script")
 
     args = parser.parse_args()

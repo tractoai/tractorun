@@ -95,10 +95,6 @@ def _run(
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
-    if mesh.gpu_type is not None:
-        pool_tree = const.GPU_TYPE_TO_POOLTREE[mesh.gpu_type]
-    else:
-        pool_tree = const.DEFAULT_POOLTREE
 
     # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
@@ -131,13 +127,19 @@ def _run(
         )
     )
 
-    operation_spec = runnable.modify_operation(task_spec.end_task().pool_trees([pool_tree]))
+    operation_spec = task_spec.end_task()
+
+    if mesh.pool_trees is not None:
+        operation_spec = operation_spec.pool_trees(mesh.pool_trees)
+
     if wandb_enabled:
         operation_spec = operation_spec.secure_vault(
             {
                 "WANDB_API_KEY": wandb_api_key,
             }
         )
+
+    operation_spec = runnable.modify_operation(operation_spec)
 
     yt_client.run_operation(operation_spec)
 

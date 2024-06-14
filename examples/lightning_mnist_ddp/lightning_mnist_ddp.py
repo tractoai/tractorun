@@ -87,7 +87,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--yt-home-dir", type=str, required=True)
     parser.add_argument("--dataset-path", type=str, default=DEFAULT_DATASET_PATH)
-    parser.add_argument("--wandb", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--wandb", action=argparse.BooleanOptionalAction, default=False)  # type: ignore  # FIXME: min python -> 3.10
     args = parser.parse_args()
 
     workdir = args.yt_home_dir

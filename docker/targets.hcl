@@ -56,11 +56,27 @@ target "torchesaurus_runtime" {  # TODO: find out if it is possible to reduce it
   dockerfile-inline = <<EOT
 FROM base_image
 COPY requirements.txt requirements_lightning.txt requirements_torch.txt /tmp
+RUN python3 -m pip install -r /tmp/requirements_torch.txt
 RUN python3 -m pip install \
   -r /tmp/requirements.txt \
-  -r /tmp/requirements_torch.txt \
   -r /tmp/requirements_lightning.txt
 COPY . /src
 RUN python3 -m pip install --no-deps "/src"
+EOT
+}
+
+target "demo_image" {
+  platforms = ["linux/amd64"]
+  tags = [
+    "${DOCKER_REPO}/demo:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM quay.io/jupyter/pytorch-notebook:cuda12-python-3.11.8
+
+ARG TR_VERSION
+
+RUN pip3 install ytsaurus-client torchvision wandb
+RUN pip3 install https://artifactory.nebius.dev/artifactory/nyt/tractorun/$TR_VERSION/tractorun-$TR_VERSION-py3-none-any.whl
+
 EOT
 }

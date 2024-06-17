@@ -8,7 +8,7 @@ import attr
 from yt.wrapper import YtClient
 
 from tractorun.coordinator import Coordinator
-from tractorun.mesh import Mesh
+from tractorun.mesh import Mesh, MeshSerializer
 
 
 @attr.define
@@ -35,7 +35,7 @@ def get_closet() -> Closet:
     port = int(config["port"])
     path = config["path"]
     self_endpoint = socket.gethostname() + ":" + str(port)
-    mesh = Mesh(int(config["nnodes"]), int(config["nproc"]), int(config["ngpu_per_proc"]))
+    mesh = MeshSerializer.deserialize(config["mesh"])
     yt_client = YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
     training_metadata = TrainingMetadata(
         operation_id=os.environ["YT_OPERATION_ID"],

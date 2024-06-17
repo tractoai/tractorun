@@ -8,5 +8,5 @@ exec docker run -it \
   -e YT_PROXY="${YT_PROXY}" \
   -e YT_TOKEN="${YT_TOKEN}" \
   -e PYTHONPATH="/source:$PYTHONPATH" \
-  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-07-19-46-14 \
+  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24 \
   pytest /source/tests/$1 ${@:2}

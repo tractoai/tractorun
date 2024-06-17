@@ -20,7 +20,7 @@ from tractorun.backend.tractorch.environment import prepare_environment
 from tractorun.closet import get_closet
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.environment import get_toolbox
-from tractorun.mesh import Mesh
+from tractorun.mesh import Mesh, MeshSerializer
 from tractorun.resources import Resources
 from tractorun.toolbox import Toolbox
 
@@ -156,9 +156,7 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[l
 
     for i in range(mesh.process_per_node):
         proc_config: Dict[str, Union[str, int]] = {
-            "nnodes": mesh.node_count,
-            "nproc": mesh.process_per_node,
-            "ngpu_per_proc": mesh.gpu_per_process,
+            "mesh": MeshSerializer.serialize(mesh),
             "node_index": os.environ["YT_JOB_COOKIE"],
             "proc_index": i,
             "port": os.environ[f"YT_PORT_{i}"],

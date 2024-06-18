@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--docker-image", type=str)
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
     parser.add_argument("--pool-trees", action="append", required=False)
+    parser.add_argument("--local", type=bool, default=False)
     parser.add_argument("training_script")
 
     args = parser.parse_args()
@@ -29,6 +30,7 @@ def main() -> None:
         yt_path=args.yt_path,
         docker_image=args.docker_image,
         user_config=user_config,
+        local=args.local,
     )
 
 

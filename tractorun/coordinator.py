@@ -31,8 +31,9 @@ class Coordinator:
         operation_id: str,
         job_id: str,
     ) -> "Coordinator":
+        cls._create_directory(yt_client=yt_client, yt_path=yt_path)
+
         self_index = node_index * mesh.process_per_node + process_index
-        print("Self address:", self_endpoint, file=sys.stderr)
         if self_index == 0:
             return cls._make_primary(
                 self_endpoint=self_endpoint,
@@ -83,6 +84,16 @@ class Coordinator:
         return self._process_index
 
     @classmethod
+    def _create_directory(
+        cls,
+        yt_client: yt.YtClient,
+        yt_path: str,
+    ) -> None:
+        yt_client.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
+        yt_client.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
+        yt_client.create("map_node", yt_path + "/incarnations", ignore_existing=True)
+
+    @classmethod
     def _make_primary(
         cls,
         self_index: int,
@@ -97,10 +108,6 @@ class Coordinator:
     ) -> "Coordinator":
         incarnation_transaction_id = yt_client.start_transaction()
         assert incarnation_transaction_id is not None
-        yt_client.Transaction(
-            transaction_id=incarnation_transaction_id,
-            acquire=False,
-        )
 
         with yt_client.Transaction(
             transaction_id=incarnation_transaction_id,

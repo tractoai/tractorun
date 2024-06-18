@@ -36,6 +36,7 @@ from tractorun.environment import get_toolbox
 from tractorun.mesh import Mesh, MeshSerializer
 from tractorun.resources import Resources
 from tractorun.toolbox import Toolbox
+from tractorun.exceptions import TractorunInvalidConfiguration
 
 
 class Runnable(abc.ABC):
@@ -94,7 +95,7 @@ class UserFunction(Runnable):
         return wrapped
 
 
-def _run(
+def _run_tracto(
     runnable: Runnable,
     *,
     yt_path: str,
@@ -114,10 +115,6 @@ def _run(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
-
-    yt_client.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
-    yt_client.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
-    yt_client.create("map_node", yt_path + "/incarnations", ignore_existing=True)
 
     wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
 
@@ -155,6 +152,43 @@ def _run(
     operation_spec = runnable.modify_operation(operation_spec)
 
     yt_client.run_operation(operation_spec)
+
+
+def _run_local(
+    runnable: Runnable,
+    *,
+    yt_path: str,
+    mesh: Mesh,
+    user_config: Optional[Dict[Any, Any]] = None,
+    docker_image: Optional[str] = None,
+    resources: Optional[Resources] = None,
+    yt_client: Optional[yt.YtClient] = None,
+    wandb_enabled: bool = False,
+    wandb_api_key: Optional[str] = None,
+) -> None:
+    if mesh.node_count != 1:
+        raise TractorunInvalidConfiguration("local mode only supports 1 node")
+
+    # TODO: respawn in docker
+
+    # Fake YT job environment.
+    os.environ["YT_OPERATION_ID"] = "1-2-3-4"
+    os.environ["YT_JOB_ID"] = "a-b-c-d"
+    os.environ["YT_JOB_COOKIE"] = "0"
+    os.environ["YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB"] = "1"
+    os.environ["WANDB_ENABLED"] = str(int(wandb_enabled))
+    if wandb_api_key:
+        os.environ["YT_SECURE_VAULT_WANDB_API_KEY"] = wandb_api_key
+
+    # TODO: look for free ports
+    import random
+
+    start_port = random.randint(10000, 20000)
+    for i in range(mesh.process_per_node):
+        os.environ[f"YT_PORT_{i}"] = str(start_port + i)
+
+    wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
+    return wrapped()
 
 
 def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[list] = None) -> None:

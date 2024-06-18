@@ -65,6 +65,26 @@ RUN python3 -m pip install --no-deps "/src"
 EOT
 }
 
+target "tractorax_runtime" {
+  platforms = ["linux/amd64"]
+  contexts = {
+    base_image = "target:jammy_python_sys"
+  }
+  context           = "${PROJECT_ROOT}"
+  tags = [
+    "${DOCKER_REPO}/tractorax_runtime:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM base_image
+COPY requirements.txt requirements_jax.txt /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_jax.txt
+COPY . /src
+RUN python3 -m pip install --no-deps "/src"
+EOT
+}
+
 target "demo_image" {
   platforms = ["linux/amd64"]
   tags = [

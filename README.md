@@ -1,12 +1,12 @@
 ### Build and push new runtime image
 ```shell
-./build torchesaurus_runtime --push
+./run_build torchesaurus_runtime --push
 ```
 Don't forget to update images in `run.py`
 
-### Build and push new runtime image
+### Build and push new image for tests
 ```shell
-./build torchesaurus_tests --push
+./run_build torchesaurus_tests --push
 ```
 and update image in `run_tests`
 

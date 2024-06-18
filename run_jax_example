@@ -4,10 +4,11 @@ set -x
 
 exec docker run -it \
   --mount type=bind,source=.,target=/source \
+  --network=host \
   -e YT_MODE=external \
   -e YT_PROXY="${YT_PROXY}" \
   -e YT_TOKEN="${YT_TOKEN}" \
   -e WANDB_API_KEY="${WANDB_API_KEY}" \
   -e PYTHONPATH="/source:$PYTHONPATH" \
-  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-06-17-16-17-56 \
+  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_runtime:2024-06-18-17-42-54 \
   python3 $1 ${@:2}

@@ -133,6 +133,7 @@ def _run_tracto(
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
                 const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
                 "WANDB_ENABLED": str(int(wandb_enabled)),
+                "PYTHONDONTWRITEBYTECODE": "1"
             }
         )
     )
@@ -238,6 +239,9 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[l
             env={
                 **os.environ,
                 "TRACTO_CONFIG": f"config_{i}.json",
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "YT_PROXY": conf["proxy"]["url"],
+                "YT_TOKEN": conf["token"],
             },
         )
         processes.append(process)

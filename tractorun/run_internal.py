@@ -238,8 +238,6 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[l
             env={
                 **os.environ,
                 "TRACTO_CONFIG": f"config_{i}.json",
-                "NCCL_DEBUG": "TRACE",
-                "NCCL_SHM_DISABLE": "1",
             },
         )
         processes.append(process)

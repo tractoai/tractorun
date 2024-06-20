@@ -46,7 +46,7 @@ def print_output(generator):
 
 
 parser = argparse.ArgumentParser(description="Get the stderr of a tractorun peer")
-parser.add_argument("training-root", type=str, help="The path to the training root directory")
+parser.add_argument("training_root", metavar="training-root", type=str, help="The path to the training root directory")
 parser.add_argument(
     "--incarnation",
     type=int,
@@ -63,7 +63,7 @@ parser.add_argument("-f", "--follow", action="store_true", help="Follow the stde
 args = parser.parse_args()
 if args.incarnation is None:
     incarnation = -1
-    for dir in yt.list(args.path + "/incarnations"):
+    for dir in yt.list(args.training_root + "/incarnations"):
         try:
             incarnation = max(incarnation, int(dir))
         except ValueError:
@@ -73,7 +73,7 @@ else:
     incarnation = args.incarnation
 
 incarnation_dir = None
-for dir in yt.list(args.path + "/incarnations"):
+for dir in yt.list(args.training_root + "/incarnations"):
     try:
         if int(dir) == incarnation:
             incarnation_dir = dir
@@ -82,8 +82,8 @@ for dir in yt.list(args.path + "/incarnations"):
         pass
 assert incarnation_dir is not None, "Incarnation not found"
 
-operation_id = yt.get(args.path + "/incarnations/" + incarnation_dir + "/@incarnation_operation_id")
-job_id = yt.get(args.path + "/incarnations/" + incarnation_dir + f"/@topology/{args.peer_index}/job_id")
+operation_id = yt.get(args.training_root + "/incarnations/" + incarnation_dir + "/@incarnation_operation_id")
+job_id = yt.get(args.training_root + "/incarnations/" + incarnation_dir + f"/@topology/{args.peer_index}/job_id")
 
 generator = lambda: yt.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
 if args.follow:

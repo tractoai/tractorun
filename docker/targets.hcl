@@ -93,10 +93,12 @@ target "demo_image" {
   dockerfile-inline = <<EOT
 FROM quay.io/jupyter/pytorch-notebook:cuda12-python-3.11.8
 
-ARG TR_VERSION
+RUN pip3 install torchvision wandb
 
-RUN pip3 install ytsaurus-client torchvision wandb
-RUN pip3 install https://artifactory.nebius.dev/artifactory/nyt/tractorun/$TR_VERSION/tractorun-$TR_VERSION-py3-none-any.whl
+COPY . /src
+USER root
+RUN python3 -m pip install "/src"
+USER 1000
 
 EOT
 }

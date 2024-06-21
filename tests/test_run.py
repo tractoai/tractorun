@@ -1,7 +1,11 @@
 import json
 import subprocess
 import sys
-from typing import Any
+from typing import (
+    Any,
+    Callable,
+)
+import uuid
 
 import torch
 import torch.nn as nn
@@ -31,11 +35,8 @@ def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     assert len(schema) == 2
 
 
-def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    yt_training_dir = f"//tmp/{get_random_string(13)}"
-    yt_client = yt_instance.get_client()
-
-    def train(toolbox: Toolbox) -> None:
+def _get_simple_train(mnist_ds_path: str) -> Callable:
+    def _simple_train(toolbox: Toolbox) -> None:
         class Net(nn.Module):
             def __init__(self) -> None:
                 super(Net, self).__init__()
@@ -68,10 +69,57 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             },
         )
 
-    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path=yt_training_dir, mesh=mesh, yt_client=yt_client, docker_image=DOCKER_IMAGE)
+    return _simple_train
 
+
+def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    yt_training_dir = f"//tmp/{get_random_string(13)}"
+
+    train_func = _get_simple_train(mnist_ds_path)
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     # The operation did not fail => success!
+    run(
+        train_func,
+        yt_path=yt_training_dir,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+    )
+
+
+def test_run_with_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    operation_title = f"test operation {uuid.uuid4()}"
+    task_title = f"test operation's task {uuid.uuid4()}"
+
+    yt_training_dir = f"//tmp/{get_random_string(13)}"
+
+    train_func = _get_simple_train(mnist_ds_path)
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+
+    run(
+        train_func,
+        yt_path=yt_training_dir,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        yt_task_spec={"title": task_title},
+        yt_operation_spec={"title": operation_title},
+    )
+
+    operations = yt_client.list_operations(filter=operation_title)["operations"]
+    assert len(operations) == 1
+
+    operation_id = operations[0]["id"]
+
+    operation_spec = yt_client.get_operation(operation_id)["spec"]
+    assert operation_spec["title"] == operation_title
+    assert operation_spec["tasks"]["task"]["title"] == task_title
 
 
 def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str) -> None:
@@ -164,3 +212,44 @@ def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     )
     process.wait()
     assert process.returncode == 0
+
+
+def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    operation_title = f"test operation {uuid.uuid4()}"
+    task_title = f"test operation's task {uuid.uuid4()}"
+
+    process = subprocess.Popen(
+        [
+            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+            "--nnodes",
+            "1",
+            "--nproc_per_node",
+            "1",
+            "--ngpu_per_proc",
+            "0",
+            "--yt-path",
+            "//tmp",
+            "--docker-image",
+            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            "--user-config",
+            json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
+            "--yt-operation-spec",
+            json.dumps({"title": operation_title}),
+            "--yt-task-spec",
+            json.dumps({"title": task_title}),
+            get_data_path("../data/torch_run_script.py"),
+        ]
+    )
+    process.wait()
+    assert process.returncode == 0
+
+    operations = yt_client.list_operations(filter=operation_title)["operations"]
+    assert len(operations) == 1
+
+    operation_id = operations[0]["id"]
+
+    operation_spec = yt_client.get_operation(operation_id)["spec"]
+    assert operation_spec["title"] == operation_title
+    assert operation_spec["tasks"]["task"]["title"] == task_title

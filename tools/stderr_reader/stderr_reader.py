@@ -1,11 +1,15 @@
-import yt.wrapper as yt
-
 import argparse
 import time
+from typing import (
+    Callable,
+    List,
+)
+
+import yt.wrapper as yt
 
 
-def tail_output(generator, polling_interval):
-    def prefix_function(s):
+def tail_output(generator: Callable[[], bytes], polling_interval: float) -> None:
+    def prefix_function(s: bytes) -> List[int]:
         pi = [0] * len(s)
         for i in range(1, len(s)):
             j = pi[i - 1]
@@ -16,7 +20,7 @@ def tail_output(generator, polling_interval):
             pi[i] = j
         return pi
 
-    def get_new_data(s, t):
+    def get_new_data(s: bytes, t: bytes) -> bytes:
         UUID = b"8a5c221d-c111d561-13440384-186"
         k = t + UUID + s
         pi = prefix_function(k)
@@ -40,7 +44,7 @@ def tail_output(generator, polling_interval):
         print(e)
 
 
-def print_output(generator):
+def print_output(generator: Callable[[], bytes]) -> None:
     stderr = generator().decode("unicode_escape")
     print(stderr)
 
@@ -85,8 +89,12 @@ assert incarnation_dir is not None, "Incarnation not found"
 operation_id = yt.get(args.training_root + "/incarnations/" + incarnation_dir + "/@incarnation_operation_id")
 job_id = yt.get(args.training_root + "/incarnations/" + incarnation_dir + f"/@topology/{args.peer_index}/job_id")
 
-generator = lambda: yt.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
+
+def _gen() -> bytes:
+    return yt.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
+
+
 if args.follow:
-    tail_output(generator, 1.0)
+    tail_output(_gen, 1.0)
 else:
-    print_output(generator)
+    print_output(_gen)

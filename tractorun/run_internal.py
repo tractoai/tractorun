@@ -18,6 +18,7 @@ from yt.common import update_inplace
 
 from tractorun import constants as const
 
+
 # TODO: do it normally
 
 try:
@@ -26,7 +27,6 @@ except Exception:
     pass
 
 try:
-    import tractorun.backend.tractorax
     from tractorun.backend.tractorax.environment import prepare_environment
 except Exception:
     pass
@@ -34,10 +34,13 @@ except Exception:
 from tractorun.closet import get_closet
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.environment import get_toolbox
-from tractorun.mesh import Mesh, MeshSerializer
+from tractorun.exceptions import TractorunInvalidConfiguration
+from tractorun.mesh import (
+    Mesh,
+    MeshSerializer,
+)
 from tractorun.resources import Resources
 from tractorun.toolbox import Toolbox
-from tractorun.exceptions import TractorunInvalidConfiguration
 
 
 class Runnable(abc.ABC):
@@ -107,9 +110,13 @@ def _run_tracto(
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
+    yt_operation_spec: Optional[Dict[Any, Any]] = None,
+    yt_task_spec: Optional[Dict[Any, Any]] = None,
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
+    yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
+    yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
 
     # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
@@ -129,6 +136,7 @@ def _run_tracto(
         .cpu_limit(resources.cpu_limit)
         .memory_limit(resources.memory_limit)
         .docker_image(docker_image)
+        .spec(yt_task_spec)
         .environment(
             {
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
@@ -152,6 +160,7 @@ def _run_tracto(
             }
         )
 
+    operation_spec = operation_spec.spec(yt_operation_spec)
     operation_spec = runnable.modify_operation(operation_spec)
 
     yt_client.run_operation(operation_spec)
@@ -162,9 +171,6 @@ def _run_local(
     *,
     yt_path: str,
     mesh: Mesh,
-    user_config: Optional[Dict[Any, Any]] = None,
-    docker_image: Optional[str] = None,
-    resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,

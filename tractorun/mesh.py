@@ -1,8 +1,8 @@
+import json
 from typing import (
     List,
     Optional,
 )
-import json
 
 import attrs
 import cattrs

@@ -1,17 +1,19 @@
-from jax import grad, jit
-import jax.numpy as jnp
+import sys
 
-from tractorun.toolbox import Toolbox
+from jax import (
+    grad,
+    jit,
+)
+
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
-
-import sys
+from tractorun.toolbox import Toolbox
 
 
 def task(_: Toolbox) -> None:
     @jit
-    def f(x):
+    def f(x: int) -> int:
         return x**2 + 3 * x + 1
 
     grad_f = grad(f)

@@ -16,6 +16,8 @@ def main() -> None:
     parser.add_argument("--docker-image", type=str)
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
     parser.add_argument("--pool-trees", action="append", required=False)
+    parser.add_argument("--yt-operation-spec", type=str, required=False)
+    parser.add_argument("--yt-task-spec", type=str, required=False)
     parser.add_argument("--local", type=bool, default=False)
     parser.add_argument("training_script")
 
@@ -23,6 +25,8 @@ def main() -> None:
 
     mesh = Mesh(node_count=args.nnodes, process_per_node=args.nproc_per_node, gpu_per_process=args.ngpu_per_proc)
     user_config = json.loads(args.user_config) if args.user_config is not None else None
+    yt_operation_spec = json.loads(args.yt_operation_spec) if args.yt_operation_spec is not None else None
+    yt_task_spec = json.loads(args.yt_task_spec) if args.yt_task_spec is not None else None
 
     run_script(
         training_script=args.training_script,
@@ -30,6 +34,8 @@ def main() -> None:
         yt_path=args.yt_path,
         docker_image=args.docker_image,
         user_config=user_config,
+        yt_operation_spec=yt_operation_spec,
+        yt_task_spec=yt_task_spec,
         local=args.local,
     )
 

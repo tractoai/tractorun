@@ -8,7 +8,10 @@ import attr
 from yt.wrapper import YtClient
 
 from tractorun.coordinator import Coordinator
-from tractorun.mesh import Mesh, MeshSerializer
+from tractorun.mesh import (
+    Mesh,
+    MeshSerializer,
+)
 
 
 @attr.define

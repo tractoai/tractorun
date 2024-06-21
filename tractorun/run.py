@@ -73,8 +73,8 @@ def run_script(
             yt_path=yt_path,
             mesh=mesh,
             user_config=user_config,
-            resources=None,
             yt_client=None,
+            resources=None,
             docker_image=docker_image,
         )
     else:

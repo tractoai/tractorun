@@ -31,8 +31,6 @@ def prepare_environment(closet: Closet) -> None:
     os.environ["WORLD_SIZE"] = str(closet.coordinator.get_total_peer_count())
     os.environ["NODE_RANK"] = str(closet.coordinator.get_self_index() // closet.mesh.process_per_node)
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
-    # Sometimes we can't read compiled bytecode in forks.
-    os.environ["PYTHONDONTWRITEBYTECODE"] = 1
 
     if os.environ["WANDB_ENABLED"] == "1":
         import wandb

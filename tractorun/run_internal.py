@@ -3,6 +3,7 @@ import base64
 import json
 import os
 import pickle
+import random
 from typing import (
     Any,
     Callable,
@@ -133,8 +134,9 @@ def _run_tracto(
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
                 const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
                 "WANDB_ENABLED": str(int(wandb_enabled)),
-                "PYTHONDONTWRITEBYTECODE": "1"
-            }
+                # Sometimes we can't read compiled bytecode in forks on yt.
+                "PYTHONDONTWRITEBYTECODE": "1",
+            },
         )
     )
 
@@ -182,7 +184,6 @@ def _run_local(
         os.environ["YT_SECURE_VAULT_WANDB_API_KEY"] = wandb_api_key
 
     # TODO: look for free ports
-    import random
 
     start_port = random.randint(10000, 20000)
     for i in range(mesh.process_per_node):
@@ -239,7 +240,6 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[l
             env={
                 **os.environ,
                 "TRACTO_CONFIG": f"config_{i}.json",
-                "PYTHONDONTWRITEBYTECODE": "1",
                 "YT_PROXY": conf["proxy"]["url"],
                 "YT_TOKEN": conf["token"],
             },

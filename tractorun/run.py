@@ -2,15 +2,17 @@ from typing import (
     Any,
     Callable,
     Dict,
+    List,
     Optional,
 )
 
 import yt.wrapper as yt
 
+from tractorun.bind import Bind
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run_internal import (
-    TrainingScript,
+    Command,
     UserFunction,
     _prepare_and_get_toolbox,
     _run_local,
@@ -60,32 +62,34 @@ def run(
 
 
 def run_script(
-    training_script: str,
+    command: List[str],
     *,
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
+    binds: List[Bind] = [],
     local: bool = False,
     yt_operation_spec: Optional[Dict[Any, Any]] = None,
     yt_task_spec: Optional[Dict[Any, Any]] = None,
 ) -> None:
     if local:
         return _run_local(
-            runnable=TrainingScript(script_path=training_script),
+            runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
             yt_client=None,
         )
     else:
         return _run_tracto(
-            runnable=TrainingScript(script_path=training_script),
+            runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
             user_config=user_config,
             resources=None,
             yt_client=None,
             docker_image=docker_image,
+            binds=binds,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
         )

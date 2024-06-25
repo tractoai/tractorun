@@ -4,10 +4,14 @@ import json
 import os
 import pickle
 import random
+import shutil
+import sys
+import tarfile
 from typing import (
     Any,
     Callable,
     Dict,
+    List,
     Optional,
     Union,
 )
@@ -31,6 +35,7 @@ try:
 except Exception:
     pass
 
+from tractorun.bind import Bind
 from tractorun.closet import get_closet
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.environment import get_toolbox
@@ -58,22 +63,18 @@ class Runnable(abc.ABC):
 
 
 @attrs.define
-class TrainingScript(Runnable):
-    script_path: str
-
-    @property
-    def script_name(self) -> str:
-        return self.script_path.split("/")[-1]
+class Command(Runnable):
+    command: List[str]
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
-        return task.file_paths(yt.LocalFile(self.script_path, file_name=self.script_name))
+        return task
 
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
     def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
         def wrapped() -> None:
-            _bootstrap(mesh, yt_path, yt_client=yt_client, pyargs=[self.script_name])
+            _bootstrap(mesh, yt_path, yt_client, self.command)
 
         return wrapped
 
@@ -94,7 +95,8 @@ class UserFunction(Runnable):
                 toolbox = _prepare_and_get_toolbox()
                 self.function(toolbox)
             else:
-                _bootstrap(mesh, yt_path, yt_client=yt_client)
+                command = ["python3"] + sys.argv
+                _bootstrap(mesh, yt_path, yt_client, command)
 
         return wrapped
 
@@ -106,6 +108,7 @@ def _run_tracto(
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
+    binds: List[Bind] = [],
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -126,10 +129,31 @@ def _run_tracto(
 
     wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
 
+    # TODO: do it normally
+    if os.path.exists('.binds'):
+        shutil.rmtree('.binds')
+    os.mkdir('.binds')
+
+    task_spec = yt.VanillaSpecBuilder().begin_task("task")
+
+    for idx, bind in enumerate(binds):
+        path = f".binds/{idx}.tar"
+        with tarfile.open(path, 'w:gz') as tar:
+            tar.add(bind.source, arcname=os.path.basename(bind.source))
+        task_spec = task_spec.file_paths(yt.LocalFile(path, path))
+
+    def unpack_wrapper(func):
+        def wrapper():
+            for idx, bind in enumerate(binds):
+                path = f".binds/{idx}.tar"
+                with tarfile.open(path, 'r:gz') as tar:
+                    tar.extractall(path=bind.destination)
+            func()
+        return wrapper
+
     task_spec = runnable.modify_task(
-        yt.VanillaSpecBuilder()
-        .begin_task("task")
-        .command(wrapped)
+        task_spec
+        .command(unpack_wrapper(wrapped))
         .job_count(mesh.node_count)
         .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
         .port_count(mesh.process_per_node)
@@ -199,13 +223,12 @@ def _run_local(
     return wrapped()
 
 
-def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[list] = None) -> None:
+def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, command: List[str]) -> None:
     # Runs in a job
 
     import json
     import os
     import subprocess
-    import sys
 
     processes = []
 
@@ -229,13 +252,8 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, pyargs: Optional[l
         )
 
         proc_config["yt_client_config"] = base64.b64encode(pickle.dumps(conf)).decode()
-        with open(f"config_{i}.json", "w") as ff:
-            json.dump(proc_config, ff)
-
-        if pyargs:
-            command = ["python3"] + pyargs
-        else:
-            command = ["python3"] + list(sys.argv)
+        with open(f"config_{i}.json", "w") as f:
+            json.dump(proc_config, f)
 
         process = subprocess.Popen(
             command,

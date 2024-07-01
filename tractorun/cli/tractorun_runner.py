@@ -20,8 +20,8 @@ def main() -> None:
     parser.add_argument("--yt-operation-spec", type=str, required=False)
     parser.add_argument("--yt-task-spec", type=str, required=False)
     parser.add_argument("--local", type=bool, default=False)
-    parser.add_argument("--bind", type=str, action='append', help="bind mounts to be passed to the docker container")
-    parser.add_argument("command", nargs='+', help="command to run")
+    parser.add_argument("--bind", type=str, action="append", help="bind mounts to be passed to the docker container")
+    parser.add_argument("command", nargs="+", help="command to run")
 
     args = parser.parse_args()
 

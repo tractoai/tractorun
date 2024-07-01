@@ -130,15 +130,15 @@ def _run_tracto(
     wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
 
     # TODO: do it normally
-    if os.path.exists('.binds'):
-        shutil.rmtree('.binds')
-    os.mkdir('.binds')
+    if os.path.exists(".binds"):
+        shutil.rmtree(".binds")
+    os.mkdir(".binds")
 
     task_spec = yt.VanillaSpecBuilder().begin_task("task")
 
     for idx, bind in enumerate(binds):
         path = f".binds/{idx}.tar"
-        with tarfile.open(path, 'w:gz') as tar:
+        with tarfile.open(path, "w:gz") as tar:
             tar.add(bind.source, arcname=os.path.basename(bind.source))
         task_spec = task_spec.file_paths(yt.LocalFile(path, path))
 
@@ -146,14 +146,14 @@ def _run_tracto(
         def wrapper() -> None:
             for idx, bind in enumerate(binds):
                 path = f".binds/{idx}.tar"
-                with tarfile.open(path, 'r:gz') as tar:
+                with tarfile.open(path, "r:gz") as tar:
                     tar.extractall(path=bind.destination)
             func()
+
         return wrapper
 
     task_spec = runnable.modify_task(
-        task_spec
-        .command(unpack_wrapper(wrapped))
+        task_spec.command(unpack_wrapper(wrapped))
         .job_count(mesh.node_count)
         .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
         .port_count(mesh.process_per_node)

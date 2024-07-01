@@ -7,10 +7,10 @@ black-fix:
 	python -m black .
 
 ruff-check:
-	ruff check
+	ruff check .
 
 ruff-fix:
-	ruff check --fix
+	ruff check --fix .
 
 isort-check:
 	isort --check-only .

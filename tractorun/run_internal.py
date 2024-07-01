@@ -142,8 +142,8 @@ def _run_tracto(
             tar.add(bind.source, arcname=os.path.basename(bind.source))
         task_spec = task_spec.file_paths(yt.LocalFile(path, path))
 
-    def unpack_wrapper(func):
-        def wrapper():
+    def unpack_wrapper(func: Callable) -> Callable:
+        def wrapper() -> None:
             for idx, bind in enumerate(binds):
                 path = f".binds/{idx}.tar"
                 with tarfile.open(path, 'r:gz') as tar:

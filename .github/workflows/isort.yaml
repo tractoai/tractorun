@@ -12,4 +12,4 @@ jobs:
       with:
         python-version: "3.11"
     - run: pip install .[dev]
-    - run: isort --check-only .
+    - run: make isort-check

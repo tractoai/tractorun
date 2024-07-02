@@ -1,0 +1,15 @@
+name: mypy
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: tractoai-runners
+    container:
+      image: cr.ai.nebius.cloud/crnf2coti090683j5ssi/gh_runner:0.0.4
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    - run: pip install .[all]
+    - run: make mypy-check

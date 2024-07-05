@@ -68,11 +68,13 @@ def run_script(
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
-    binds: List[Bind] = [],
+    binds: Optional[List[Bind]] = None,
     local: bool = False,
     yt_operation_spec: Optional[Dict[Any, Any]] = None,
     yt_task_spec: Optional[Dict[Any, Any]] = None,
 ) -> None:
+    if binds is None:
+        binds = []
     if local:
         return _run_local(
             runnable=Command(command=command),

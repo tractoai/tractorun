@@ -16,7 +16,7 @@ isort-check:
 	isort --check-only .
 
 mypy-check:
-	mypy ./examples ./tractorun ./tests
+	mypy ./examples ./tractorun ./tests ./tools
 
 isort-fix:
 	isort .

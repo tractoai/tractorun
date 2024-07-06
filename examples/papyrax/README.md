@@ -31,3 +31,4 @@
    ```
 3. Install papyrax `pip install -r requirements.txt` `SETUPTOOLS_ENABLE_FEATURES="legacy-editable" python -m pip install -e .`. SETUPTOOLS_ENABLE_FEATURES is important
 4. `make all-all-check`
+5. Install extra deps: https://github.com/nebius/papyrax/blob/05dc337efafecb816484ac9bd930943dd863cad6/docker/Dockerfile#L18

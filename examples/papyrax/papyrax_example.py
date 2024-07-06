@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 import sys
 from typing import (
@@ -80,7 +81,7 @@ def main() -> None:
 
 
 def main_local_papyrax() -> None:
-    config: Config = Config.from_cli(["/source/examples/papyrax/tools/training/config.yaml"], [])
+    config: Config = Config.from_cli([os.environ.get("CHIFFA_CONFIG_PATH")], [])
     trainer_config: TrainerConfig = TrainerConfig.from_cli(
         [config.config_path], config.config_overrides, config.override_values
     )

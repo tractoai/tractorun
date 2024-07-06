@@ -108,7 +108,7 @@ def _run_tracto(
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
     docker_image: Optional[str] = None,
-    binds: List[Bind] = [],
+    binds: Optional[List[Bind]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -118,6 +118,7 @@ def _run_tracto(
 ) -> None:
     docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
+    binds = binds if binds is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
     yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
 

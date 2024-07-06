@@ -1,7 +1,11 @@
 import logging
-import sys
 from pathlib import Path
-from typing import Any
+import sys
+from typing import (
+    Any,
+    List,
+    Optional,
+)
 
 from papyrax.training.config import TrainerConfig
 from papyrax.training.trainer import train_model
@@ -11,15 +15,10 @@ from papyrax.utils.logging import configure_logging
 from papyrax.utils.nccl import run_nccl_all_reduce_perf_test
 from papyrax.utils.tqdm import logging_redirect_tqdm
 
-from tractorun.toolbox import Toolbox
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
-
-from typing import (
-    List,
-    Optional,
-)
+from tractorun.toolbox import Toolbox
 
 
 LOGGER = logging.getLogger(__name__)
@@ -50,12 +49,11 @@ class Config(ConfigBase):
 
 def train(
     config: TrainerConfig,
-    rank: int,
     log_level: int,
     logging_config_path: Path | None,
     enable_cloud_logging: bool,
     toolbox: Toolbox,
-):
+) -> None:
     # Some large models require a higher recursion limit
     sys.setrecursionlimit(10000)
 
@@ -64,12 +62,8 @@ def train(
         logging_config_path=logging_config_path,
         enable_cloud_logging=enable_cloud_logging,
         runtime_attributes={
-            "checkpoint_dir": (
-                str(config.checkpointing.checkpoint_dir)
-                if config.checkpointing is not None
-                else None
-            ),
-            "rank": rank,
+            "checkpoint_dir": (str(config.checkpointing.checkpoint_dir) if config.checkpointing is not None else None),
+            "rank": toolbox.mesh.node_count,
         },
     )
 
@@ -86,8 +80,10 @@ def main() -> None:
 
 
 def main_local_papyrax() -> None:
-    config = Config.from_cli(["/source/examples/papyrax/tools/training/config.yaml"], [])
-    trainer_config = TrainerConfig.from_cli([config.config_path], config.config_overrides, config.override_values)
+    config: Config = Config.from_cli(["/source/examples/papyrax/tools/training/config.yaml"], [])
+    trainer_config: TrainerConfig = TrainerConfig.from_cli(
+        [config.config_path], config.config_overrides, config.override_values
+    )
 
     mesh = Mesh(
         node_count=config.mesh.node_count,
@@ -104,7 +100,7 @@ def main_local_papyrax() -> None:
     def wrapped_train(toolbox: Toolbox) -> None:
         train(
             config=trainer_config,
-            log_level="DEBUG",
+            log_level=logging.DEBUG,
             logging_config_path=None,
             enable_cloud_logging=False,
             toolbox=toolbox,

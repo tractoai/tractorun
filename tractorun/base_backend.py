@@ -10,7 +10,7 @@ class EnvironmentBase(abc.ABC):
 
 
 class BackendBase(abc.ABC):
-    @abc.abstractmethod
     @property
+    @abc.abstractmethod
     def environment(self) -> EnvironmentBase:
         pass

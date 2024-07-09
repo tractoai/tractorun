@@ -217,6 +217,7 @@ def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
+            "python3",
             get_data_path("../data/torch_run_script.py"),
         ]
     )
@@ -249,6 +250,7 @@ def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str
             json.dumps({"title": operation_title}),
             "--yt-task-spec",
             json.dumps({"title": task_title}),
+            "python3",
             get_data_path("../data/torch_run_script.py"),
         ]
     )

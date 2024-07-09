@@ -20,6 +20,7 @@ from tests.utils import (
     get_random_string,
 )
 from tests.yt_instances import YtInstance
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
@@ -83,6 +84,7 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     # The operation did not fail => success!
     run(
         train_func,
+        backend=Tractorch(),
         yt_path=yt_training_dir,
         mesh=mesh,
         yt_client=yt_client,
@@ -104,6 +106,7 @@ def test_run_with_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
     run(
         train_func,
+        backend=Tractorch(),
         yt_path=yt_training_dir,
         mesh=mesh,
         yt_client=yt_client,
@@ -188,7 +191,14 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
                 print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    run(train, yt_path=yt_training_dir, mesh=mesh, yt_client=yt_client, docker_image=DOCKER_IMAGE)
+    run(
+        train,
+        backend=Tractorch(),
+        yt_path=yt_training_dir,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+    )
 
 
 def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:

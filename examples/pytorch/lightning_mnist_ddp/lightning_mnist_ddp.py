@@ -18,6 +18,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -94,6 +95,7 @@ def main() -> None:
     mesh = Mesh(node_count=1, process_per_node=3, gpu_per_process=1)
     run(
         train,
+        backend=Tractorch(),
         yt_path=workdir,
         mesh=mesh,
         resources=Resources(

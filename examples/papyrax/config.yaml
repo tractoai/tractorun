@@ -1,0 +1,12 @@
+training_root: //home/yt-team/chiffa/tractorun/papyrax
+config_path: /papyrax/configs/training/base_1b_moe.yaml
+config_overrides: []
+override_values: {}
+docker_image: cr.nemax.nebius.cloud/crnf2coti090683j5ssi/tracto_llm:1
+mesh:
+  node_count: 1
+  process_per_node: 1
+  gpu_per_process: 1
+  pool_trees: gpu_h100
+user_config:
+  .....

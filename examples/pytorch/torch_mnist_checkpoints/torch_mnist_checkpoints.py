@@ -12,6 +12,7 @@ import torch.utils.data
 import wandb
 import yt.wrapper as yt
 
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
@@ -150,6 +151,7 @@ if __name__ == "__main__":
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(
         train,
+        backend=Tractorch(),
         yt_path=workdir,
         mesh=mesh,
         user_config={

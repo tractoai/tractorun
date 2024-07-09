@@ -8,6 +8,7 @@ from typing import (
 
 import yt.wrapper as yt
 
+from tractorun.base_backend import BackendBase
 from tractorun.bind import Bind
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -24,6 +25,7 @@ from tractorun.toolbox import Toolbox
 def run(
     user_function: Callable,
     *,
+    backend: BackendBase,
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
@@ -38,7 +40,10 @@ def run(
 ) -> None:
     if local:
         return _run_local(
-            UserFunction(function=user_function),
+            UserFunction(
+                function=user_function,
+                backend=backend,
+            ),
             yt_path=yt_path,
             mesh=mesh,
             yt_client=yt_client,
@@ -47,7 +52,10 @@ def run(
         )
     else:
         return _run_tracto(
-            UserFunction(function=user_function),
+            UserFunction(
+                function=user_function,
+                backend=backend,
+            ),
             yt_path=yt_path,
             mesh=mesh,
             user_config=user_config,
@@ -97,5 +105,5 @@ def run_script(
         )
 
 
-def prepare_and_get_toolbox() -> Toolbox:
-    return _prepare_and_get_toolbox()
+def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
+    return _prepare_and_get_toolbox(backend)

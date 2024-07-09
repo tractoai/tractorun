@@ -14,7 +14,10 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from tractorun.backend.tractorch.dataset import YtTensorDataset
+from tractorun.backend.tractorch import (
+    Tractorch,
+    YtTensorDataset,
+)
 from tractorun.run import prepare_and_get_toolbox
 
 
@@ -42,7 +45,7 @@ class MNISTModel(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 
-toolbox = prepare_and_get_toolbox()
+toolbox = prepare_and_get_toolbox(backend=Tractorch())
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Running on device:", device, file=sys.stderr)
 

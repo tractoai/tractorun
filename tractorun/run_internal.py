@@ -21,20 +21,7 @@ from yt import wrapper as yt
 from yt.common import update_inplace
 
 from tractorun import constants as const
-
-
-# TODO: do it normally
-
-try:
-    from tractorun.backend.tractorch.environment import prepare_environment
-except Exception:
-    pass
-
-try:
-    from tractorun.backend.tractorax.environment import prepare_environment
-except Exception:
-    pass
-
+from tractorun.base_backend import BackendBase
 from tractorun.bind import Bind
 from tractorun.closet import get_closet
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
@@ -58,7 +45,12 @@ class Runnable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(
+        self,
+        mesh: Mesh,
+        yt_path: str,
+        yt_client: yt.YtClient,
+    ) -> Callable:
         pass
 
 
@@ -72,7 +64,12 @@ class Command(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(
+        self,
+        mesh: Mesh,
+        yt_path: str,
+        yt_client: yt.YtClient,
+    ) -> Callable:
         def wrapped() -> None:
             _bootstrap(mesh, yt_path, yt_client, self.command)
 
@@ -82,6 +79,7 @@ class Command(Runnable):
 @attrs.define
 class UserFunction(Runnable):
     function: Callable
+    _backend: BackendBase
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
         return task
@@ -89,10 +87,15 @@ class UserFunction(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(self, mesh: Mesh, yt_path: str, yt_client: yt.YtClient) -> Callable:
+    def get_wrapped_job_function(
+        self,
+        mesh: Mesh,
+        yt_path: str,
+        yt_client: yt.YtClient,
+    ) -> Callable:
         def wrapped() -> None:
             if "TRACTO_CONFIG" in os.environ:
-                toolbox = _prepare_and_get_toolbox()
+                toolbox = _prepare_and_get_toolbox(backend=self._backend)
                 self.function(toolbox)
             else:
                 command = ["python3"] + sys.argv
@@ -280,8 +283,8 @@ def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, command: List[str]
     # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
-def _prepare_and_get_toolbox() -> Toolbox:
+def _prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     # Runs in a job
     closet = get_closet()
-    prepare_environment(closet)
+    backend.environment.prepare(closet)
     return get_toolbox(closet)

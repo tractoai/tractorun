@@ -18,14 +18,9 @@ isort-check:
 mypy-check:
 	mypy ./tractorun ./tests ./tools ./examples/jax ./examples/pytorch
 
-mypy-papyrax-check:
-	mypy ./examples/papyrax
-
 isort-fix:
 	isort --profile black .
 
 all-check: black-check ruff-check isort-check mypy-check
-
-all-all-check: black-check ruff-check isort-check mypy-check mypy-papyrax-check
 
 all-fix: black-fix ruff-fix isort-fix

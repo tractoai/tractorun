@@ -10,6 +10,7 @@ import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
 from tractorun.bind import Bind
+from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run_internal import (
@@ -29,7 +30,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
-    docker_image: Optional[str] = None,
+    docker_image: str = DEFAULT_DOCKER_IMAGE,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -74,8 +75,9 @@ def run_script(
     *,
     yt_path: str,
     mesh: Mesh,
+    docker_image: str,
+    resources: Resources,
     user_config: Optional[Dict[Any, Any]] = None,
-    docker_image: Optional[str] = None,
     binds: Optional[List[Bind]] = None,
     local: bool = False,
     yt_operation_spec: Optional[Dict[Any, Any]] = None,
@@ -96,7 +98,7 @@ def run_script(
             yt_path=yt_path,
             mesh=mesh,
             user_config=user_config,
-            resources=None,
+            resources=resources,
             yt_client=None,
             docker_image=docker_image,
             binds=binds,

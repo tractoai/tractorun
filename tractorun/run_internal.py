@@ -24,7 +24,6 @@ from tractorun import constants as const
 from tractorun.base_backend import BackendBase
 from tractorun.bind import Bind
 from tractorun.closet import get_closet
-from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
 from tractorun.mesh import (
@@ -107,10 +106,10 @@ class UserFunction(Runnable):
 def _run_tracto(
     runnable: Runnable,
     *,
+    docker_image: str,
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[Dict[Any, Any]] = None,
-    docker_image: Optional[str] = None,
     binds: Optional[List[Bind]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
@@ -119,7 +118,6 @@ def _run_tracto(
     yt_operation_spec: Optional[Dict[Any, Any]] = None,
     yt_task_spec: Optional[Dict[Any, Any]] = None,
 ) -> None:
-    docker_image = docker_image or DEFAULT_DOCKER_IMAGE
     resources = resources if resources is not None else Resources()
     binds = binds if binds is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}

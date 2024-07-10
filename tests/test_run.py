@@ -234,7 +234,7 @@ def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str
     process = subprocess.Popen(
         [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
-            "--mesh.node_count",
+            "--mesh.node-count",
             "1",
             "--mesh.process-per-node",
             "1",

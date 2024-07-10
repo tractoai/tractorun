@@ -110,7 +110,9 @@ class EffectiveConfig:
         yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
         bind = args["bind"] if args["bind"] is not None else []
 
-        command = _choose_value(args["command"], config.command)
+        # here is `args["command"] or None` as a special hack
+        # because argparse can't use default=None here
+        command = _choose_value(args["command"] or None, config.command)
         if not command:
             raise TractorunConfigError("Command should be set in config or by cli param")
 
@@ -190,8 +192,8 @@ def main() -> None:
         "--bind",
         type=str,
         action="append",
+        default=None,
         help="bind mounts to be passed to the docker container",
-        default=[],
     )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")

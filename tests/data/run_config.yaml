@@ -1,0 +1,7 @@
+mesh:
+  node_count: 2
+  process_per_mode: 1
+  gpu_per_process: 0
+yt_path: "//tmp"
+user-config:
+  foo: bar

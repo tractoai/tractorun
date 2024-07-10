@@ -1,6 +1,7 @@
 import torch
 import torch.distributed as dist
 
+from tractorun.backend.tractorch import Tractorch
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
@@ -37,4 +38,9 @@ def train(toolbox: Toolbox) -> None:
 
 if __name__ == "__main__":
     mesh = Mesh(1, 2, 0)
-    run(train, yt_path="//home/gritukan/train", mesh=mesh)
+    run(
+        train,
+        backend=Tractorch(),
+        yt_path="//home/gritukan/train",
+        mesh=mesh,
+    )

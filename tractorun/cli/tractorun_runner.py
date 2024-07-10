@@ -34,9 +34,10 @@ def main() -> None:
     user_config = json.loads(args.user_config) if args.user_config is not None else None
     yt_operation_spec = json.loads(args.yt_operation_spec) if args.yt_operation_spec is not None else None
     yt_task_spec = json.loads(args.yt_task_spec) if args.yt_task_spec is not None else None
+    raw_binds = args.bind if args.bind is not None else []
 
     binds = []
-    for bind in args.bind:
+    for bind in raw_binds:
         source, destination = bind.split(":")
         binds.append(Bind(source=source, destination=destination))
 

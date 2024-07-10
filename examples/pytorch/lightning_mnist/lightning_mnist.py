@@ -14,6 +14,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -60,6 +61,7 @@ if __name__ == "__main__":
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(
         train,
+        backend=Tractorch(),
         yt_path="//home/gritukan/mnist/trainings/dense",
         mesh=mesh,
         resources=Resources(

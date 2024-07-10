@@ -6,7 +6,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data
 
-from tractorun.backend.tractorch.dataset import YtTensorDataset
+from tractorun.backend.tractorch import (
+    Tractorch,
+    YtTensorDataset,
+)
 from tractorun.run import prepare_and_get_toolbox
 
 
@@ -20,7 +23,7 @@ class Net(nn.Module):
 
 
 if __name__ == "__main__":
-    toolbox = prepare_and_get_toolbox()
+    toolbox = prepare_and_get_toolbox(backend=Tractorch())
     user_config = toolbox.get_user_config()
     mnist_ds_path = user_config["MNIST_DS_PATH"]
     device = torch.device("cpu")

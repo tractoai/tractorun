@@ -13,13 +13,13 @@ ruff-fix:
 	ruff check --fix
 
 isort-check:
-	isort --check-only .
+	isort --profile black --check-only .
 
 mypy-check:
 	mypy ./tractorun ./tests ./tools ./examples/jax ./examples/pytorch
 
 isort-fix:
-	isort .
+	isort --profile black .
 
 all-check: black-check ruff-check isort-check mypy-check
 

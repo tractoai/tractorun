@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data
 
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
@@ -96,6 +97,7 @@ if __name__ == "__main__":
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(
         train,
+        backend=Tractorch(),
         yt_path=f"{args.yt_home_dir}/mnist/trainings/dense",
         mesh=mesh,
         user_config={"yt_home_dir": args.yt_home_dir},

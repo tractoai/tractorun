@@ -124,9 +124,9 @@ class EffectiveConfig:
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
-            user_config=_choose_value(args_value=user_config, config_value=user_config),
-            yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=yt_operation_spec),
-            yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=yt_task_spec),
+            user_config=_choose_value(args_value=user_config, config_value=config.user_config),
+            yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
+            yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind=bind,
             command=command,

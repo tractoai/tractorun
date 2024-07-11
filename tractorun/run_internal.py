@@ -153,10 +153,8 @@ def _run_tracto(
         def wrapper() -> None:
             for idx_w, bind_w in enumerate(binds):
                 path_w = f".binds/{idx_w}.tar"
-                print(f"Extract {path_w} to {bind_w.destination}", file=sys.stderr)
                 with tarfile.open(path_w, "r:gz") as tar_w:
                     tar_w.extractall(path=bind_w.destination)
-                print(f"Extracted {os.listdir(bind_w.destination)}", file=sys.stderr)
             func()
 
         return wrapper

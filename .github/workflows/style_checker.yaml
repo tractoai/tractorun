@@ -4,8 +4,6 @@ on: [pull_request]
 jobs:
   black:
     runs-on: tractoai-runners
-    container:
-      image: cr.ai.nebius.cloud/crnf2coti090683j5ssi/gh_runner:0.0.4
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
@@ -15,8 +13,6 @@ jobs:
     - run: make black-check
   ruff:
     runs-on: tractoai-runners
-    container:
-      image: cr.ai.nebius.cloud/crnf2coti090683j5ssi/gh_runner:0.0.4
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
@@ -26,8 +22,6 @@ jobs:
     - run: make ruff-check
   isort:
     runs-on: tractoai-runners
-    container:
-      image: cr.ai.nebius.cloud/crnf2coti090683j5ssi/gh_runner:0.0.4
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4

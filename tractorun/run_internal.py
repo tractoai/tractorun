@@ -151,10 +151,12 @@ def _run_tracto(
 
     def unpack_wrapper(func: Callable) -> Callable:
         def wrapper() -> None:
-            for idx, bind in enumerate(binds):
-                path = f".binds/{idx}.tar"
-                with tarfile.open(path, "r:gz") as tar:
-                    tar.extractall(path=bind.destination)
+            for idx_w, bind_w in enumerate(binds):
+                path_w = f".binds/{idx_w}.tar"
+                print(f"Extract {path_w} to {bind_w.destination}", file=sys.stderr)
+                with tarfile.open(path_w, "r:gz") as tar_w:
+                    tar_w.extractall(path=bind_w.destination)
+                print(f"Extracted {os.listdir(bind_w.destination)}", file=sys.stderr)
             func()
 
         return wrapper

@@ -114,10 +114,12 @@ class EffectiveConfig:
         command = _choose_value(args["command"] or None, config.command)
         if not command:
             raise TractorunConfigError("Command should be set in config or by cli param")
-
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
+        bind = _choose_value(args_value=args["bind"], config_value=config.bind)
+        if bind is None:
+            bind = []
 
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
@@ -126,7 +128,7 @@ class EffectiveConfig:
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
-            bind=_choose_value(args_value=args["bind"], config_value=config.bind),
+            bind=bind,
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(

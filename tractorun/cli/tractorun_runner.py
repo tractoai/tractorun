@@ -108,7 +108,6 @@ class EffectiveConfig:
         user_config = json.loads(args["user_config"]) if args["user_config"] is not None else None
         yt_operation_spec = json.loads(args["yt_operation_spec"]) if args["yt_operation_spec"] is not None else None
         yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
-        bind = args["bind"] if args["bind"] is not None else []
 
         # here is `args["command"] or None` as a special hack
         # because argparse can't use default=None here
@@ -127,7 +126,7 @@ class EffectiveConfig:
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
-            bind=bind,
+            bind=_choose_value(args_value=args["bind"], config_value=config.bind),
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -207,7 +206,8 @@ def main() -> None:
     )
 
     binds = []
-    for bind in effective_config.bind:
+    effective_binds = effective_config.bind or []
+    for bind in effective_binds:
         source, destination = bind.split(":")
         binds.append(Bind(source=source, destination=destination))
 

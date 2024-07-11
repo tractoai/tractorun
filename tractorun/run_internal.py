@@ -98,7 +98,12 @@ class UserFunction(Runnable):
                 self.function(toolbox)
             else:
                 command = ["python3"] + sys.argv
-                _bootstrap(mesh, yt_path, yt_client, command)
+                _bootstrap(
+                    mesh=mesh,
+                    path=yt_path,
+                    yt_client=yt_client,
+                    command=command,
+                )
 
         return wrapped
 

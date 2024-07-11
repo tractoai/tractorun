@@ -205,11 +205,11 @@ def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     process = subprocess.Popen(
         [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
-            "--nnodes",
+            "--mesh.node-count",
             "1",
-            "--nproc_per_node",
+            "--mesh.process-per-node",
             "1",
-            "--ngpu_per_proc",
+            "--mesh.gpu-per-process",
             "0",
             "--yt-path",
             "//tmp",
@@ -234,11 +234,11 @@ def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str
     process = subprocess.Popen(
         [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
-            "--nnodes",
+            "--mesh.node-count",
             "1",
-            "--nproc_per_node",
+            "--mesh.process-per-node",
             "1",
-            "--ngpu_per_proc",
+            "--mesh.gpu-per-process",
             "0",
             "--yt-path",
             "//tmp",
@@ -265,3 +265,40 @@ def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str
     operation_spec = yt_client.get_operation(operation_id)["spec"]
     assert operation_spec["title"] == operation_title
     assert operation_spec["tasks"]["task"]["title"] == task_title
+
+
+def test_run_script_with_config(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+    # TODO: just validate yt spec here
+
+    yt_client = yt_instance.get_client()
+
+    operation_title = f"test operation {uuid.uuid4()}"
+    task_title = f"test operation's task {uuid.uuid4()}"
+
+    process = subprocess.Popen(
+        [
+            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+            "--run-config-path",
+            get_data_path("../data/run_config.yaml"),
+            "--docker-image",
+            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            "--user-config",
+            json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
+            "--yt-operation-spec",
+            json.dumps({"title": operation_title}),
+            "--yt-task-spec",
+            json.dumps({"title": task_title}),
+            "python3",
+            get_data_path("../data/torch_run_script.py"),
+        ]
+    )
+    process.wait()
+    assert process.returncode == 0
+
+    operations = yt_client.list_operations(filter=operation_title)["operations"]
+    assert len(operations) == 1
+
+    operation_id = operations[0]["id"]
+    operation_spec = yt_client.get_operation(operation_id)["spec"]
+    # just check that mesh.node-count has been overridden
+    assert operation_spec["tasks"]["task"]["job_count"] == 2

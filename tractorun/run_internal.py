@@ -1,8 +1,6 @@
 import abc
-import base64
 import json
 import os
-import pickle
 import random
 import shutil
 import sys
@@ -13,23 +11,19 @@ from typing import (
     Dict,
     List,
     Optional,
-    Union,
 )
 
 import attrs
 from yt import wrapper as yt
-from yt.common import update_inplace
 
 from tractorun import constants as const
 from tractorun.base_backend import BackendBase
 from tractorun.bind import Bind
+from tractorun.bootstrapper import bootstrap
 from tractorun.closet import get_closet
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
-from tractorun.mesh import (
-    Mesh,
-    MeshSerializer,
-)
+from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.toolbox import Toolbox
 
@@ -70,7 +64,12 @@ class Command(Runnable):
         yt_client: yt.YtClient,
     ) -> Callable:
         def wrapped() -> None:
-            _bootstrap(mesh, yt_path, yt_client, self.command)
+            bootstrap(
+                mesh=mesh,
+                path=yt_path,
+                yt_client_config=yt.config.get_config(yt_client),
+                command=self.command,
+            )
 
         return wrapped
 
@@ -98,10 +97,10 @@ class UserFunction(Runnable):
                 self.function(toolbox)
             else:
                 command = ["python3"] + sys.argv
-                _bootstrap(
+                bootstrap(
                     mesh=mesh,
                     path=yt_path,
-                    yt_client=yt_client,
+                    yt_client_config=yt.config.get_config(yt_client),
                     command=command,
                 )
 
@@ -228,62 +227,6 @@ def _run_local(
 
     wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
     return wrapped()
-
-
-def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, command: List[str]) -> None:
-    # Runs in a job
-
-    import json
-    import os
-    import subprocess
-
-    processes = []
-
-    for i in range(mesh.process_per_node):
-        proc_config: Dict[str, Union[str, int]] = {
-            "mesh": MeshSerializer.serialize(mesh),
-            "node_index": os.environ["YT_JOB_COOKIE"],
-            "proc_index": i,
-            "port": os.environ[f"YT_PORT_{i}"],
-            "path": path,
-        }
-
-        conf = yt.config.get_config(yt_client)
-        update_inplace(
-            conf,
-            {
-                "pickling": {
-                    "module_filter": None,
-                },
-            },
-        )
-
-        proc_config["yt_client_config"] = base64.b64encode(pickle.dumps(conf)).decode()
-        with open(f"config_{i}.json", "w") as f:
-            json.dump(proc_config, f)
-
-        process = subprocess.Popen(
-            command,
-            stdout=sys.stderr,
-            stderr=sys.stderr,
-            bufsize=1,
-            universal_newlines=True,
-            env={
-                **os.environ,
-                "TRACTO_CONFIG": f"config_{i}.json",
-                "YT_PROXY": conf["proxy"]["url"],
-                "YT_TOKEN": conf["token"],
-            },
-        )
-        processes.append(process)
-
-    for process in processes:
-        exit_code = process.wait()
-        if exit_code != 0:
-            sys.exit(exit_code)
-
-    # TODO: torch multiprocessing is better, but pickling does not work.
-    # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
 def _prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:

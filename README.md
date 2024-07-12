@@ -10,6 +10,11 @@ Don't forget to update images in `run.py`
 ```
 and update image in `run_tests`
 
+### Build and push new demo image
+```shell
+./run_build demo_image --push
+```
+
 ### Run tests
 ```shell
 YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests . -s

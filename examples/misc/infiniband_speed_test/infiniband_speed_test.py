@@ -5,7 +5,6 @@ from tractorun.run import prepare_and_get_toolbox
 
 import sys
 import subprocess
-import time
 
 
 def run_cmd(cmd):

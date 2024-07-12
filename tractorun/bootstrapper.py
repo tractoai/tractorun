@@ -1,12 +1,9 @@
 import base64
 import pickle
 import sys
-from typing import (
-    Dict,
-    List,
-)
+from typing import List
 
-import attrs
+import attr
 from yt.common import update_inplace
 
 from tractorun.constants import TRACTO_CONFIG_ENV_VAR
@@ -14,7 +11,10 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 
 
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+BOOTSTRAP_CONFIG_YT_PATH = "/tractorun_system/bootstrap_config"
+
+
+@attr.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcConfig:
     mesh: Mesh
     node_index: int
@@ -24,7 +24,7 @@ class ProcConfig:
     yt_client_config: str
 
 
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+@attr.define(kw_only=True, slots=True, auto_attribs=True)
 class BootstrapConfig:
     mesh: Mesh
     path: str
@@ -32,7 +32,7 @@ class BootstrapConfig:
     command: List[str]
 
 
-def bootstrap(mesh: Mesh, path: str, yt_client_config: Dict, command: List[str]) -> None:
+def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: List[str]) -> None:
     # Runs in a job
 
     import json
@@ -41,9 +41,11 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: Dict, command: List[str])
 
     processes = []
 
+    yt_config = pickle.loads(base64.b64decode(yt_client_config))
+
     for i in range(mesh.process_per_node):
         update_inplace(
-            yt_client_config,
+            yt_config,
             {
                 "pickling": {
                     "module_filter": None,
@@ -57,7 +59,7 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: Dict, command: List[str])
             proc_index=i,
             port=int(os.environ[f"YT_PORT_{i}"]),
             path=path,
-            yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
+            yt_client_config=base64.b64encode(pickle.dumps(yt_config)).decode("utf-8"),
         )
         with open(f"config_{i}.json", "w") as f:
             serializer = AttrSerializer(ProcConfig)
@@ -72,8 +74,8 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: Dict, command: List[str])
             env={
                 **os.environ,
                 TRACTO_CONFIG_ENV_VAR: f"config_{i}.json",
-                "YT_PROXY": yt_client_config["proxy"]["url"],
-                "YT_TOKEN": yt_client_config["token"],
+                "YT_PROXY": yt_config["proxy"]["url"],
+                "YT_TOKEN": yt_config["token"],
             },
         )
         processes.append(process)

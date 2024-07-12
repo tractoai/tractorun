@@ -4,9 +4,7 @@ import string
 
 
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24"
-DOCKER_IMAGE_TRTRCH = (
-    "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests_with_tractorch:2024-07-11-23-55-01"
-)
+DOCKER_IMAGE_TRTRCH = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-07-12-02-05-06"
 
 
 def get_data_path(filename: str) -> str:

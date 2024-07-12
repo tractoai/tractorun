@@ -122,7 +122,7 @@ USER 1000
 EOT
 }
 
-target "papyrax_example" {
+target "papyrax_demo" {
   platform = ["linux/amd64"]
   tags = [
     "${DOCKER_REPO}/papyrax_demo:${DOCKER_TAG}"

@@ -4,32 +4,40 @@ import json
 import os
 import pickle
 import random
-import shutil
+import shlex
 import sys
-import tarfile
+import tempfile
 from typing import (
     Any,
     Callable,
     Dict,
     List,
     Optional,
-    Union,
 )
 
 import attrs
 from yt import wrapper as yt
-from yt.common import update_inplace
 
 from tractorun import constants as const
 from tractorun.base_backend import BackendBase
-from tractorun.bind import Bind
+from tractorun.bind import (
+    Bind,
+    BindsPacker,
+)
+from tractorun.bootstrapper import (
+    BOOTSTRAP_CONFIG_YT_PATH,
+    BootstrapConfig,
+    bootstrap,
+)
 from tractorun.closet import get_closet
+from tractorun.constants import (
+    BIND_PATHS_ENV_VAR,
+    BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
+)
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
-from tractorun.mesh import (
-    Mesh,
-    MeshSerializer,
-)
+from tractorun.helpers import AttrSerializer
+from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.toolbox import Toolbox
 
@@ -44,18 +52,26 @@ class Runnable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_wrapped_job_function(
+    def get_bootstrap_command(self) -> list[str]:
+        pass
+
+    @abc.abstractmethod
+    def make_yt_command(self) -> Callable | bytes:
+        pass
+
+    @abc.abstractmethod
+    def make_local_command(
         self,
         mesh: Mesh,
         yt_path: str,
-        yt_client: yt.YtClient,
+        yt_client_config: str,
     ) -> Callable:
         pass
 
 
 @attrs.define
 class Command(Runnable):
-    command: List[str]
+    command: list[str]
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
         return task
@@ -63,14 +79,26 @@ class Command(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(
+    def get_bootstrap_command(self) -> list[str]:
+        return self.command
+
+    def make_yt_command(self) -> bytes:
+        escaped_args = " ".join([shlex.quote(arg) for arg in self.command])
+        return f"_tractorun_bootstrap {escaped_args}".encode("utf-8")
+
+    def make_local_command(
         self,
         mesh: Mesh,
         yt_path: str,
-        yt_client: yt.YtClient,
+        yt_client_config: str,
     ) -> Callable:
         def wrapped() -> None:
-            _bootstrap(mesh, yt_path, yt_client, self.command)
+            bootstrap(
+                mesh=mesh,
+                path=yt_path,
+                yt_client_config=yt_client_config,
+                command=self.get_bootstrap_command(),
+            )
 
         return wrapped
 
@@ -86,23 +114,54 @@ class UserFunction(Runnable):
     def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
         return operation
 
-    def get_wrapped_job_function(
-        self,
-        mesh: Mesh,
-        yt_path: str,
-        yt_client: yt.YtClient,
-    ) -> Callable:
+    def get_bootstrap_command(self) -> list[str]:
+        # on YT it should be native YT-wrapper command like
+        # python3 _py_runner.py wrapped.pickle config_dump _modules_info _main_module.py _main_module PY_SOURCE
+        return ["python3"] + sys.argv
+
+    def make_yt_command(self) -> Callable:
         def wrapped() -> None:
+            # run on YT
             if "TRACTO_CONFIG" in os.environ:
                 toolbox = _prepare_and_get_toolbox(backend=self._backend)
                 self.function(toolbox)
             else:
-                command = ["python3"] + sys.argv
-                _bootstrap(
+                binds_packer = BindsPacker.from_env(os.environ[BIND_PATHS_ENV_VAR])
+                binds_packer.unpack()
+                bootstrap_config_path = os.path.join(
+                    BOOTSTRAP_CONFIG_YT_PATH,
+                    os.environ[BOOTSTRAP_CONFIG_FILENAME_ENV_VAR],
+                )
+                with open(bootstrap_config_path, "r") as f:
+                    content = f.read()
+                    deserializer = AttrSerializer(BootstrapConfig)
+                    config: BootstrapConfig = deserializer.deserialize(data=content)
+                bootstrap(
+                    mesh=config.mesh,
+                    path=config.path,
+                    yt_client_config=config.yt_client_config,
+                    command=self.get_bootstrap_command(),
+                )
+
+        return wrapped
+
+    def make_local_command(
+        self,
+        mesh: Mesh,
+        yt_path: str,
+        yt_client_config: str,
+    ) -> Callable:
+        def wrapped() -> None:
+            # run on YT
+            if "TRACTO_CONFIG" in os.environ:
+                toolbox = _prepare_and_get_toolbox(backend=self._backend)
+                self.function(toolbox)
+            else:
+                bootstrap(
                     mesh=mesh,
                     path=yt_path,
-                    yt_client=yt_client,
-                    command=command,
+                    yt_client_config=yt_client_config,
+                    command=self.get_bootstrap_command(),
                 )
 
         return wrapped
@@ -134,33 +193,29 @@ def _run_tracto(
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
 
-    wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
+    yt_client_config: dict = yt.config.get_config(yt_client)
 
-    # TODO: do it normally
-    if os.path.exists(".binds"):
-        shutil.rmtree(".binds")
-    os.mkdir(".binds")
+    yt_command = runnable.make_yt_command()
 
     task_spec = yt.VanillaSpecBuilder().begin_task("task")
 
-    for idx, bind in enumerate(binds):
-        path = f".binds/{idx}.tar"
-        with tarfile.open(path, "w:gz") as tar:
-            tar.add(bind.source, arcname=os.path.basename(bind.source))
+    config = BootstrapConfig(
+        mesh=mesh,
+        path=yt_path,
+        yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
+    )
+    tmp_file = tempfile.NamedTemporaryFile()
+    tmp_file.write(AttrSerializer(BootstrapConfig).serialize(config).encode("utf-8"))
+
+    binds_packer = BindsPacker(
+        binds=binds + [Bind(source=tmp_file.name, destination=BOOTSTRAP_CONFIG_YT_PATH)],
+    )
+    bind_paths = binds_packer.pack()
+    for path in bind_paths:
         task_spec = task_spec.file_paths(yt.LocalFile(path, path))
 
-    def unpack_wrapper(func: Callable) -> Callable:
-        def wrapper() -> None:
-            for idx_w, bind_w in enumerate(binds):
-                path_w = f".binds/{idx_w}.tar"
-                with tarfile.open(path_w, "r:gz") as tar_w:
-                    tar_w.extractall(path=bind_w.destination)
-            func()
-
-        return wrapper
-
     task_spec = runnable.modify_task(
-        task_spec.command(unpack_wrapper(wrapped))
+        task_spec.command(yt_command)
         .job_count(mesh.node_count)
         .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
         .port_count(mesh.process_per_node)
@@ -175,6 +230,8 @@ def _run_tracto(
                 "WANDB_ENABLED": str(int(wandb_enabled)),
                 # Sometimes we can't read compiled bytecode in forks on yt.
                 "PYTHONDONTWRITEBYTECODE": "1",
+                BIND_PATHS_ENV_VAR: binds_packer.to_env(),
+                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: os.path.split(tmp_file.name)[1],
             },
         )
     )
@@ -195,6 +252,7 @@ def _run_tracto(
     operation_spec = runnable.modify_operation(operation_spec)
 
     yt_client.run_operation(operation_spec)
+    tmp_file.close()
 
 
 def _run_local(
@@ -208,6 +266,8 @@ def _run_local(
 ) -> None:
     if mesh.node_count != 1:
         raise TractorunInvalidConfiguration("local mode only supports 1 node")
+
+    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
     # TODO: respawn in docker
 
@@ -226,64 +286,12 @@ def _run_local(
     for i in range(mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
-    wrapped = runnable.get_wrapped_job_function(mesh=mesh, yt_path=yt_path, yt_client=yt_client)
+    wrapped = runnable.make_local_command(
+        mesh=mesh,
+        yt_path=yt_path,
+        yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
+    )
     return wrapped()
-
-
-def _bootstrap(mesh: Mesh, path: str, yt_client: yt.YtClient, command: List[str]) -> None:
-    # Runs in a job
-
-    import json
-    import os
-    import subprocess
-
-    processes = []
-
-    for i in range(mesh.process_per_node):
-        proc_config: Dict[str, Union[str, int]] = {
-            "mesh": MeshSerializer.serialize(mesh),
-            "node_index": os.environ["YT_JOB_COOKIE"],
-            "proc_index": i,
-            "port": os.environ[f"YT_PORT_{i}"],
-            "path": path,
-        }
-
-        conf = yt.config.get_config(yt_client)
-        update_inplace(
-            conf,
-            {
-                "pickling": {
-                    "module_filter": None,
-                },
-            },
-        )
-
-        proc_config["yt_client_config"] = base64.b64encode(pickle.dumps(conf)).decode()
-        with open(f"config_{i}.json", "w") as f:
-            json.dump(proc_config, f)
-
-        process = subprocess.Popen(
-            command,
-            stdout=sys.stderr,
-            stderr=sys.stderr,
-            bufsize=1,
-            universal_newlines=True,
-            env={
-                **os.environ,
-                "TRACTO_CONFIG": f"config_{i}.json",
-                "YT_PROXY": conf["proxy"]["url"],
-                "YT_TOKEN": conf["token"],
-            },
-        )
-        processes.append(process)
-
-    for process in processes:
-        exit_code = process.wait()
-        if exit_code != 0:
-            sys.exit(exit_code)
-
-    # TODO: torch multiprocessing is better, but pickling does not work.
-    # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
 
 
 def _prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:

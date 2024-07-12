@@ -7,11 +7,11 @@ import socket
 import attr
 from yt.wrapper import YtClient
 
+from tractorun.bootstrapper import ProcConfig
+from tractorun.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.coordinator import Coordinator
-from tractorun.mesh import (
-    Mesh,
-    MeshSerializer,
-)
+from tractorun.helpers import AttrSerializer
+from tractorun.mesh import Mesh
 
 
 @attr.define
@@ -31,34 +31,36 @@ class Closet:
 
 
 def get_closet() -> Closet:
-    config_path = os.environ["TRACTO_CONFIG"]
+    config_path = os.environ[TRACTO_CONFIG_ENV_VAR]
     with open(config_path, "r") as ff:
-        config = json.load(ff)
+        deserializer = AttrSerializer(ProcConfig)
+        config: ProcConfig = deserializer.deserialize(json.load(ff))
 
-    port = int(config["port"])
-    path = config["path"]
-    self_endpoint = socket.gethostname() + ":" + str(port)
-    mesh = MeshSerializer.deserialize(config["mesh"])
-    yt_client = YtClient(config=pickle.loads(base64.b64decode(config["yt_client_config"])))
+    self_endpoint = socket.gethostname() + ":" + str(config.port)
+    yt_client = YtClient(
+        config=pickle.loads(
+            base64.b64decode(config.yt_client_config),
+        ),
+    )
     training_metadata = TrainingMetadata(
         operation_id=os.environ["YT_OPERATION_ID"],
         job_id=os.environ["YT_JOB_ID"],
     )
     coordinator = Coordinator.create(
         yt_client=yt_client,
-        yt_path=path,
+        yt_path=config.path,
         self_endpoint=self_endpoint,
-        mesh=mesh,
-        node_index=int(config["node_index"]),
-        process_index=int(config["proc_index"]),
+        mesh=config.mesh,
+        node_index=config.node_index,
+        process_index=config.proc_index,
         operation_id=training_metadata.operation_id,
         job_id=training_metadata.job_id,
     )
 
     return Closet(
-        mesh=mesh,
+        mesh=config.mesh,
         coordinator=coordinator,
         yt_client=yt_client,
-        yt_path=path,
+        yt_path=config.path,
         training_metadata=training_metadata,
     )

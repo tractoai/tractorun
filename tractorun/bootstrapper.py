@@ -29,7 +29,6 @@ class BootstrapConfig:
     mesh: Mesh
     path: str
     yt_client_config: str
-    command: List[str]
 
 
 def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: List[str]) -> None:

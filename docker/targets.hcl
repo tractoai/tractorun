@@ -102,3 +102,18 @@ USER 1000
 
 EOT
 }
+
+target "papyrax_example" {
+  platform = ["linux/amd64"]
+  tags = [
+    "${DOCKER_REPO}/papyrax_demo:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM cr.ai.nebius.cloud/crnf2coti090683j5ssi/ytsaurus/papyrax_main:2024-07-11-03
+
+RUN ln -fns /usr/bin/python3.10 /usr/bin/python3
+
+COPY . /src
+RUN pip install /src
+EOT
+}

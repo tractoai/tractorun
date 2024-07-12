@@ -4,6 +4,7 @@ import json
 import os
 import pickle
 import random
+import shlex
 import sys
 import tempfile
 from typing import (
@@ -82,7 +83,8 @@ class Command(Runnable):
         return self.command
 
     def make_yt_command(self) -> bytes:
-        return b"tractorun_bootstrap"
+        escaped_args = [shlex.quote(arg) for arg in self.command]
+        return f"tractorun_bootstrap {escaped_args}".encode("utf-8")
 
     def make_local_command(
         self,
@@ -201,7 +203,6 @@ def _run_tracto(
         mesh=mesh,
         path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
-        command=runnable.get_bootstrap_command(),
     )
     tmp_file = tempfile.NamedTemporaryFile()
     tmp_file.write(AttrSerializer(BootstrapConfig).serialize(config).encode("utf-8"))

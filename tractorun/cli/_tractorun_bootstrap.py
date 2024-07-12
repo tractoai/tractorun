@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 
 from tractorun.bind import BindsPacker
 from tractorun.bootstrapper import (
@@ -29,7 +30,7 @@ def main() -> None:
         mesh=config.mesh,
         path=config.path,
         yt_client_config=config.yt_client_config,
-        command=config.command,
+        command=sys.argv[1:],
     )
 
 

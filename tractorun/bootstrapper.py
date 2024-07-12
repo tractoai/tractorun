@@ -1,5 +1,8 @@
 import base64
+import json
+import os
 import pickle
+import subprocess
 import sys
 from typing import List
 
@@ -33,10 +36,6 @@ class BootstrapConfig:
 
 def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: List[str]) -> None:
     # Runs in a job
-
-    import json
-    import os
-    import subprocess
 
     processes = []
 

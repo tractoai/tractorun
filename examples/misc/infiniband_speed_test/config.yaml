@@ -1,0 +1,15 @@
+docker_image: cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/nccl_perf_test:3
+mesh:
+  node_count: 2
+  process_per_node: 1
+  gpu_per_process: 8
+  pool_trees: [gpu-llm]
+resources:
+  cpu_limit: 8
+  memory_limit: 34359738368
+yt_path: //tmp/nccl_speed_test
+bind: ["infiniband_speed_test.py:."]
+command: ["python3", "infiniband_speed_test.py"]
+yt_operation_spec:
+  stderr_table_path: "//tmp/stderr"
+  max_failed_job_count: 1

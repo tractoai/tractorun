@@ -1,10 +1,8 @@
-from tractorun.backend.generic import (
-    GenericBackend,
-)
-from tractorun.run import prepare_and_get_toolbox
-
-import sys
 import subprocess
+import sys
+
+from tractorun.backend.generic import GenericBackend
+from tractorun.run import prepare_and_get_toolbox
 
 
 def run_cmd(cmd):

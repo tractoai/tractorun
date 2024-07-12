@@ -211,8 +211,7 @@ def _run_tracto(
         binds=binds + [Bind(source=tmp_file.name, destination=BOOTSTRAP_CONFIG_YT_PATH)],
     )
     bind_paths = binds_packer.pack()
-    for path in bind_paths:
-        task_spec = task_spec.file_paths(yt.LocalFile(path, path))
+    task_spec = task_spec.file_paths([yt.LocalFile(path, path) for path in bind_paths])
 
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)

@@ -37,18 +37,21 @@ jobs:
         id: tag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
 
-      - name: "Create Pull Request"
-        id: cpr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          title: "New version is coming: ${{ steps.tag.outputs.tag }}"
-          branch: "new-version-${{ steps.tag.outputs.tag }}"
-          body: ""
+      # - name: "Create Pull Request"
+      #   id: cpr
+      #   uses: peter-evans/create-pull-request@v6
+      #   with:
+      #     title: "New version is coming: ${{ steps.tag.outputs.tag }}"
+      #     branch: "new-version-${{ steps.tag.outputs.tag }}"
+      #     body: ""
 
-      - name: "Merge Pull Request"
-        run: gh pr merge --squash --admin ${{ steps.cpr.outputs.pull-request-number }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: "Merge Pull Request"
+      #   run: gh pr merge --squash --admin ${{ steps.cpr.outputs.pull-request-number }}
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Push"  # TODO: delete after pr creation is allowed
+        run: git push
 
       - name: "Set tag"
         uses: mathieudutour/github-tag-action@v6.1

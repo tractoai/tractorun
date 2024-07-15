@@ -18,7 +18,7 @@ jobs:
           python-version: "3.10"
 
       - name: "Install requirements"
-        run: pip install requirements_dev.txt
+        run: pip install -r requirements_dev.txt
 
       - name: "Setup git"
         run: git config --global user.email "noreply@tracto.ai" && git config --global user.name "Tracto Driver"

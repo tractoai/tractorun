@@ -13,6 +13,7 @@ from typing import (
     Optional,
 )
 
+import attr
 import attrs
 from yt import wrapper as yt
 
@@ -70,6 +71,7 @@ class Runnable(abc.ABC):
 @attrs.define
 class Command(Runnable):
     command: list[str]
+    bootstrap_command: Optional[list[str]] = attr.field(default=None)
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
         return task
@@ -81,8 +83,11 @@ class Command(Runnable):
         return self.command
 
     def make_yt_command(self) -> bytes:
-        escaped_args = " ".join([shlex.quote(arg) for arg in self.command])
-        return f"_tractorun_bootstrap {escaped_args}".encode("utf-8")
+        escaped_command = " ".join([shlex.quote(arg) for arg in self.command])
+        # escaped_bootstrap_command = " ".join([shlex.quote(arg) for arg in self.bootstrap_command])
+        # if not escaped_bootstrap_command:
+        escaped_bootstrap_command = "_tractorun_bootstrap"
+        return f"{escaped_bootstrap_command} {escaped_command}".encode("utf-8")
 
     def make_local_command(
         self,

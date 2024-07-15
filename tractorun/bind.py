@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-import tarfile
+import zipfile
 
 import attrs
 
@@ -25,18 +25,18 @@ class BindsPacker:
         binds = sorted(self._binds, key=lambda b: b.source)
         paths = []
         for idx, bind in enumerate(binds):
-            path = f".binds/{idx}.tar"
-            with tarfile.open(path, "w:gz") as tar:
-                tar.add(bind.source, arcname=os.path.basename(bind.source))
+            path = f".binds/{idx}.zip"
+            with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zipf:
+                zipf.write(bind.source, arcname=os.path.basename(bind.source))
                 paths.append(path)
         return paths
 
     def unpack(self) -> None:
         binds = sorted(self._binds, key=lambda b: b.source)
-        for idx_w, bind_w in enumerate(binds):
-            path_w = f".binds/{idx_w}.tar"
-            with tarfile.open(path_w, "r:gz") as tar_w:
-                tar_w.extractall(path=bind_w.destination)
+        for idx, bind in enumerate(binds):
+            path_w = f".binds/{idx}.zip"
+            with zipfile.ZipFile(path_w, "r") as zipf:
+                zipf.extractall(path=bind.destination)
 
     def to_env(self) -> str:
         # sorry

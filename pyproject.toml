@@ -56,3 +56,24 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "yt_yson_bindings.*"
 ignore_missing_imports = true
+
+[tool.bumpversion]
+current_version = "0.6.0"
+commit = true
+commit_args = "--no-verify"
+tag = true
+tag_name = "{new_version}"
+message = "New version: {new_version} [changelog-ignore]"
+allow_dirty = true
+
+[[tool.bumpversion.files]]
+filename = "tractorun/__init__.py"
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+search = "Unreleased"
+
+[[tool.bumpversion.files]]
+filename = "CHANGELOG.md"
+search = "{current_version}...HEAD"
+replace = "{current_version}...{new_version}"

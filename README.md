@@ -19,3 +19,25 @@ and update image in `run_tests`
 ```shell
 YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests . -s
 ```
+
+### Bump library version
+Just run `Create release` action.
+
+### Build and upload a wheel
+- log in to https://artifactory.nebius.dev/ui/packages
+- go to `Welcome, username` -> `Edit Profile` -> `Generate an Identity Token`
+- make your `~/.pypirc` look this way:
+```
+[distutils]
+index-servers = local
+[local]
+repository: https://artifactory.nebius.dev/artifactory/api/pypi/nyt
+username: username@nebius.com
+password: <your token>
+```
+
+Now you can do it!
+```shell
+./build_and_upload.sh
+```
+Make sure your git revision has a version tag.

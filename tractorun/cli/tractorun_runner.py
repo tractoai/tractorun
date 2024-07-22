@@ -5,13 +5,11 @@ import json
 import pprint
 from typing import (
     Any,
-    Dict,
-    List,
     Optional,
     TypeVar,
 )
 
-import attr
+import attrs
 import cattr
 import yaml
 
@@ -29,38 +27,38 @@ MESH_GPU_PER_PROCESS_DEFAULT = 0
 LOCAL_DEFAULT = False
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class MeshConfig:
-    node_count: Optional[int] = attr.ib(default=None)
-    process_per_node: Optional[int] = attr.ib(default=None)
-    gpu_per_process: Optional[int] = attr.ib(default=None)
-    pool_trees: Optional[List[str]] = attr.ib(default=None)
+    node_count: Optional[int] = attrs.field(default=None)
+    process_per_node: Optional[int] = attrs.field(default=None)
+    gpu_per_process: Optional[int] = attrs.field(default=None)
+    pool_trees: Optional[list[str]] = attrs.field(default=None)
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ResourcesConfig:
-    cpu_limit: Optional[float] = attr.ib(default=None)
-    memory_limit: Optional[int] = attr.ib(default=None)
+    cpu_limit: Optional[float] = attrs.field(default=None)
+    memory_limit: Optional[int] = attrs.field(default=None)
 
 
 _T = TypeVar("_T")
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class Config:
     """yaml config representation"""
 
-    yt_path: Optional[str] = attr.field(default=None)
-    docker_image: Optional[str] = attr.field(default=None)
-    user_config: Optional[Dict[str, Any]] = attr.field(default=None)
-    yt_operation_spec: Optional[Dict[str, Any]] = attr.field(default=None)
-    yt_task_spec: Optional[Dict[str, Any]] = attr.field(default=None)
-    local: Optional[bool] = attr.field(default=None)
-    bind: Optional[List[str]] = attr.field(default=None)
-    command: Optional[List[str]] = attr.field(default=None)
+    yt_path: Optional[str] = attrs.field(default=None)
+    docker_image: Optional[str] = attrs.field(default=None)
+    user_config: Optional[dict[str, Any]] = attrs.field(default=None)
+    yt_operation_spec: Optional[dict[str, Any]] = attrs.field(default=None)
+    yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
+    local: Optional[bool] = attrs.field(default=None)
+    bind: Optional[list[str]] = attrs.field(default=None)
+    command: Optional[list[str]] = attrs.field(default=None)
 
-    mesh: MeshConfig = attr.field(default=MeshConfig())
-    resources: ResourcesConfig = attr.field(default=ResourcesConfig())
+    mesh: MeshConfig = attrs.field(default=MeshConfig())
+    resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
@@ -69,36 +67,36 @@ class Config:
         return cattr.structure(config, Config)
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveMeshConfig:
     node_count: int
     process_per_node: int
     gpu_per_process: int
-    pool_trees: Optional[List[str]]
+    pool_trees: Optional[list[str]]
 
 
-@attr.define(kw_only=True, slots=True)
+@attrs.define(kw_only=True, slots=True)
 class EffectiveResourcesConfig:
     cpu_limit: Optional[float]
     memory_limit: Optional[int]
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveConfig:
     yt_path: str
     docker_image: str
-    user_config: Optional[Dict[str, Any]]
-    yt_operation_spec: Optional[Dict[str, Any]]
-    yt_task_spec: Optional[Dict[str, Any]]
+    user_config: Optional[dict[str, Any]]
+    yt_operation_spec: Optional[dict[str, Any]]
+    yt_task_spec: Optional[dict[str, Any]]
     local: bool
-    bind: List[str]
-    command: List[str]
+    bind: list[str]
+    command: list[str]
 
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
 
     @classmethod
-    def configure(cls, args: Dict[str, Any], config: Config) -> "EffectiveConfig":
+    def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
         def _choose_value(args_value: _T, config_value: _T, default: Optional[_T] = None) -> _T:
             result = args_value if args_value is not None else config_value
             if result is None and default is not None:
@@ -217,9 +215,9 @@ def main() -> None:
         print("Parsed args:")
         pprint.pprint(args)
         print("\nConfig from file:")
-        pprint.pprint(attr.asdict(file_config_content))  # type: ignore
+        pprint.pprint(attrs.asdict(file_config_content))  # type: ignore
         print("\nEffective config:")
-        pprint.pprint(attr.asdict(effective_config))  # type: ignore
+        pprint.pprint(attrs.asdict(effective_config))  # type: ignore
         return
 
     run_script(

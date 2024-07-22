@@ -1,8 +1,6 @@
 from typing import (
     Any,
     Callable,
-    Dict,
-    List,
     Optional,
 )
 
@@ -29,14 +27,14 @@ def run(
     backend: BackendBase,
     yt_path: str,
     mesh: Mesh,
-    user_config: Optional[Dict[Any, Any]] = None,
+    user_config: Optional[dict[Any, Any]] = None,
     docker_image: str = DEFAULT_DOCKER_IMAGE,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
-    yt_operation_spec: Optional[Dict[Any, Any]] = None,
-    yt_task_spec: Optional[Dict[Any, Any]] = None,
+    yt_operation_spec: Optional[dict[Any, Any]] = None,
+    yt_task_spec: Optional[dict[Any, Any]] = None,
     local: bool = False,
 ) -> None:
     if local:
@@ -71,17 +69,17 @@ def run(
 
 
 def run_script(
-    command: List[str],
+    command: list[str],
     *,
     yt_path: str,
     mesh: Mesh,
     docker_image: str,
     resources: Resources,
-    user_config: Optional[Dict[Any, Any]] = None,
-    binds: Optional[List[Bind]] = None,
+    user_config: Optional[dict[Any, Any]] = None,
+    binds: Optional[list[Bind]] = None,
     local: bool = False,
-    yt_operation_spec: Optional[Dict[Any, Any]] = None,
-    yt_task_spec: Optional[Dict[Any, Any]] = None,
+    yt_operation_spec: Optional[dict[Any, Any]] = None,
+    yt_task_spec: Optional[dict[Any, Any]] = None,
 ) -> None:
     if binds is None:
         binds = []

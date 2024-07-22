@@ -4,7 +4,7 @@ import os
 import pickle
 import socket
 
-import attr
+import attrs
 from yt.wrapper import YtClient
 
 from tractorun.bootstrapper import ProcConfig
@@ -14,14 +14,14 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 
 
-@attr.define
+@attrs.define
 class TrainingMetadata:
     # TODO: choose a good place for this data
     operation_id: str
     job_id: str
 
 
-@attr.define
+@attrs.define
 class Closet:
     mesh: Mesh
     coordinator: Coordinator

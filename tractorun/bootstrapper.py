@@ -4,9 +4,8 @@ import os
 import pickle
 import subprocess
 import sys
-from typing import List
 
-import attr
+import attrs
 from yt.common import update_inplace
 
 from tractorun.constants import TRACTO_CONFIG_ENV_VAR
@@ -17,7 +16,7 @@ from tractorun.mesh import Mesh
 BOOTSTRAP_CONFIG_YT_PATH = "/tractorun_system/bootstrap_config"
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcConfig:
     mesh: Mesh
     node_index: int
@@ -27,14 +26,14 @@ class ProcConfig:
     yt_client_config: str
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BootstrapConfig:
     mesh: Mesh
     path: str
     yt_client_config: str
 
 
-def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: List[str]) -> None:
+def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str]) -> None:
     # Runs in a job
 
     processes = []

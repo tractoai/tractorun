@@ -2,12 +2,11 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Iterator,
-    List,
     Optional,
     Sized,
 )
 
-import attr
+import attrs
 import torch.utils.data
 from torch.utils.data.dataset import T_co
 from yt import wrapper as yt
@@ -16,11 +15,11 @@ from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.toolbox import Toolbox
 
 
-@attr.define(frozen=True, slots=True)
+@attrs.define(frozen=True, slots=True)
 class YTTensorTransform:
-    _serializer: TensorSerializer = attr.field(default=TensorSerializer())
+    _serializer: TensorSerializer = attrs.field(default=TensorSerializer())
 
-    def __call__(self, columns: List[str], row: dict) -> tuple:
+    def __call__(self, columns: list[str], row: dict) -> tuple:
         return tuple((self._serializer.desirialize(yt.yson.get_bytes(row[name])) for name in columns))
 
 
@@ -29,7 +28,7 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
         self,
         toolbox: Toolbox,
         path: str,
-        transform: Callable[[List[str], dict], T_co],
+        transform: Callable[[list[str], dict], T_co],
         start: int = 0,
         end: Optional[int] = None,
         columns: Optional[list] = None,

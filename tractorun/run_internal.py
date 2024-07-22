@@ -82,7 +82,7 @@ class Command(Runnable):
 
     def make_yt_command(self) -> bytes:
         escaped_command = " ".join([shlex.quote(arg) for arg in self.command])
-        return f"_tractorun_bootstrap {escaped_command}".encode("utf-8")
+        return f"python3 -m tractorun.cli.tractorun_bootstrap {escaped_command}".encode("utf-8")
 
     def make_local_command(
         self,

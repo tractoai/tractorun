@@ -1,8 +1,5 @@
 import json
-from typing import (
-    List,
-    Optional,
-)
+from typing import Optional
 
 import attrs
 import cattrs
@@ -13,7 +10,7 @@ class Mesh:
     node_count: int = attrs.field()
     process_per_node: int = attrs.field()
     gpu_per_process: int = attrs.field()
-    pool_trees: Optional[List[str]] = attrs.field(default=None)
+    pool_trees: Optional[list[str]] = attrs.field(default=None)
 
 
 class MeshSerializer:

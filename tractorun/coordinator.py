@@ -1,14 +1,14 @@
 import datetime
 import time
 
-import attr
+import attrs
 import yt.wrapper as yt
 
 from tractorun.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
 
 
-@attr.define(kw_only=True)
+@attrs.define(kw_only=True)
 class Coordinator:
     _mesh: Mesh
     _self_index: int

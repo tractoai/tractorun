@@ -1,15 +1,12 @@
 import argparse
 import time
-from typing import (
-    Callable,
-    List,
-)
+from typing import Callable
 
 import yt.wrapper as yt
 
 
 def tail_output(generator: Callable[[], bytes], polling_interval: float) -> None:
-    def prefix_function(s: bytes) -> List[int]:
+    def prefix_function(s: bytes) -> list[int]:
         pi = [0] * len(s)
         for i in range(1, len(s)):
             j = pi[i - 1]
@@ -21,11 +18,11 @@ def tail_output(generator: Callable[[], bytes], polling_interval: float) -> None
         return pi
 
     def get_new_data(s: bytes, t: bytes) -> bytes:
-        UUID = b"8a5c221d-c111d561-13440384-186"
-        k = t + UUID + s
+        uuid = b"8a5c221d-c111d561-13440384-186"
+        k = t + uuid + s
         pi = prefix_function(k)
         max_pi = 0
-        for i in range(len(t) + len(UUID), len(k)):
+        for i in range(len(t) + len(uuid), len(k)):
             max_pi = max(max_pi, pi[i])
         return t[max_pi:]
 

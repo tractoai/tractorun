@@ -4,7 +4,7 @@ from abc import (
 )
 from typing import Any
 
-import attr
+import attrs
 import testcontainers_yt_local.container
 from yt.wrapper.client import YtClient
 
@@ -15,10 +15,10 @@ class YtInstance(ABC):
         pass
 
 
-@attr.define
+@attrs.define
 class YtInstanceExternal(YtInstance):
     proxy_url: str
-    token: str = attr.ib(repr=False)
+    token: str = attrs.field(repr=False)
 
     def get_client(self) -> YtClient:
         return YtClient(

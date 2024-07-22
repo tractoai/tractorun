@@ -3,16 +3,16 @@ import os
 import shutil
 import tarfile
 
-import attr
+import attrs
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class Bind:
     source: str
     destination: str
 
 
-@attr.define(kw_only=True, slots=True, auto_attribs=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsPacker:
     _binds: list[Bind]
 
@@ -40,7 +40,7 @@ class BindsPacker:
 
     def to_env(self) -> str:
         # sorry
-        return json.dumps([attr.asdict(bind) for bind in self._binds])  # type: ignore
+        return json.dumps([attrs.asdict(bind) for bind in self._binds])  # type: ignore
 
     @classmethod
     def from_env(cls, content: str) -> "BindsPacker":

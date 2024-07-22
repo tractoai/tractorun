@@ -10,8 +10,6 @@ import tempfile
 from typing import (
     Any,
     Callable,
-    Dict,
-    List,
     Optional,
 )
 
@@ -173,14 +171,14 @@ def _run_tracto(
     docker_image: str,
     yt_path: str,
     mesh: Mesh,
-    user_config: Optional[Dict[Any, Any]] = None,
-    binds: Optional[List[Bind]] = None,
+    user_config: Optional[dict[Any, Any]] = None,
+    binds: Optional[list[Bind]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
-    yt_operation_spec: Optional[Dict[Any, Any]] = None,
-    yt_task_spec: Optional[Dict[Any, Any]] = None,
+    yt_operation_spec: Optional[dict[Any, Any]] = None,
+    yt_task_spec: Optional[dict[Any, Any]] = None,
 ) -> None:
     resources = resources if resources is not None else Resources()
     binds = binds if binds is not None else []

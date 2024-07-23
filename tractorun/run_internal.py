@@ -227,7 +227,6 @@ def _run_tracto(
 
     task_spec = task_spec.file_paths(yt_file_bindings)
 
-
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)
         .job_count(mesh.node_count)

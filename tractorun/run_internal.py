@@ -30,7 +30,8 @@ from tractorun.bootstrapper import (
 from tractorun.closet import get_closet
 from tractorun.constants import (
     BIND_PATHS_ENV_VAR,
-    BOOTSTRAP_CONFIG_FILENAME_ENV_VAR, BOOTSTRAP_CONFIG_NAME,
+    BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
+    BOOTSTRAP_CONFIG_NAME,
 )
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
@@ -225,6 +226,8 @@ def _run_tracto(
 
     task_spec = task_spec.file_paths(yt_file_bindings)
 
+    new_pythonpath = ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs])
+
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)
         .job_count(mesh.node_count)
@@ -242,9 +245,7 @@ def _run_tracto(
                 # Sometimes we can't read compiled bytecode in forks on yt.
                 "PYTHONDONTWRITEBYTECODE": "1",
                 BIND_PATHS_ENV_VAR: binds_packer.to_env(),
-                "PYTHONPATH": "$PYTHONPATH:{0}".format(
-                    ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs]),
-                ),
+                "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
                 BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: BOOTSTRAP_CONFIG_NAME,
             },
         )

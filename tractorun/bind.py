@@ -1,6 +1,7 @@
 from collections import Counter
 import json
 import os
+import shutil
 import zipfile
 
 import attrs
@@ -26,30 +27,22 @@ class BindsPacker:
         binds = sorted(self._binds, key=lambda b: b.source)
         result: list[PackedBind] = []
         for idx, bind in enumerate(binds):
-            archive_name = f"{idx}.zip"
+            archive_name = f"__{idx}"
             path = os.path.join(base_result_path, archive_name)
-            with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                for root, dirs, files in os.walk(bind.source):
-                    for d in dirs:
-                        dir_path = os.path.join(root, d)
-                        arcname = os.path.relpath(dir_path, bind.source)
-                        zipf.writestr(arcname + os.path.sep, "")
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, bind.source)
-                        zipf.write(file_path, arcname=arcname)
-                result.append(
-                    PackedBind(
-                        archive_name=archive_name,
-                        path=path,
-                    ),
-                )
+            root_dir, base_dir = os.path.split(os.path.abspath(bind.source))
+            shutil.make_archive(path, "zip", root_dir, base_dir)
+            result.append(
+                PackedBind(
+                    archive_name=f"{archive_name}.zip",
+                    path=f"{path}.zip",
+                ),
+            )
         return result
 
     def unpack(self) -> None:
         binds = sorted(self._binds, key=lambda b: b.source)
         for idx, bind in enumerate(binds):
-            path_w = f"{idx}.zip"
+            path_w = f"__{idx}.zip"
             with zipfile.ZipFile(path_w, "r") as zipf:
                 zipf.extractall(path=bind.destination)
 
@@ -83,28 +76,13 @@ class BindsLibPacker:
 
         result: list[PackedLib] = []
         for lib_name, original_path in lib_to_original_path.items():
-            path = os.path.join(base_result_path, f"{lib_name}.zip")
-            with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zipf:
-                zipf.writestr(lib_name + os.path.sep, "")
-                for root, dirs, files in os.walk(original_path):
-                    for d in dirs:
-                        dir_path = os.path.join(root, d)
-                        arcname = os.path.join(
-                            lib_name,
-                            os.path.relpath(dir_path, original_path),
-                        )
-                        zipf.writestr(arcname + os.path.sep, "")
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.join(
-                            lib_name,
-                            os.path.relpath(file_path, original_path),
-                        )
-                        zipf.write(file_path, arcname=arcname)
-                result.append(
-                    PackedLib(
-                        archive_name=lib_name,
-                        path=path,
-                    )
+            path = os.path.join(base_result_path, f"__{lib_name}")
+            root_dir, base_dir = os.path.split(os.path.abspath(original_path))
+            shutil.make_archive(path, "zip", root_dir, base_dir)
+            result.append(
+                PackedLib(
+                    archive_name=lib_name,
+                    path=f"{path}.zip",
                 )
+            )
         return result

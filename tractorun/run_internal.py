@@ -20,17 +20,17 @@ from tractorun import constants as const
 from tractorun.base_backend import BackendBase
 from tractorun.bind import (
     Bind,
+    BindsLibPacker,
     BindsPacker,
 )
 from tractorun.bootstrapper import (
-    BOOTSTRAP_CONFIG_YT_PATH,
     BootstrapConfig,
     bootstrap,
 )
 from tractorun.closet import get_closet
 from tractorun.constants import (
     BIND_PATHS_ENV_VAR,
-    BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
+    BOOTSTRAP_CONFIG_FILENAME_ENV_VAR, BOOTSTRAP_CONFIG_NAME,
 )
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
@@ -126,10 +126,7 @@ class UserFunction(Runnable):
             else:
                 binds_packer = BindsPacker.from_env(os.environ[BIND_PATHS_ENV_VAR])
                 binds_packer.unpack()
-                bootstrap_config_path = os.path.join(
-                    BOOTSTRAP_CONFIG_YT_PATH,
-                    os.environ[BOOTSTRAP_CONFIG_FILENAME_ENV_VAR],
-                )
+                bootstrap_config_path = os.environ[BOOTSTRAP_CONFIG_FILENAME_ENV_VAR]
                 with open(bootstrap_config_path, "r") as f:
                     content = f.read()
                     deserializer = AttrSerializer(BootstrapConfig)
@@ -173,6 +170,7 @@ def _run_tracto(
     mesh: Mesh,
     user_config: Optional[dict[Any, Any]] = None,
     binds: Optional[list[Bind]] = None,
+    bind_libs: Optional[list[str]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -182,6 +180,7 @@ def _run_tracto(
 ) -> None:
     resources = resources if resources is not None else Resources()
     binds = binds if binds is not None else []
+    bind_libs = bind_libs if bind_libs is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
     yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
 
@@ -193,23 +192,38 @@ def _run_tracto(
 
     yt_client_config: dict = yt.config.get_config(yt_client)
 
-    yt_command = runnable.make_yt_command()
-
-    task_spec = yt.VanillaSpecBuilder().begin_task("task")
-
     config = BootstrapConfig(
         mesh=mesh,
         path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
     )
-    tmp_file = tempfile.NamedTemporaryFile()
-    tmp_file.write(AttrSerializer(BootstrapConfig).serialize(config).encode("utf-8"))
+    tmp_dir = tempfile.TemporaryDirectory()
+    bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
+    with open(bootstrap_config_path, "w") as f:
+        f.write(AttrSerializer(BootstrapConfig).serialize(config))
 
     binds_packer = BindsPacker(
-        binds=binds + [Bind(source=tmp_file.name, destination=BOOTSTRAP_CONFIG_YT_PATH)],
+        binds=binds,
     )
-    bind_paths = binds_packer.pack()
-    task_spec = task_spec.file_paths([yt.LocalFile(path, path) for path in bind_paths])
+    packed_binds = binds_packer.pack(tmp_dir.name)
+    bind_libs_packer = BindsLibPacker(
+        paths=bind_libs,
+    )
+    packed_libs = bind_libs_packer.pack(tmp_dir.name)
+
+    yt_file_bindings = []
+    yt_file_bindings.extend(
+        [yt.LocalFile(packed_bind.path, packed_bind.archive_name) for packed_bind in packed_binds],
+    )
+    yt_file_bindings.extend([yt.LocalFile(packed_lib.path, packed_lib.archive_name) for packed_lib in packed_libs])
+    yt_file_bindings.append(
+        yt.LocalFile(bootstrap_config_path, BOOTSTRAP_CONFIG_NAME),
+    )
+
+    yt_command = runnable.make_yt_command()
+    task_spec = yt.VanillaSpecBuilder().begin_task("task")
+
+    task_spec = task_spec.file_paths(yt_file_bindings)
 
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)
@@ -228,7 +242,10 @@ def _run_tracto(
                 # Sometimes we can't read compiled bytecode in forks on yt.
                 "PYTHONDONTWRITEBYTECODE": "1",
                 BIND_PATHS_ENV_VAR: binds_packer.to_env(),
-                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: os.path.split(tmp_file.name)[1],
+                "PYTHONPATH": "$PYTHONPATH:{0}".format(
+                    ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs]),
+                ),
+                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: BOOTSTRAP_CONFIG_NAME,
             },
         )
     )
@@ -249,7 +266,7 @@ def _run_tracto(
     operation_spec = runnable.modify_operation(operation_spec)
 
     yt_client.run_operation(operation_spec)
-    tmp_file.close()
+    tmp_dir.cleanup()
 
 
 def _run_local(

@@ -77,6 +77,7 @@ def run_script(
     resources: Resources,
     user_config: Optional[dict[Any, Any]] = None,
     binds: Optional[list[Bind]] = None,
+    bind_libs: Optional[list[str]] = None,
     local: bool = False,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
     yt_task_spec: Optional[dict[Any, Any]] = None,
@@ -100,6 +101,7 @@ def run_script(
             yt_client=None,
             docker_image=docker_image,
             binds=binds,
+            bind_libs=bind_libs,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
         )

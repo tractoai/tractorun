@@ -4,3 +4,4 @@ BIND_PATHS_ENV_VAR: str = "BIND_PATHS"
 BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str = "BOOTSTRAP_CONFIG_FILENAME"
 
 DEFAULT_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-06-17-16-17-56"
+BOOTSTRAP_CONFIG_NAME: str = "__bootstrap_config"

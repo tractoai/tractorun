@@ -211,6 +211,7 @@ def _run_tracto(
         paths=bind_libs,
     )
     packed_libs = bind_libs_packer.pack(tmp_dir.name)
+    new_pythonpath = ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs])
 
     yt_file_bindings = []
     yt_file_bindings.extend(
@@ -226,7 +227,6 @@ def _run_tracto(
 
     task_spec = task_spec.file_paths(yt_file_bindings)
 
-    new_pythonpath = ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs])
 
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)

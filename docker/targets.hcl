@@ -28,22 +28,6 @@ RUN python3 -m pip install --index-url https://download.pytorch.org/whl/cpu -r "
 EOT
 }
 
-target "torchesaurus_tests_with_tractorch" {
-  platforms = ["linux/amd64"]
-  contexts = {
-    base_image = "target:torchesaurus_tests"
-  }
-  context           = "${PROJECT_ROOT}"
-  tags = [
-    "${DOCKER_REPO}/torchesaurus_tests_with_tractorch:${DOCKER_TAG}"
-  ]
-  dockerfile-inline = <<EOT
-FROM base_image
-COPY . /src
-RUN python3 -m pip install --no-deps "/src"
-EOT
-}
-
 target "torchesaurus_runtime" {  # TODO: find out if it is possible to reduce its size
   platforms = ["linux/amd64"]
   contexts = {

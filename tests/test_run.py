@@ -15,7 +15,6 @@ import torch.utils.data
 
 from tests.utils import (
     DOCKER_IMAGE,
-    DOCKER_IMAGE_TRTRCH,
     get_data_path,
     get_random_string,
 )
@@ -214,11 +213,15 @@ def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             "--yt-path",
             "//tmp",
             "--docker-image",
-            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            DOCKER_IMAGE,
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
+            "--bind",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
+            "--bind-lib",
+            get_data_path("../../tractorun"),
             "python3",
-            get_data_path("../data/torch_run_script.py"),
+            "/tractorun_tests/torch_run_script.py",
         ]
     )
     process.wait()
@@ -243,15 +246,19 @@ def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str
             "--yt-path",
             "//tmp",
             "--docker-image",
-            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            DOCKER_IMAGE,
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
             "--yt-operation-spec",
             json.dumps({"title": operation_title}),
             "--yt-task-spec",
             json.dumps({"title": task_title}),
+            "--bind",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
+            "--bind-lib",
+            get_data_path("../../tractorun"),
             "python3",
-            get_data_path("../data/torch_run_script.py"),
+            "/tractorun_tests/torch_run_script.py",
         ]
     )
     process.wait()
@@ -281,15 +288,19 @@ def test_run_script_with_config(yt_instance: YtInstance, mnist_ds_path: str) -> 
             "--run-config-path",
             get_data_path("../data/run_config.yaml"),
             "--docker-image",
-            DOCKER_IMAGE_TRTRCH,  # TODO: run on usual DOCKER_IMAGE
+            DOCKER_IMAGE,
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
             "--yt-operation-spec",
             json.dumps({"title": operation_title}),
             "--yt-task-spec",
             json.dumps({"title": task_title}),
+            "--bind",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
+            "--bind-lib",
+            get_data_path("../../tractorun"),
             "python3",
-            get_data_path("../data/torch_run_script.py"),
+            "/tractorun_tests/torch_run_script.py",
         ]
     )
     process.wait()

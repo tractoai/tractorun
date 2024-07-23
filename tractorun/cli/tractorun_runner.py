@@ -55,6 +55,7 @@ class Config:
     yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     local: Optional[bool] = attrs.field(default=None)
     bind: Optional[list[str]] = attrs.field(default=None)
+    bind_lib: Optional[list[str]] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -90,6 +91,7 @@ class EffectiveConfig:
     yt_task_spec: Optional[dict[str, Any]]
     local: bool
     bind: list[str]
+    bind_lib: list[str]
     command: list[str]
 
     mesh: EffectiveMeshConfig
@@ -119,6 +121,10 @@ class EffectiveConfig:
         if bind is None:
             bind = []
 
+        bind_lib = _choose_value(args_value=args["bind_lib"], config_value=config.bind_lib)
+        if bind_lib is None:
+            bind_lib = []
+
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
@@ -127,6 +133,7 @@ class EffectiveConfig:
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind=bind,
+            bind_lib=bind_lib,
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -192,7 +199,14 @@ def main() -> None:
         type=str,
         action="append",
         default=None,
-        help="bind mounts to be passed to the docker container",
+        help="bind mounts to be passed to the docker container. Format: `local_path:remote_path`",
+    )
+    parser.add_argument(
+        "--bind-lib",
+        type=str,
+        action="append",
+        default=None,
+        help="bind python libraries to the docker container and remote PYTHONPATH",
     )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
@@ -205,9 +219,8 @@ def main() -> None:
         args=args,
     )
 
-    binds = []
-    effective_binds = effective_config.bind or []
-    for bind in effective_binds:
+    binds: list[Bind] = []
+    for bind in effective_config.bind:
         source, destination = bind.split(":")
         binds.append(Bind(source=source, destination=destination))
 
@@ -235,6 +248,7 @@ def main() -> None:
         yt_path=effective_config.yt_path,
         docker_image=effective_config.docker_image,
         binds=binds,
+        bind_libs=effective_config.bind_lib,
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

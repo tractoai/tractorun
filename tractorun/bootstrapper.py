@@ -13,9 +13,6 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 
 
-BOOTSTRAP_CONFIG_YT_PATH = "/tractorun_system/bootstrap_config"
-
-
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcConfig:
     mesh: Mesh

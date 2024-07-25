@@ -117,25 +117,22 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], 
         if is_success(exit_codes):
             for run in sidecar_runs:
                 run.terminate()
+            return
 
         for run in sidecar_runs:
-            exit_code = run.poll()
-            if exit_code is None:
-                continue
-
             match run.need_restart():
                 case RestartVerdict.restart:
                     run.restart()
                 case RestartVerdict.fail:
-                    print("Sidecar has been failed")
+                    print("Sidecar has been failed", file=sys.stderr)
                     sys.exit(1)
                 case RestartVerdict.skip:
                     pass
                 case RestartVerdict.unknown:
-                    print("Unknown restart policy", file=sys.stderr)
+                    print("Warning: unknown restart policy", file=sys.stderr)
                     pass
                 case _:
-                    print("Unknown restart verdict", file=sys.stderr)
+                    print("Warning: unknown restart verdict", file=sys.stderr)
                     pass
 
 

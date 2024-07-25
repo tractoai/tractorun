@@ -114,7 +114,15 @@ class EffectiveConfig:
         user_config = json.loads(args["user_config"]) if args["user_config"] is not None else None
         yt_operation_spec = json.loads(args["yt_operation_spec"]) if args["yt_operation_spec"] is not None else None
         yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
-        sidecar = json.loads(args["sidecar"]) if args["sidecar"] is not None else None
+        if args["sidecar"] is not None:
+            raw_sidecar = [json.loads(sidecar) for sidecar in args["sidecar"]]
+            sidecar = [
+                Sidecar(
+                    command=sidecar["command"],
+                    restart_policy=sidecar["restart_policy"],
+                )
+                for sidecar in raw_sidecar
+            ]
 
         # here is `args["command"] or None` as a special hack
         # because argparse can't use default=None here
@@ -219,7 +227,8 @@ def main() -> None:
     parser.add_argument(
         "--sidecar",
         nargs="*",
-        help=f'sidecar in json format `{"command": "shell command", "restart_policy: "always"}`. Restart policy: {[p for p in RestartPolicy]}',
+        help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
+        + ", ".join(p for p in RestartPolicy),
     )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")

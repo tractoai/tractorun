@@ -9,7 +9,7 @@ import attrs
 class RestartPolicy(str, enum.Enum):
     ON_FAILURE = "on_failure"
     ALWAYS = "always"
-    NEWER = "newer"
+    NEVER = "never"
     FAIL = "fail"
 
 
@@ -70,7 +70,7 @@ class SidecarRun:
                 return RestartVerdict.restart
             case RestartPolicy.ALWAYS:
                 return RestartVerdict.restart
-            case RestartPolicy.NEWER:
+            case RestartPolicy.NEVER:
                 return RestartVerdict.skip
             case RestartPolicy.FAIL:
                 return RestartVerdict.fail

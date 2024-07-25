@@ -115,7 +115,8 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], 
         if has_failed(exit_codes):
             sys.exit(1)
         if is_success(exit_codes):
-            return
+            for run in sidecar_runs:
+                run.terminate()
 
         for run in sidecar_runs:
             exit_code = run.poll()

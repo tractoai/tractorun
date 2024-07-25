@@ -56,6 +56,9 @@ class SidecarRun:
         assert self._process.poll() is None
         self._process = self._runner.run()
 
+    def terminate(self) -> None:
+        self._process.terminate()
+
     def need_restart(self) -> RestartVerdict:
         exit_code = self._process.poll()
         if exit_code is None:

@@ -19,6 +19,10 @@ from tractorun.exceptions import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run_script
+from tractorun.sidecar import (
+    RestartPolicy,
+    Sidecar,
+)
 
 
 MESH_NODE_COUNT_DEFAULT = 1
@@ -56,6 +60,7 @@ class Config:
     local: Optional[bool] = attrs.field(default=None)
     bind: Optional[list[str]] = attrs.field(default=None)
     bind_lib: Optional[list[str]] = attrs.field(default=None)
+    sidecar: list[Sidecar] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -92,6 +97,7 @@ class EffectiveConfig:
     local: bool
     bind: list[str]
     bind_lib: list[str]
+    sidecar: list[Sidecar]
     command: list[str]
 
     mesh: EffectiveMeshConfig
@@ -108,6 +114,7 @@ class EffectiveConfig:
         user_config = json.loads(args["user_config"]) if args["user_config"] is not None else None
         yt_operation_spec = json.loads(args["yt_operation_spec"]) if args["yt_operation_spec"] is not None else None
         yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
+        sidecar = json.loads(args["sidecar"]) if args["sidecar"] is not None else None
 
         # here is `args["command"] or None` as a special hack
         # because argparse can't use default=None here
@@ -134,6 +141,7 @@ class EffectiveConfig:
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind=bind,
             bind_lib=bind_lib,
+            sidecar=_choose_value(args_value=sidecar, config_value=config.sidecar),
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -208,6 +216,11 @@ def main() -> None:
         default=None,
         help="bind python libraries to the docker container and remote PYTHONPATH",
     )
+    parser.add_argument(
+        "--sidecar",
+        nargs="*",
+        help=f'sidecar in json format `{"command": "shell command", "restart_policy: "always"}`. Restart policy: {[p for p in RestartPolicy]}',
+    )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
 
@@ -249,6 +262,7 @@ def main() -> None:
         docker_image=effective_config.docker_image,
         binds=binds,
         bind_libs=effective_config.bind_lib,
+        sidecars=effective_config.sidecar,
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

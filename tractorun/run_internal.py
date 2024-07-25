@@ -38,6 +38,7 @@ from tractorun.exceptions import TractorunInvalidConfiguration
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
+from tractorun.sidecar import Sidecar
 from tractorun.toolbox import Toolbox
 
 
@@ -62,6 +63,7 @@ class Runnable(abc.ABC):
     def make_local_command(
         self,
         mesh: Mesh,
+        sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
     ) -> Callable:
@@ -88,6 +90,7 @@ class Command(Runnable):
     def make_local_command(
         self,
         mesh: Mesh,
+        sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
     ) -> Callable:
@@ -97,6 +100,7 @@ class Command(Runnable):
                 path=yt_path,
                 yt_client_config=yt_client_config,
                 command=self.get_bootstrap_command(),
+                sidecars=sidecars,
             )
 
         return wrapped
@@ -137,6 +141,7 @@ class UserFunction(Runnable):
                     path=config.path,
                     yt_client_config=config.yt_client_config,
                     command=self.get_bootstrap_command(),
+                    sidecars=config.sidecars,
                 )
 
         return wrapped
@@ -144,6 +149,7 @@ class UserFunction(Runnable):
     def make_local_command(
         self,
         mesh: Mesh,
+        sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
     ) -> Callable:
@@ -158,6 +164,7 @@ class UserFunction(Runnable):
                     path=yt_path,
                     yt_client_config=yt_client_config,
                     command=self.get_bootstrap_command(),
+                    sidecars=sidecars,
                 )
 
         return wrapped
@@ -172,6 +179,7 @@ def _run_tracto(
     user_config: Optional[dict[Any, Any]] = None,
     binds: Optional[list[Bind]] = None,
     bind_libs: Optional[list[str]] = None,
+    sidecars: Optional[list[Sidecar]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -182,6 +190,7 @@ def _run_tracto(
     resources = resources if resources is not None else Resources()
     binds = binds if binds is not None else []
     bind_libs = bind_libs if bind_libs is not None else []
+    sidecars = sidecars if sidecars is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
     yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
 
@@ -195,6 +204,7 @@ def _run_tracto(
 
     config = BootstrapConfig(
         mesh=mesh,
+        sidecars=sidecars,
         path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
     )
@@ -274,10 +284,13 @@ def _run_local(
     *,
     yt_path: str,
     mesh: Mesh,
+    sidecars: Optional[list[Sidecar]] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
 ) -> None:
+    sidecars = sidecars if sidecars is not None else []
+
     if mesh.node_count != 1:
         raise TractorunInvalidConfiguration("local mode only supports 1 node")
 
@@ -302,6 +315,7 @@ def _run_local(
 
     wrapped = runnable.make_local_command(
         mesh=mesh,
+        sidecars=sidecars,
         yt_path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
     )

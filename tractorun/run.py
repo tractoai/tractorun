@@ -18,6 +18,7 @@ from tractorun.run_internal import (
     _run_local,
     _run_tracto,
 )
+from tractorun.sidecar import Sidecar
 from tractorun.toolbox import Toolbox
 
 
@@ -31,6 +32,7 @@ def run(
     docker_image: str = DEFAULT_DOCKER_IMAGE,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
+    sidecars: Optional[list[Sidecar]] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
@@ -45,6 +47,7 @@ def run(
             ),
             yt_path=yt_path,
             mesh=mesh,
+            sidecars=sidecars,
             yt_client=yt_client,
             wandb_enabled=wandb_enabled,
             wandb_api_key=wandb_api_key,
@@ -57,6 +60,7 @@ def run(
             ),
             yt_path=yt_path,
             mesh=mesh,
+            sidecars=sidecars,
             user_config=user_config,
             resources=resources,
             yt_client=yt_client,
@@ -78,6 +82,7 @@ def run_script(
     user_config: Optional[dict[Any, Any]] = None,
     binds: Optional[list[Bind]] = None,
     bind_libs: Optional[list[str]] = None,
+    sidecars: Optional[list[Sidecar]] = None,
     local: bool = False,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
     yt_task_spec: Optional[dict[Any, Any]] = None,
@@ -89,6 +94,7 @@ def run_script(
             runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
+            sidecars=sidecars,
             yt_client=None,
         )
     else:
@@ -102,6 +108,7 @@ def run_script(
             docker_image=docker_image,
             binds=binds,
             bind_libs=bind_libs,
+            sidecars=sidecars,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
         )

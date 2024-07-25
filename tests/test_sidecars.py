@@ -34,7 +34,7 @@ def test_success_with_pickle(yt_instance: YtInstance, mnist_ds_path: str) -> Non
                 time.sleep(5)
                 if attempts > 5:
                     raise Exception("Something wrong with sidecar")
-                attempts += 1
+            attempts += 1
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     run(

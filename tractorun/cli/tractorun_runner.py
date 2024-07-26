@@ -153,6 +153,8 @@ class EffectiveConfig:
                 )
                 for sidecar in raw_sidecars
             ]
+        if sidecars is None:
+            sidecars = []
 
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),

@@ -1,10 +1,12 @@
 from typing import Optional
 
 import pytest
+
 from tractorun.bootstrapper import (
+    PoolStatus,
+    check_status,
     has_failed,
     is_success,
-    check_status, PoolStatus,
 )
 
 

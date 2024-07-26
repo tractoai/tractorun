@@ -167,7 +167,8 @@ class EffectiveConfig:
                 EffectiveSidecarConfig(
                     command=sidecar.command,
                     restart_policy=sidecar.restart_policy,
-                ) for sidecar in sidecars
+                )
+                for sidecar in sidecars
             ],
             command=command,
             mesh=EffectiveMeshConfig(
@@ -294,7 +295,8 @@ def main() -> None:
             Sidecar(
                 command=s.command,
                 restart_policy=s.restart_policy,
-            ) for s in effective_config.sidecars
+            )
+            for s in effective_config.sidecars
         ],
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,

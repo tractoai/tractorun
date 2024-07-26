@@ -16,7 +16,10 @@ from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.sidecar import (
     RestartPolicy,
-    Sidecar, RestartVerdict, SidecarRunner, SidecarRun,
+    RestartVerdict,
+    Sidecar,
+    SidecarRun,
+    SidecarRunner,
 )
 from tractorun.toolbox import Toolbox
 
@@ -169,24 +172,24 @@ COMMAND_FAILED = ["python3", "-c", "import sys; sys.exit(1)"]
             RestartVerdict.skip,
         ),
         (
-                COMMAND_FAILED,
-                RestartPolicy.ALWAYS,
-                RestartVerdict.restart,
+            COMMAND_FAILED,
+            RestartPolicy.ALWAYS,
+            RestartVerdict.restart,
         ),
         (
-                COMMAND_FAILED,
-                RestartPolicy.ON_FAILURE,
-                RestartVerdict.restart,
+            COMMAND_FAILED,
+            RestartPolicy.ON_FAILURE,
+            RestartVerdict.restart,
         ),
         (
-                COMMAND_FAILED,
-                RestartPolicy.FAIL,
-                RestartVerdict.fail,
+            COMMAND_FAILED,
+            RestartPolicy.FAIL,
+            RestartVerdict.fail,
         ),
         (
-                COMMAND_FAILED,
-                RestartPolicy.NEVER,
-                RestartVerdict.skip,
+            COMMAND_FAILED,
+            RestartPolicy.NEVER,
+            RestartVerdict.skip,
         ),
     ],
 )

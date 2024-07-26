@@ -1,6 +1,7 @@
 import json
 import tempfile
 
+import pytest
 import yaml
 import yt.wrapper as yt
 
@@ -15,7 +16,7 @@ from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.sidecar import (
     RestartPolicy,
-    Sidecar,
+    Sidecar, RestartVerdict, SidecarRunner, SidecarRun,
 )
 from tractorun.toolbox import Toolbox
 
@@ -138,3 +139,65 @@ def test_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
         op_run = tracto_cli.run()
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
+
+COMMAND_SUCCESS = ["python3", "-c", "import sys; sys.exit(0)"]
+COMMAND_FAILED = ["python3", "-c", "import sys; sys.exit(1)"]
+
+
+@pytest.mark.parametrize(
+    "command,policy,verdict",
+    [
+        (
+            COMMAND_SUCCESS,
+            RestartPolicy.ALWAYS,
+            RestartVerdict.restart,
+        ),
+        (
+            COMMAND_SUCCESS,
+            RestartPolicy.ON_FAILURE,
+            RestartVerdict.skip,
+        ),
+        (
+            COMMAND_SUCCESS,
+            RestartPolicy.FAIL,
+            RestartVerdict.fail,
+        ),
+        (
+            COMMAND_SUCCESS,
+            RestartPolicy.NEVER,
+            RestartVerdict.skip,
+        ),
+        (
+                COMMAND_FAILED,
+                RestartPolicy.ALWAYS,
+                RestartVerdict.restart,
+        ),
+        (
+                COMMAND_FAILED,
+                RestartPolicy.ON_FAILURE,
+                RestartVerdict.restart,
+        ),
+        (
+                COMMAND_FAILED,
+                RestartPolicy.FAIL,
+                RestartVerdict.fail,
+        ),
+        (
+                COMMAND_FAILED,
+                RestartPolicy.NEVER,
+                RestartVerdict.skip,
+        ),
+    ],
+)
+def test_sidecar(command: list[str], policy: RestartPolicy, verdict: RestartVerdict) -> None:
+    sidecar = Sidecar(command=command, restart_policy=policy)
+    runner = SidecarRunner(command=sidecar.command, env={})
+    process = runner.run()
+    sidecar_run = SidecarRun(
+        runner=runner,
+        restart_policy=policy,
+        process=process,
+    )
+    sidecar_run.wait()
+    assert sidecar_run.need_restart() == verdict

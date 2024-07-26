@@ -52,6 +52,9 @@ class SidecarRun:
     def poll(self) -> Optional[int]:
         return self._process.poll()
 
+    def wait(self) -> None:
+        self._process.wait()
+
     def restart(self) -> None:
         assert self._process.poll() is None
         self._process = self._runner.run()

@@ -27,27 +27,26 @@ class Sidecar:
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SidecarRunner:
-    _command: list[str]
+class SidecarRun:
+    _sidecar: Sidecar
+    _process: subprocess.Popen
     _env: dict[str, str]
 
-    def run(self) -> subprocess.Popen:
-        process = subprocess.Popen(
-            self._command,
+    @classmethod
+    def _run_process(cls, sidecar: Sidecar, env: dict[str, str]) -> subprocess.Popen:
+        return subprocess.Popen(
+            sidecar.command,
             stdout=sys.stderr,
             stderr=sys.stderr,
             bufsize=1,
             universal_newlines=True,
-            env=self._env,
+            env=env,
         )
-        return process
 
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SidecarRun:
-    _restart_policy: RestartPolicy
-    _runner: SidecarRunner
-    _process: subprocess.Popen
+    @classmethod
+    def run(cls, sidecar: Sidecar, env: dict[str, str]) -> "SidecarRun":
+        process = cls._run_process(sidecar=sidecar, env=env)
+        return SidecarRun(sidecar=sidecar, process=process, env=env)
 
     def poll(self) -> Optional[int]:
         return self._process.poll()
@@ -56,8 +55,8 @@ class SidecarRun:
         self._process.wait()
 
     def restart(self) -> None:
-        assert self._process.poll() is None
-        self._process = self._runner.run()
+        self.terminate()
+        self._process = self._run_process(sidecar=self._sidecar, env=self._env)
 
     def terminate(self) -> None:
         self._process.terminate()
@@ -66,7 +65,7 @@ class SidecarRun:
         exit_code = self._process.poll()
         if exit_code is None:
             return RestartVerdict.skip
-        match self._restart_policy:
+        match self._sidecar.restart_policy:
             case RestartPolicy.ON_FAILURE:
                 if exit_code == 0:
                     return RestartVerdict.skip

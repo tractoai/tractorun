@@ -19,7 +19,6 @@ from tractorun.sidecar import (
     RestartVerdict,
     Sidecar,
     SidecarRun,
-    SidecarRunner,
 )
 from tractorun.toolbox import Toolbox
 
@@ -193,14 +192,25 @@ COMMAND_FAILED = ["python3", "-c", "import sys; sys.exit(1)"]
         ),
     ],
 )
-def test_sidecar(command: list[str], policy: RestartPolicy, verdict: RestartVerdict) -> None:
+def test_need_restart(command: list[str], policy: RestartPolicy, verdict: RestartVerdict) -> None:
     sidecar = Sidecar(command=command, restart_policy=policy)
-    runner = SidecarRunner(command=sidecar.command, env={})
-    process = runner.run()
-    sidecar_run = SidecarRun(
-        runner=runner,
-        restart_policy=policy,
-        process=process,
+    sidecar_run = SidecarRun.run(
+        sidecar=sidecar,
+        env={},
     )
     sidecar_run.wait()
     assert sidecar_run.need_restart() == verdict
+
+
+def test_sidecar_run() -> None:
+    sidecar = Sidecar(command=["sleep", "infinity"], restart_policy=RestartPolicy.NEVER)
+    sidecar_run = SidecarRun.run(sidecar=sidecar, env={})
+    sidecar_run.restart()
+    assert sidecar_run.poll() is None
+    sidecar_run.terminate()
+
+    sidecar = Sidecar(command=["echo", "1"], restart_policy=RestartPolicy.NEVER)
+    sidecar_run = SidecarRun.run(sidecar=sidecar, env={})
+    sidecar_run.wait()
+    sidecar_run.restart()
+    sidecar_run.terminate()

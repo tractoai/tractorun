@@ -18,7 +18,6 @@ from tractorun.sidecar import (
     RestartVerdict,
     Sidecar,
     SidecarRun,
-    SidecarRunner,
 )
 
 
@@ -93,22 +92,15 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], 
 
     sidecar_runs: list[SidecarRun] = []
     for sidecar in sidecars:
-        runner = SidecarRunner(
-            command=sidecar.command,
+        sidecar_run = SidecarRun.run(
+            sidecar=sidecar,
             env={
                 **os.environ,
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
             },
         )
-        process = runner.run()
-        sidecar_runs.append(
-            SidecarRun(
-                process=process,
-                runner=runner,
-                restart_policy=sidecar.restart_policy,
-            )
-        )
+        sidecar_runs.append(sidecar_run)
 
     while True:
         time.sleep(TIMEOUT)

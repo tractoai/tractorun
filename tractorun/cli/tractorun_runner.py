@@ -19,6 +19,10 @@ from tractorun.exceptions import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run_script
+from tractorun.sidecar import (
+    RestartPolicy,
+    Sidecar,
+)
 
 
 MESH_NODE_COUNT_DEFAULT = 1
@@ -41,6 +45,12 @@ class ResourcesConfig:
     memory_limit: Optional[int] = attrs.field(default=None)
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class SidecarConfig:
+    command: list[str]
+    restart_policy: RestartPolicy
+
+
 _T = TypeVar("_T")
 
 
@@ -60,6 +70,7 @@ class Config:
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
+    sidecars: list[SidecarConfig] = attrs.field(default=None)
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
@@ -76,10 +87,16 @@ class EffectiveMeshConfig:
     pool_trees: Optional[list[str]]
 
 
-@attrs.define(kw_only=True, slots=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveResourcesConfig:
     cpu_limit: Optional[float]
     memory_limit: Optional[int]
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class EffectiveSidecarConfig:
+    command: list[str]
+    restart_policy: RestartPolicy
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -96,6 +113,7 @@ class EffectiveConfig:
 
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
+    sidecars: list[EffectiveSidecarConfig]
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
@@ -125,6 +143,19 @@ class EffectiveConfig:
         if bind_lib is None:
             bind_lib = []
 
+        sidecars = config.sidecars
+        if args["sidecar"] is not None:
+            raw_sidecars = [json.loads(sidecar) for sidecar in args["sidecar"]]
+            sidecars = [
+                SidecarConfig(
+                    command=sidecar["command"],
+                    restart_policy=sidecar["restart_policy"],
+                )
+                for sidecar in raw_sidecars
+            ]
+        if sidecars is None:
+            sidecars = []
+
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
@@ -134,6 +165,13 @@ class EffectiveConfig:
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind=bind,
             bind_lib=bind_lib,
+            sidecars=[
+                EffectiveSidecarConfig(
+                    command=sidecar.command,
+                    restart_policy=sidecar.restart_policy,
+                )
+                for sidecar in sidecars
+            ],
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -208,6 +246,12 @@ def main() -> None:
         default=None,
         help="bind python libraries to the docker container and remote PYTHONPATH",
     )
+    parser.add_argument(
+        "--sidecar",
+        nargs="*",
+        help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
+        + ", ".join(p for p in RestartPolicy),
+    )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
 
@@ -249,6 +293,13 @@ def main() -> None:
         docker_image=effective_config.docker_image,
         binds=binds,
         bind_libs=effective_config.bind_lib,
+        sidecars=[
+            Sidecar(
+                command=s.command,
+                restart_policy=s.restart_policy,
+            )
+            for s in effective_config.sidecars
+        ],
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

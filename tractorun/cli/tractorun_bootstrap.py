@@ -26,6 +26,7 @@ def main() -> None:
         mesh=config.mesh,
         path=config.path,
         yt_client_config=config.yt_client_config,
+        sidecars=config.sidecars,
         command=sys.argv[1:],
     )
 

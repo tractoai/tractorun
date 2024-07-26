@@ -1,9 +1,12 @@
 import base64
+import enum
 import json
 import os
 import pickle
 import subprocess
 import sys
+import time
+from typing import Optional
 
 import attrs
 from yt.common import update_inplace
@@ -11,6 +14,14 @@ from yt.common import update_inplace
 from tractorun.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
+from tractorun.sidecar import (
+    RestartVerdict,
+    Sidecar,
+    SidecarRun,
+)
+
+
+TIMEOUT = 10
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -26,11 +37,12 @@ class ProcConfig:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BootstrapConfig:
     mesh: Mesh
+    sidecars: list[Sidecar]
     path: str
     yt_client_config: str
 
 
-def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str]) -> None:
+def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], sidecars: list[Sidecar]) -> None:
     # Runs in a job
 
     processes = []
@@ -55,10 +67,14 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str]) 
             path=path,
             yt_client_config=base64.b64encode(pickle.dumps(yt_config)).decode("utf-8"),
         )
-        with open(f"config_{i}.json", "w") as f:
+        config_name = f"config_{i}.json"
+        with open(config_name, "w") as f:
             serializer = AttrSerializer(ProcConfig)
             json.dump(serializer.serialize(proc_config), f)
 
+        # TODO: torch multiprocessing is better (or another backend-specific tool),
+        # but pickling does not work in this case.
+        # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
         process = subprocess.Popen(
             command,
             stdout=sys.stderr,
@@ -67,17 +83,70 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str]) 
             universal_newlines=True,
             env={
                 **os.environ,
-                TRACTO_CONFIG_ENV_VAR: f"config_{i}.json",
+                TRACTO_CONFIG_ENV_VAR: config_name,
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
             },
         )
         processes.append(process)
 
-    for process in processes:
-        exit_code = process.wait()
-        if exit_code != 0:
-            sys.exit(exit_code)
+    sidecar_runs: list[SidecarRun] = []
+    for sidecar in sidecars:
+        sidecar_run = SidecarRun.run(
+            sidecar=sidecar,
+            env={
+                **os.environ,
+                "YT_PROXY": yt_config["proxy"]["url"],
+                "YT_TOKEN": yt_config["token"],
+            },
+        )
+        sidecar_runs.append(sidecar_run)
 
-    # TODO: torch multiprocessing is better, but pickling does not work.
-    # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
+    while True:
+        time.sleep(TIMEOUT)
+        exit_codes = [process.poll() for process in processes]
+        match check_status(exit_codes):
+            case PoolStatus.failed:
+                sys.exit(1)
+            case PoolStatus.success:
+                for run in sidecar_runs:
+                    run.terminate()
+                return
+
+        for run in sidecar_runs:
+            match run.need_restart():
+                case RestartVerdict.restart:
+                    run.restart()
+                case RestartVerdict.fail:
+                    print("Sidecar has been failed", file=sys.stderr)
+                    sys.exit(1)
+                case RestartVerdict.skip:
+                    pass
+                case RestartVerdict.unknown:
+                    print("Warning: unknown restart policy", file=sys.stderr)
+                    pass
+                case _:
+                    print("Warning: unknown restart verdict", file=sys.stderr)
+                    pass
+
+
+def has_failed(exit_codes: list[Optional[int]]) -> bool:
+    return any(code is not None and code != 0 for code in exit_codes)
+
+
+def is_success(exit_codes: list[Optional[int]]) -> bool:
+    return all(code == 0 for code in exit_codes)
+
+
+class PoolStatus(enum.IntEnum):
+    running = enum.auto()
+    success = enum.auto()
+    failed = enum.auto()
+
+
+def check_status(exit_codes: list[Optional[int]]) -> PoolStatus:
+    if has_failed(exit_codes):
+        return PoolStatus.failed
+    if is_success(exit_codes):
+        return PoolStatus.success
+    return PoolStatus.running

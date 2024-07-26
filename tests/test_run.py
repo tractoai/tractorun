@@ -1,5 +1,4 @@
 import json
-import subprocess
 import sys
 from typing import (
     Any,
@@ -15,6 +14,7 @@ import torch.utils.data
 
 from tests.utils import (
     DOCKER_IMAGE,
+    TractoCli,
     get_data_path,
     get_random_string,
 )
@@ -200,10 +200,12 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
     )
 
 
-def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    process = subprocess.Popen(
-        [
-            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+def test_run_script(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
             "--mesh.node-count",
             "1",
             "--mesh.process-per-node",
@@ -211,105 +213,34 @@ def test_run_script(yt_instance: YtInstance, mnist_ds_path: str) -> None:
             "--mesh.gpu-per-process",
             "0",
             "--yt-path",
-            "//tmp",
-            "--docker-image",
-            DOCKER_IMAGE,
+            yt_path,
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
             "--bind",
             f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
-            "--bind-lib",
-            get_data_path("../../tractorun"),
-            "python3",
-            "/tractorun_tests/torch_run_script.py",
-        ]
+        ],
     )
-    process.wait()
-    assert process.returncode == 0
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 
-def test_run_script_with_custom_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 
-    operation_title = f"test operation {uuid.uuid4()}"
-    task_title = f"test operation's task {uuid.uuid4()}"
-
-    process = subprocess.Popen(
-        [
-            get_data_path("../../tractorun/cli/tractorun_runner.py"),
-            "--mesh.node-count",
-            "1",
-            "--mesh.process-per-node",
-            "1",
-            "--mesh.gpu-per-process",
-            "0",
-            "--yt-path",
-            "//tmp",
-            "--docker-image",
-            DOCKER_IMAGE,
-            "--user-config",
-            json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
-            "--yt-operation-spec",
-            json.dumps({"title": operation_title}),
-            "--yt-task-spec",
-            json.dumps({"title": task_title}),
-            "--bind",
-            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
-            "--bind-lib",
-            get_data_path("../../tractorun"),
-            "python3",
-            "/tractorun_tests/torch_run_script.py",
-        ]
-    )
-    process.wait()
-    assert process.returncode == 0
-
-    operations = yt_client.list_operations(filter=operation_title)["operations"]
-    assert len(operations) == 1
-
-    operation_id = operations[0]["id"]
-
-    operation_spec = yt_client.get_operation(operation_id)["spec"]
-    assert operation_spec["title"] == operation_title
-    assert operation_spec["tasks"]["task"]["title"] == task_title
-
-
-def test_run_script_with_config(yt_instance: YtInstance, mnist_ds_path: str) -> None:
-    # TODO: just validate yt spec here
-
-    yt_client = yt_instance.get_client()
-
-    operation_title = f"test operation {uuid.uuid4()}"
-    task_title = f"test operation's task {uuid.uuid4()}"
-
-    process = subprocess.Popen(
-        [
-            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
             "--run-config-path",
             get_data_path("../data/run_config.yaml"),
-            "--docker-image",
-            DOCKER_IMAGE,
+            "--yt-path",
+            yt_path,
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
-            "--yt-operation-spec",
-            json.dumps({"title": operation_title}),
-            "--yt-task-spec",
-            json.dumps({"title": task_title}),
             "--bind",
             f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
-            "--bind-lib",
-            get_data_path("../../tractorun"),
-            "python3",
-            "/tractorun_tests/torch_run_script.py",
-        ]
+        ],
     )
-    process.wait()
-    assert process.returncode == 0
-
-    operations = yt_client.list_operations(filter=operation_title)["operations"]
-    assert len(operations) == 1
-
-    operation_id = operations[0]["id"]
-    operation_spec = yt_client.get_operation(operation_id)["spec"]
-    # just check that mesh.node-count has been overridden
-    assert operation_spec["tasks"]["task"]["job_count"] == 2
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=2)

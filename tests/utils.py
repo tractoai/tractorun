@@ -42,7 +42,6 @@ class TractoCliRun:
 class TractoCli:
     _command: list[str]
     _args: list[str]
-    _yt_path: str
     _task_spec: dict[str, Any] = attrs.field(default={})
     _operation_spec: dict[str, Any] = attrs.field(default={})
 
@@ -54,8 +53,6 @@ class TractoCli:
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
             "--docker-image",
             DOCKER_IMAGE,
-            "--yt-path",
-            self._yt_path,
             "--yt-operation-spec",
             json.dumps(
                 {

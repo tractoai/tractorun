@@ -45,6 +45,12 @@ class ResourcesConfig:
     memory_limit: Optional[int] = attrs.field(default=None)
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class SidecarConfig:
+    command: list[str]
+    restart_policy: RestartPolicy
+
+
 _T = TypeVar("_T")
 
 
@@ -60,11 +66,11 @@ class Config:
     local: Optional[bool] = attrs.field(default=None)
     bind: Optional[list[str]] = attrs.field(default=None)
     bind_lib: Optional[list[str]] = attrs.field(default=None)
-    sidecar: list[Sidecar] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
+    sidecars: list[SidecarConfig] = attrs.field(default=None)
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
@@ -81,10 +87,16 @@ class EffectiveMeshConfig:
     pool_trees: Optional[list[str]]
 
 
-@attrs.define(kw_only=True, slots=True)
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveResourcesConfig:
     cpu_limit: Optional[float]
     memory_limit: Optional[int]
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class EffectiveSidecarConfig:
+    command: list[str]
+    restart_policy: RestartPolicy
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -97,11 +109,11 @@ class EffectiveConfig:
     local: bool
     bind: list[str]
     bind_lib: list[str]
-    sidecar: list[Sidecar]
     command: list[str]
 
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
+    sidecars: list[EffectiveSidecarConfig]
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
@@ -114,15 +126,6 @@ class EffectiveConfig:
         user_config = json.loads(args["user_config"]) if args["user_config"] is not None else None
         yt_operation_spec = json.loads(args["yt_operation_spec"]) if args["yt_operation_spec"] is not None else None
         yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
-        if args["sidecar"] is not None:
-            raw_sidecar = [json.loads(sidecar) for sidecar in args["sidecar"]]
-            sidecar = [
-                Sidecar(
-                    command=sidecar["command"],
-                    restart_policy=sidecar["restart_policy"],
-                )
-                for sidecar in raw_sidecar
-            ]
 
         # here is `args["command"] or None` as a special hack
         # because argparse can't use default=None here
@@ -140,6 +143,17 @@ class EffectiveConfig:
         if bind_lib is None:
             bind_lib = []
 
+        sidecars = config.sidecars
+        if args["sidecar"] is not None:
+            raw_sidecars = [json.loads(sidecar) for sidecar in args["sidecar"]]
+            sidecars = [
+                SidecarConfig(
+                    command=sidecar["command"],
+                    restart_policy=sidecar["restart_policy"],
+                )
+                for sidecar in raw_sidecars
+            ]
+
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
@@ -149,7 +163,12 @@ class EffectiveConfig:
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind=bind,
             bind_lib=bind_lib,
-            sidecar=_choose_value(args_value=sidecar, config_value=config.sidecar),
+            sidecars=[
+                EffectiveSidecarConfig(
+                    command=sidecar.command,
+                    restart_policy=sidecar.restart_policy,
+                ) for sidecar in sidecars
+            ],
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -271,7 +290,12 @@ def main() -> None:
         docker_image=effective_config.docker_image,
         binds=binds,
         bind_libs=effective_config.bind_lib,
-        sidecars=effective_config.sidecar,
+        sidecars=[
+            Sidecar(
+                command=s.command,
+                restart_policy=s.restart_policy,
+            ) for s in effective_config.sidecars
+        ],
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

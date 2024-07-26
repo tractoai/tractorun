@@ -1,5 +1,7 @@
 import json
+import tempfile
 
+import yaml
 import yt.wrapper as yt
 
 from tests.utils import (
@@ -18,7 +20,7 @@ from tractorun.sidecar import (
 from tractorun.toolbox import Toolbox
 
 
-def test_success_with_pickle(yt_instance: YtInstance, yt_path: str) -> None:
+def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
     attr_key = "test_key"
     attr_value = "test_value"
@@ -57,7 +59,7 @@ def test_success_with_pickle(yt_instance: YtInstance, yt_path: str) -> None:
     )
 
 
-def test_success_with_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
+def test_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     attr_key = "test_key"
@@ -66,6 +68,8 @@ def test_success_with_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
     tracto_cli = TractoCli(
         command=["python3", "/tractorun_tests/sidecar_script.py"],
         args=[
+            "--yt-path",
+            yt_path,
             "--user-config",
             json.dumps(
                 {
@@ -84,8 +88,53 @@ def test_success_with_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
             "--bind",
             f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
         ],
-        yt_path=yt_path,
     )
     op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
+
+def test_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    attr_key = "test_key"
+    attr_value = "test_value"
+
+    run_config = {
+        "mesh": {
+            "node_count": 1,
+            "process_per_mode": 1,
+            "gpu_per_process": 0,
+        },
+        "sidecars": [
+            {
+                "command": ["yt", "set", f"{yt_path}/@{attr_key}", attr_value],
+                "restart_policy": RestartPolicy.ON_FAILURE.value,
+            },
+        ],
+    }
+    with tempfile.NamedTemporaryFile(mode="w") as f:
+        yaml.safe_dump(run_config, f)
+
+        tracto_cli = TractoCli(
+            command=["python3", "/tractorun_tests/sidecar_script.py"],
+            args=[
+                "--run-config-path",
+                f.name,
+                "--yt-path",
+                yt_path,
+                "--user-config",
+                json.dumps(
+                    {
+                        "attr_key": attr_key,
+                        "attr_value": attr_value,
+                        "yt_path": yt_path,
+                    },
+                ),
+                "--bind",
+                f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
+            ],
+        )
+        op_run = tracto_cli.run()
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)

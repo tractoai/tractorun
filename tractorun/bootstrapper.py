@@ -1,4 +1,5 @@
 import base64
+import enum
 import json
 import os
 import pickle
@@ -112,12 +113,13 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], 
     while True:
         time.sleep(TIMEOUT)
         exit_codes = [process.poll() for process in processes]
-        if has_failed(exit_codes):
-            sys.exit(1)
-        if is_success(exit_codes):
-            for run in sidecar_runs:
-                run.terminate()
-            return
+        match check_status(exit_codes):
+            case PoolStatus.failed:
+                sys.exit(1)
+            case PoolStatus.success:
+                for run in sidecar_runs:
+                    run.terminate()
+                return
 
         for run in sidecar_runs:
             match run.need_restart():
@@ -142,3 +144,17 @@ def has_failed(exit_codes: list[Optional[int]]) -> bool:
 
 def is_success(exit_codes: list[Optional[int]]) -> bool:
     return all(code == 0 for code in exit_codes)
+
+
+class PoolStatus(enum.IntEnum):
+    running = enum.auto()
+    success = enum.auto()
+    failed = enum.auto()
+
+
+def check_status(exit_codes: list[Optional[int]]) -> PoolStatus:
+    if has_failed(exit_codes):
+        return PoolStatus.failed
+    if is_success(exit_codes):
+        return PoolStatus.success
+    return PoolStatus.running

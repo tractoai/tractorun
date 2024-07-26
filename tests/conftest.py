@@ -30,18 +30,26 @@ def yt_instance() -> Generator[YtInstance, None, None]:
         raise ValueError(f"Unknown yt_mode: {yt_mode}")
 
 
-@pytest.fixture(scope="function")
-def yt_path(yt_instance: YtInstance) -> str:
+@pytest.fixture(scope="session")
+def yt_base_dir(yt_instance: YtInstance) -> str:
     yt_client = yt_instance.get_client()
 
-    path = f"//tmp/tractorun_tests/{get_random_string(13)}"
+    path = f"//tmp/tractorun_tests/run_{get_random_string(13)}"
     yt_client.create("map_node", path, recursive=True)
     return path
 
 
+@pytest.fixture(scope="function")
+def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
+    yt_client = yt_instance.get_client()
+    path = f"{yt_base_dir}/{get_random_string(13)}"
+    yt_client.create("map_node", path)
+    return path
+
+
 @pytest.fixture(scope="session")
-def mnist_ds_path(yt_path: str, yt_instance: YtInstance) -> Generator[str, None, None]:
-    table_path = f"//{yt_path}/{get_random_string(13)}"
+def mnist_ds_path(yt_base_dir: str, yt_instance: YtInstance) -> Generator[str, None, None]:
+    table_path = f"{yt_base_dir}/{get_random_string(13)}"
 
     yt_client = yt_instance.get_client()
     yt_client.create(

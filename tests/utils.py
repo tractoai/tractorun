@@ -68,7 +68,7 @@ class TractoCli:
                     **self._task_spec,
                 },
             ),
-            "--bind-lib",
+            "--bind-local-lib",
             get_data_path("../../tractorun"),
             *self._args,
             *self._command,

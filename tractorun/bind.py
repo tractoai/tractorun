@@ -8,7 +8,7 @@ import attrs
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class Bind:
+class BindLocal:
     source: str
     destination: str
 
@@ -21,7 +21,7 @@ class PackedBind:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsPacker:
-    _binds: list[Bind]
+    _binds: list[BindLocal]
 
     def pack(self, base_result_path: str) -> list[PackedBind]:
         binds = sorted(self._binds, key=lambda b: b.source)
@@ -54,7 +54,7 @@ class BindsPacker:
     def from_env(cls, content: str) -> "BindsPacker":
         # sorry
         parsed = json.loads(content)
-        binds = [Bind(source=record["source"], destination=record["destination"]) for record in parsed]
+        binds = [BindLocal(source=record["source"], destination=record["destination"]) for record in parsed]
         return BindsPacker(binds=binds)
 
 

@@ -19,7 +19,7 @@ from yt import wrapper as yt
 from tractorun import constants as const
 from tractorun.base_backend import BackendBase
 from tractorun.bind import (
-    Bind,
+    BindLocal,
     BindsLibPacker,
     BindsPacker,
 )
@@ -177,8 +177,8 @@ def _run_tracto(
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[dict[Any, Any]] = None,
-    binds: Optional[list[Bind]] = None,
-    bind_libs: Optional[list[str]] = None,
+    binds_local: Optional[list[BindLocal]] = None,
+    binds_local_lib: Optional[list[str]] = None,
     sidecars: Optional[list[Sidecar]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
@@ -188,8 +188,8 @@ def _run_tracto(
     yt_task_spec: Optional[dict[Any, Any]] = None,
 ) -> None:
     resources = resources if resources is not None else Resources()
-    binds = binds if binds is not None else []
-    bind_libs = bind_libs if bind_libs is not None else []
+    binds_local = binds_local if binds_local is not None else []
+    binds_local_lib = binds_local_lib if binds_local_lib is not None else []
     sidecars = sidecars if sidecars is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
     yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
@@ -214,11 +214,11 @@ def _run_tracto(
         f.write(AttrSerializer(BootstrapConfig).serialize(config))
 
     binds_packer = BindsPacker(
-        binds=binds,
+        binds=binds_local,
     )
     packed_binds = binds_packer.pack(tmp_dir.name)
     bind_libs_packer = BindsLibPacker(
-        paths=bind_libs,
+        paths=binds_local_lib,
     )
     packed_libs = bind_libs_packer.pack(tmp_dir.name)
     new_pythonpath = ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs])

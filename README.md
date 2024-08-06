@@ -1,3 +1,9 @@
+### Install local environment
+1. Install [pyenv](https://github.com/pyenv/pyenv)
+2. Create and activate new env `pyenv virtualenv 3.10 tractorun && pyenv activate tractorun`
+3. Install all dependencies: `pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple ."[all]`
+
+
 ### Build and push new runtime image
 ```shell
 ./run_build torchesaurus_runtime --push

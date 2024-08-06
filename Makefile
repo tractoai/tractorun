@@ -16,7 +16,7 @@ isort-check:
 	isort --profile black --check-only .
 
 mypy-check:
-	mypy ./tractorun ./tests ./tools ./examples/jax ./examples/pytorch
+	mypy ./tractorun ./tests ./tools ./examples/jax ./examples/pytorch ./examples/misc
 
 isort-fix:
 	isort --profile black .

@@ -69,6 +69,26 @@ RUN python3 -m pip install --no-deps "/src"
 EOT
 }
 
+target "tensorproxy_tests" {
+  platforms = ["linux/amd64"]
+  contexts = {
+    base_image = "target:jammy_python_sys"
+  }
+  context           = "${PROJECT_ROOT}"
+  tags = [
+    "${DOCKER_REPO}/tensorproxy_tests:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM base_image
+COPY requirements.txt requirements_tests.txt  requirements_tensorproxy.txt /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt
+COPY . /src
+RUN python3 -m pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple -r "/tmp/requirements_tensorproxy.txt"
+RUN python3 -m pip install --no-deps "/src"
+EOT
+}
+
 target "generic_runtime" {
   platforms = ["linux/amd64"]
   contexts = {

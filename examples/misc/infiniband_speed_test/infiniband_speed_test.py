@@ -5,7 +5,7 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.run import prepare_and_get_toolbox
 
 
-def run_cmd(cmd):
+def run_cmd(cmd: list) -> None:
     result = subprocess.run(cmd, capture_output=True, text=True)
     print(result.stdout, file=sys.stderr)
     print(result.stderr, file=sys.stderr)

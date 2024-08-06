@@ -10,4 +10,4 @@ exec docker run -it \
   -e YT_TOKEN="${YT_TOKEN}" \
   -e PYTHONPATH="/src:$PYTHONPATH" \
   cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24 \
-  pytest /src/tests/$1 ${@:2}
+  pytest /src/tests/generic/$1 ${@:2}

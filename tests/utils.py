@@ -50,7 +50,7 @@ class TractoCli:
         task_title = f"test operation's task {uuid.uuid4()}"
 
         command = [
-            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+            get_data_path("../tractorun/cli/tractorun_runner.py"),
             "--docker-image",
             DOCKER_IMAGE,
             "--yt-operation-spec",
@@ -68,7 +68,7 @@ class TractoCli:
                 },
             ),
             "--bind-lib",
-            get_data_path("../../tractorun"),
+            get_data_path(".."),
             *self._args,
             *self._command,
         ]

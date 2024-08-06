@@ -1,6 +1,9 @@
 import json
 
-from tests.utils import TractoCli, get_data_path
+from tests.utils import (
+    TractoCli,
+    get_data_path,
+)
 from tests.yt_instances import YtInstance
 
 

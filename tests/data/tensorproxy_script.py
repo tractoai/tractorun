@@ -4,15 +4,15 @@ import sys
 import time
 import typing
 
-import ytpath  # type: ignore
-import orbax.checkpoint as ocp
 import numpy as np
+import orbax.checkpoint as ocp
 
 # try to use jax
 from tractorun.backend.generic import GenericBackend
 from tractorun.run import prepare_and_get_toolbox
 
-grpc_address = 'localhost:20402'
+
+grpc_address = "localhost:20402"
 
 
 YSON_CONFIG = """
@@ -91,9 +91,15 @@ YSON_CONFIG = """
 
 def timed_run(action: typing.Callable) -> None:
     import time
+
     start = time.time()
     action()
     print(f"Time: {time.time() - start:.2f}s", file=sys.stderr)
+
+
+def gen_tree() -> list:
+    rand_tensor = np.random.rand(25 * 1024**2).astype(np.float32)
+    return [{"t" + str(j): rand_tensor for j in range(4)} for _ in range(4)]
 
 
 def main() -> None:
@@ -101,7 +107,7 @@ def main() -> None:
     toolbox = prepare_and_get_toolbox(backend=GenericBackend())
     yt_client = toolbox.yt_client
     tensorproxy_data = yt_client.read_file("//home/yt-team/chiffa/tensorproxy")
-    with open('./tensorproxy', 'wb') as f:
+    with open("./tensorproxy", "wb") as f:
         f.write(tensorproxy_data.read())
     os.chmod("./tensorproxy", 0o755)
     assert os.path.isfile("./tensorproxy")
@@ -125,11 +131,6 @@ def main() -> None:
     time.sleep(10)
 
     checkpoint_path = f"yt://{user_config['checkpoint_path']}/tensorproxy"
-
-    rand_tensor = np.random.rand(25 * 1024**2).astype(np.float32)
-    gen_tree = lambda: [{
-        't' + str(j): rand_tensor for j in range(4)
-    } for _ in range(4)]
 
     checkpointer = ocp.Checkpointer(ocp.PyTreeCheckpointHandler(use_ocdbt=use_ocdbt, use_zarr3=use_zarr3))
     print("Generating", file=sys.stderr)

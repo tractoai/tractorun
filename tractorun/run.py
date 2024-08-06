@@ -7,7 +7,7 @@ from typing import (
 import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
-from tractorun.bind import Bind
+from tractorun.bind import BindLocal
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -80,15 +80,15 @@ def run_script(
     docker_image: str,
     resources: Resources,
     user_config: Optional[dict[Any, Any]] = None,
-    binds: Optional[list[Bind]] = None,
-    bind_libs: Optional[list[str]] = None,
+    binds_local: Optional[list[BindLocal]] = None,
+    binds_local_lib: Optional[list[str]] = None,
     sidecars: Optional[list[Sidecar]] = None,
     local: bool = False,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
     yt_task_spec: Optional[dict[Any, Any]] = None,
 ) -> None:
-    if binds is None:
-        binds = []
+    if binds_local is None:
+        binds_local = []
     if local:
         return _run_local(
             runnable=Command(command=command),
@@ -106,8 +106,8 @@ def run_script(
             resources=resources,
             yt_client=None,
             docker_image=docker_image,
-            binds=binds,
-            bind_libs=bind_libs,
+            binds_local=binds_local,
+            binds_local_lib=binds_local_lib,
             sidecars=sidecars,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,

@@ -88,7 +88,7 @@ def test_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
                     "restart_policy": RestartPolicy.ON_FAILURE,
                 },
             ),
-            "--bind",
+            "--bind-local",
             f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
         ],
     )
@@ -134,7 +134,7 @@ def test_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
                         "yt_path": yt_path,
                     },
                 ),
-                "--bind",
+                "--bind-local",
                 f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
             ],
         )

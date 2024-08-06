@@ -13,7 +13,7 @@ import attrs
 import cattr
 import yaml
 
-from tractorun.bind import Bind
+from tractorun.bind import BindLocal
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.exceptions import TractorunConfigError
 from tractorun.mesh import Mesh
@@ -64,8 +64,8 @@ class Config:
     yt_operation_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     local: Optional[bool] = attrs.field(default=None)
-    bind: Optional[list[str]] = attrs.field(default=None)
-    bind_lib: Optional[list[str]] = attrs.field(default=None)
+    bind_local: Optional[list[str]] = attrs.field(default=None)
+    bind_local_lib: Optional[list[str]] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -107,8 +107,8 @@ class EffectiveConfig:
     yt_operation_spec: Optional[dict[str, Any]]
     yt_task_spec: Optional[dict[str, Any]]
     local: bool
-    bind: list[str]
-    bind_lib: list[str]
+    bind_local: list[str]
+    bind_local_lib: list[str]
     command: list[str]
 
     mesh: EffectiveMeshConfig
@@ -135,11 +135,11 @@ class EffectiveConfig:
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
-        bind = _choose_value(args_value=args["bind"], config_value=config.bind)
+        bind = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
         if bind is None:
             bind = []
 
-        bind_lib = _choose_value(args_value=args["bind_lib"], config_value=config.bind_lib)
+        bind_lib = _choose_value(args_value=args["bind_local_lib"], config_value=config.bind_local_lib)
         if bind_lib is None:
             bind_lib = []
 
@@ -163,8 +163,8 @@ class EffectiveConfig:
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
-            bind=bind,
-            bind_lib=bind_lib,
+            bind_local=bind,
+            bind_local_lib=bind_lib,
             sidecars=[
                 EffectiveSidecarConfig(
                     command=sidecar.command,
@@ -200,7 +200,7 @@ class EffectiveConfig:
                     config_value=config.resources.cpu_limit,
                 ),
                 memory_limit=_choose_value(
-                    args_value=args["resources.mem_limit"],
+                    args_value=args["resources.memory_limit"],
                     config_value=config.resources.memory_limit,
                 ),
             ),
@@ -227,24 +227,24 @@ def main() -> None:
     )
     parser.add_argument("--mesh.pool-trees", help="mesh pool trees", action="append")
     parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
-    parser.add_argument("--resources.mem-limit", type=int, help="mem limit")
+    parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
     parser.add_argument("--yt-operation-spec", help="yt operation spec", type=str)
     parser.add_argument("--yt-task-spec", help="yt task spec", type=str)
     parser.add_argument("--local", type=bool, help=f"enable local run mode. Default {LOCAL_DEFAULT}")
     parser.add_argument(
-        "--bind",
+        "--bind-local",
         type=str,
         action="append",
         default=None,
-        help="bind mounts to be passed to the docker container. Format: `local_path:remote_path`",
+        help="bind local file or folder to be passed to the docker container. Format: `local_path:remote_path`",
     )
     parser.add_argument(
-        "--bind-lib",
+        "--bind-local-lib",
         type=str,
         action="append",
         default=None,
-        help="bind python libraries to the docker container and remote PYTHONPATH",
+        help="bind local python libraries to the docker container and remote PYTHONPATH",
     )
     parser.add_argument(
         "--sidecar",
@@ -263,10 +263,10 @@ def main() -> None:
         args=args,
     )
 
-    binds: list[Bind] = []
-    for bind in effective_config.bind:
+    binds: list[BindLocal] = []
+    for bind in effective_config.bind_local:
         source, destination = bind.split(":")
-        binds.append(Bind(source=source, destination=destination))
+        binds.append(BindLocal(source=source, destination=destination))
 
     if args["dump_effective_config"]:
         print("Parsed args:")
@@ -291,8 +291,8 @@ def main() -> None:
         ),
         yt_path=effective_config.yt_path,
         docker_image=effective_config.docker_image,
-        binds=binds,
-        bind_libs=effective_config.bind_lib,
+        binds_local=binds,
+        binds_local_lib=effective_config.bind_local_lib,
         sidecars=[
             Sidecar(
                 command=s.command,

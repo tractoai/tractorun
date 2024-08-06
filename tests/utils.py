@@ -41,6 +41,7 @@ class TractoCliRun:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TractoCli:
     _command: list[str]
+    _docker_image: str = attrs.field(default=DOCKER_IMAGE)
     _args: list[str]
     _task_spec: dict[str, Any] = attrs.field(default={})
     _operation_spec: dict[str, Any] = attrs.field(default={})
@@ -52,7 +53,7 @@ class TractoCli:
         command = [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
             "--docker-image",
-            DOCKER_IMAGE,
+            self._docker_image,
             "--yt-operation-spec",
             json.dumps(
                 {

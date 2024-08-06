@@ -80,9 +80,10 @@ target "tensorproxy_tests" {
   ]
   dockerfile-inline = <<EOT
 FROM base_image
-COPY requirements.txt requirements_tests.txt  requirements_tensorproxy.txt /tmp
+COPY requirements.txt requirements_tests.txt requirements_tensorproxy.txt /tmp
 RUN python3 -m pip install \
-  -r /tmp/requirements.txt
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_tests.txt
 COPY . /src
 RUN python3 -m pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple -r "/tmp/requirements_tensorproxy.txt"
 RUN python3 -m pip install --no-deps "/src"

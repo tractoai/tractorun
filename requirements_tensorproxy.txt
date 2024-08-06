@@ -1,3 +1,4 @@
 orbax-checkpoint == 0.5.2
 ytpath == 0.0.3
 tensorstore == 0.1.56.post6
+numpy ~= 1.26.4

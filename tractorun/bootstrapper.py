@@ -19,6 +19,7 @@ from tractorun.sidecar import (
     Sidecar,
     SidecarRun,
 )
+from tractorun.tensorproxy import TensorproxyBootstrap
 
 
 TIMEOUT = 10
@@ -40,14 +41,35 @@ class BootstrapConfig:
     sidecars: list[Sidecar]
     path: str
     yt_client_config: str
+    tensorproxy: Optional[TensorproxyBootstrap]
 
 
-def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], sidecars: list[Sidecar]) -> None:
+def bootstrap(
+    mesh: Mesh,
+    path: str,
+    yt_client_config: str,
+    command: list[str],
+    sidecars: list[Sidecar],
+    tensorproxy: Optional[TensorproxyBootstrap],
+) -> None:
     # Runs in a job
 
     processes = []
-
     yt_config = pickle.loads(base64.b64decode(yt_client_config))
+
+    tp_sidecars, tp_env = [], {}
+    if tensorproxy is not None:
+        total_ports = mesh.process_per_node + tensorproxy.ports_count
+        tp_grpc_port, tp_mon_port = range(total_ports)[mesh.process_per_node :]
+
+        tp_sidecars = tensorproxy.prepare_and_get_sidecars(
+            yt_proxy=yt_config["proxy"]["url"],
+            grpc_port=tp_grpc_port,
+            monitoring_port=tp_mon_port,
+        )
+        tp_env = tensorproxy.get_environment(grpc_port=tp_grpc_port)
+
+    sidecars = sidecars + tp_sidecars
 
     for i in range(mesh.process_per_node):
         update_inplace(
@@ -86,6 +108,7 @@ def bootstrap(mesh: Mesh, path: str, yt_client_config: str, command: list[str], 
                 TRACTO_CONFIG_ENV_VAR: config_name,
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
+                **tp_env,
             },
         )
         processes.append(process)

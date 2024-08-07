@@ -23,11 +23,15 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.tensorproxy import TensorproxySidecar
 
 
 MESH_NODE_COUNT_DEFAULT = 1
 MESH_PROCESS_PER_NODE_DEFAULT = 1
 MESH_GPU_PER_PROCESS_DEFAULT = 0
+TENSORPROXY_ENABLED_DEFAULT = False
+TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
+TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
 
 
@@ -51,6 +55,13 @@ class SidecarConfig:
     restart_policy: RestartPolicy
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class TensorproxyConfig:
+    enabled: Optional[bool] = attrs.field(default=None)
+    restart_policy: Optional[RestartPolicy] = attrs.field(default=None)
+    yt_path: Optional[str] = attrs.field(default=None)
+
+
 _T = TypeVar("_T")
 
 
@@ -71,6 +82,7 @@ class Config:
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
     sidecars: list[SidecarConfig] = attrs.field(default=None)
+    tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
@@ -100,6 +112,13 @@ class EffectiveSidecarConfig:
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class EffectiveTensorproxyConfig:
+    enabled: bool
+    restart_policy: RestartPolicy
+    yt_path: str
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveConfig:
     yt_path: str
     docker_image: str
@@ -114,6 +133,7 @@ class EffectiveConfig:
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
     sidecars: list[EffectiveSidecarConfig]
+    tensorproxy: EffectiveTensorproxyConfig
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
@@ -204,6 +224,23 @@ class EffectiveConfig:
                     config_value=config.resources.memory_limit,
                 ),
             ),
+            tensorproxy=EffectiveTensorproxyConfig(
+                enabled=_choose_value(
+                    args_value=args["tensorproxy.enabled"],
+                    config_value=config.tensorproxy.enabled,
+                    default=TENSORPROXY_ENABLED_DEFAULT,
+                ),
+                yt_path=_choose_value(
+                    args_value=args["tensorproxy.yt_path"],
+                    config_value=config.tensorproxy.yt_path,
+                    default=TENSORPROXY_YT_PATH_DEFAULT,
+                ),
+                restart_policy=_choose_value(
+                    args_value=args["tensorproxy.restart_policy"],
+                    config_value=config.tensorproxy.restart_policy,
+                    default=TENSORPROXY_RESTART_POLICY_DEFAULT,
+                ),
+            ),
         )
         return new_config
 
@@ -229,8 +266,24 @@ def main() -> None:
     parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
     parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
+    parser.add_argument(
+        "--tensorproxy.enabled",
+        type=bool,
+        help=f"Enable tensorproxy sidecar. Default {TENSORPROXY_ENABLED_DEFAULT}",
+    )
+    parser.add_argument(
+        "--tensorproxy.yt_path",
+        type=str,
+        help=f"YT path to tensorproxy binary. Default {TENSORPROXY_YT_PATH_DEFAULT}",
+    )
+    parser.add_argument(
+        "--tensorproxy.restart_policy",
+        type=str,
+        help=f"Tensorflow's sidecar restart policy. Default {TENSORPROXY_RESTART_POLICY_DEFAULT}",
+    )
     parser.add_argument("--yt-operation-spec", help="yt operation spec", type=str)
     parser.add_argument("--yt-task-spec", help="yt task spec", type=str)
+    # TODO: rename to run mode
     parser.add_argument("--local", type=bool, help=f"enable local run mode. Default {LOCAL_DEFAULT}")
     parser.add_argument(
         "--bind-local",
@@ -293,6 +346,11 @@ def main() -> None:
         docker_image=effective_config.docker_image,
         binds_local=binds,
         binds_local_lib=effective_config.bind_local_lib,
+        tensorproxy=TensorproxySidecar(
+            enabled=effective_config.tensorproxy.enabled,
+            yt_path=effective_config.tensorproxy.yt_path,
+            restart_policy=effective_config.tensorproxy.restart_policy,
+        ),
         sidecars=[
             Sidecar(
                 command=s.command,

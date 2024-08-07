@@ -28,6 +28,7 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
             "428000000000",
             "--yt-path",
             yt_path,
+            "--dump-effective-config",
             "--user-config",
             json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
             "--bind-local",
@@ -45,7 +46,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
     run_config = {
         "mesh": {
             "node_count": 1,
-            "process_per_mode": 1,
+            "process_per_node": 1,
             "gpu_per_process": 0,
         },
         "tensorproxy": {
@@ -70,6 +71,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
                 "0",
                 "--resources.memory-limit",
                 "428000000000",
+                "--dump-effective-config",
                 "--yt-path",
                 yt_path,
                 "--user-config",

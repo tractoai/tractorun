@@ -1,10 +1,15 @@
+import json
 import os
+import tempfile
 
+import pytest
+import yaml
 import yt.wrapper as yt
 
 from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
+    get_data_path,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -13,17 +18,26 @@ from tractorun.mesh import Mesh
 from tractorun.run import run
 
 
-def test_environment(yt_instance: YtInstance, yt_path: str) -> None:
+SECRET_ENV_VALUE = "secret"
+NOT_SECRET_ENV_VALUE = "not_secret"
+
+
+@pytest.fixture
+def yt_secret_path(yt_instance: YtInstance, yt_path: str) -> str:
     yt_client = yt_instance.get_client()
 
     secret_path = yt_path + "/secret"
-
     yt.create("document", secret_path, client=yt_client)
-    yt.set(secret_path, "secret", client=yt_client)
+    yt.set(secret_path, SECRET_ENV_VALUE, client=yt_client)
+    return secret_path
+
+
+def test_environment(yt_secret_path: str, yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
 
     def env_checker(toolbox: TractoCli) -> None:
-        assert os.environ["SECRET"] == "secret"
-        assert os.environ["NOT_SECRET"] == "not_secret"
+        assert os.environ["SECRET"] == SECRET_ENV_VALUE
+        assert os.environ["NOT_SECRET"] == NOT_SECRET_ENV_VALUE
 
     run(
         env_checker,
@@ -33,7 +47,83 @@ def test_environment(yt_instance: YtInstance, yt_path: str) -> None:
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
         env=[
-            EnvVariable(name="SECRET", cypress_path=secret_path),
+            EnvVariable(name="SECRET", cypress_path=yt_secret_path),
             EnvVariable(name="NOT_SECRET", value="not_secret"),
         ],
     )
+
+
+def test_run_script(yt_instance: YtInstance, yt_secret_path: str, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/env_script.py"],
+        args=[
+            "--yt-path",
+            yt_path,
+            "--env",
+            json.dumps(
+                {
+                    "name": "SECRET",
+                    "cypress_path": yt_secret_path,
+                },
+            ),
+            "--env",
+            json.dumps(
+                {
+                    "name": "NOT_SECRET",
+                    "value": NOT_SECRET_ENV_VALUE,
+                },
+            ),
+            "--user-config",
+            json.dumps({"secret_env_value": SECRET_ENV_VALUE, "not_secret_env_value": NOT_SECRET_ENV_VALUE}),
+            "--bind-local",
+            f"{get_data_path('../data/env_script.py')}:/tractorun_tests",
+        ],
+    )
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
+
+def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, yt_secret_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    run_config = {
+        "mesh": {
+            "node_count": 1,
+            "process_per_node": 1,
+            "gpu_per_process": 0,
+        },
+        "env": [
+            {
+                "name": "SECRET",
+                "cypress_path": yt_secret_path,
+            },
+            {
+                "name": "NOT_SECRET",
+                "value": NOT_SECRET_ENV_VALUE,
+            },
+        ],
+        "user_config": {
+            "secret_env_value": SECRET_ENV_VALUE,
+            "not_secret_env_value": NOT_SECRET_ENV_VALUE,
+        },
+    }
+    with tempfile.NamedTemporaryFile(mode="w") as f:
+        yaml.safe_dump(run_config, f)
+
+        tracto_cli = TractoCli(
+            command=["python3", "/tractorun_tests/env_script.py"],
+            args=[
+                "--run-config-path",
+                f.name,
+                "--yt-path",
+                yt_path,
+                "--bind-local",
+                f"{get_data_path('../data/env_script.py')}:/tractorun_tests",
+            ],
+        )
+        op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)

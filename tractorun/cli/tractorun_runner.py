@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import pprint
 from typing import (
     Any,
     Optional,
@@ -63,6 +62,13 @@ class TensorproxyConfig:
     yt_path: Optional[str] = attrs.field(default=None)
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class EnvVariableConfig:
+    name: str
+    value: Optional[str] = None
+    cypress_path: Optional[str] = None
+
+
 _T = TypeVar("_T")
 
 
@@ -82,8 +88,8 @@ class Config:
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
-    sidecars: list[SidecarConfig] = attrs.field(default=None)
-    env: list[EnvVariable] = attrs.field(default=None)
+    sidecars: Optional[list[SidecarConfig]] = attrs.field(default=None)
+    env: Optional[list[EnvVariableConfig]] = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
 
     @classmethod
@@ -114,6 +120,13 @@ class EffectiveSidecarConfig:
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class EffectiveEnvVariableConfig:
+    name: str
+    value: Optional[str] = None
+    cypress_path: Optional[str] = None
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveTensorproxyConfig:
     enabled: bool
     restart_policy: RestartPolicy
@@ -135,7 +148,7 @@ class EffectiveConfig:
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
     sidecars: list[EffectiveSidecarConfig]
-    env: list[EnvVariable]
+    env: list[EffectiveEnvVariableConfig]
     tensorproxy: EffectiveTensorproxyConfig
 
     @classmethod
@@ -179,6 +192,20 @@ class EffectiveConfig:
         if sidecars is None:
             sidecars = []
 
+        env = config.env
+        if args["env"] is not None:
+            raw_env = [json.loads(e) for e in args["env"]]
+            env = [
+                EnvVariableConfig(
+                    name=e["name"],
+                    cypress_path=e.get("cypress_path"),
+                    value=e.get("value"),
+                )
+                for e in raw_env
+            ]
+        if env is None:
+            env = []
+
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
@@ -195,7 +222,14 @@ class EffectiveConfig:
                 )
                 for sidecar in sidecars
             ],
-            env=config.env,
+            env=[
+                EffectiveEnvVariableConfig(
+                    name=e.name,
+                    value=e.value,
+                    cypress_path=e.cypress_path,
+                )
+                for e in env
+            ],
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -305,9 +339,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--sidecar",
-        nargs="*",
+        action="append",
         help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
         + ", ".join(p for p in RestartPolicy),
+    )
+    parser.add_argument(
+        "--env",
+        action="append",
+        help='set env variable by value or from cypress node. JSON message like `{"name": "foo", "value: "real value", "cypress_path": "//tmp/foo"}`',
     )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
@@ -327,11 +366,21 @@ def main() -> None:
 
     if args["dump_effective_config"]:
         print("Parsed args:")
-        pprint.pprint(args)
+        print(json.dumps(args, indent=4))
         print("\nConfig from file:")
-        pprint.pprint(attrs.asdict(file_config_content))  # type: ignore
+        print(
+            json.dumps(
+                attrs.asdict(file_config_content),  # type: ignore
+                indent=4,
+            ),
+        )
         print("\nEffective config:")
-        pprint.pprint(attrs.asdict(effective_config))  # type: ignore
+        print(
+            json.dumps(
+                attrs.asdict(effective_config),  # type: ignore
+                indent=4,
+            ),
+        )
         return
 
     run_script(
@@ -362,7 +411,14 @@ def main() -> None:
             )
             for s in effective_config.sidecars
         ],
-        env=effective_config.env,
+        env=[
+            EnvVariable(
+                name=e.name,
+                value=e.value,
+                cypress_path=e.cypress_path,
+            )
+            for e in effective_config.env
+        ],
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

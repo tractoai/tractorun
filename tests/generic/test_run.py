@@ -16,7 +16,6 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
-    get_random_string,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.tractorch import Tractorch
@@ -72,10 +71,8 @@ def _get_simple_train(mnist_ds_path: str) -> Callable:
     return _simple_train
 
 
-def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+def test_run_torch_simple(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
-
-    yt_training_dir = f"//tmp/{get_random_string(13)}"
 
     train_func = _get_simple_train(mnist_ds_path)
 
@@ -84,20 +81,18 @@ def test_run_torch_simple(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     run(
         train_func,
         backend=Tractorch(),
-        yt_path=yt_training_dir,
+        yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
     )
 
 
-def test_run_with_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+def test_run_with_spec(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     operation_title = f"test operation {uuid.uuid4()}"
     task_title = f"test operation's task {uuid.uuid4()}"
-
-    yt_training_dir = f"//tmp/{get_random_string(13)}"
 
     train_func = _get_simple_train(mnist_ds_path)
 
@@ -106,7 +101,7 @@ def test_run_with_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     run(
         train_func,
         backend=Tractorch(),
-        yt_path=yt_training_dir,
+        yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
@@ -124,9 +119,8 @@ def test_run_with_spec(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     assert operation_spec["tasks"]["task"]["title"] == task_title
 
 
-def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str) -> None:
+def test_run_torch_with_checkpoints(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
-    yt_training_dir = f"//tmp/{get_random_string(13)}"
 
     def train(toolbox: Toolbox) -> None:
         class Net(nn.Module):
@@ -193,7 +187,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, mnist_ds_path: str)
     run(
         train,
         backend=Tractorch(),
-        yt_path=yt_training_dir,
+        yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,

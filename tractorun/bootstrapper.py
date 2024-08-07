@@ -10,8 +10,10 @@ from typing import Optional
 
 import attrs
 from yt.common import update_inplace
+import yt.wrapper as yt
 
 from tractorun.constants import TRACTO_CONFIG_ENV_VAR
+from tractorun.env import EnvVariable
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.sidecar import (
@@ -39,6 +41,7 @@ class ProcConfig:
 class BootstrapConfig:
     mesh: Mesh
     sidecars: list[Sidecar]
+    env: list[EnvVariable]
     path: str
     yt_client_config: str
     tensorproxy: Optional[TensorproxyBootstrap]
@@ -50,12 +53,14 @@ def bootstrap(
     yt_client_config: str,
     command: list[str],
     sidecars: list[Sidecar],
+    env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
 ) -> None:
     # Runs in a job
 
     processes = []
     yt_config = pickle.loads(base64.b64decode(yt_client_config))
+    yt_client = yt.YtClient(config=yt_config)
 
     tp_sidecars, tp_env = [], {}
     if tensorproxy is not None:
@@ -68,6 +73,13 @@ def bootstrap(
             monitoring_port=tp_mon_port,
         )
         tp_env = tensorproxy.get_environment(grpc_port=tp_grpc_port)
+
+    spec_env = {}
+    for var in env:
+        if var.cypress_path is not None:
+            spec_env[var.name] = yt.get(var.cypress_path, client=yt_client)
+        else:
+            spec_env[var.name] = var.value
 
     sidecars = sidecars + tp_sidecars
 
@@ -109,6 +121,7 @@ def bootstrap(
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
                 **tp_env,
+                **spec_env,
             },
         )
         processes.append(process)
@@ -121,6 +134,7 @@ def bootstrap(
                 **os.environ,
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
+                **spec_env,  # TODO(gritukan): Make separate env for sidecars
             },
         )
         sidecar_runs.append(sidecar_run)

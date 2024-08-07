@@ -9,6 +9,7 @@ import yt.wrapper as yt
 from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run_internal import (
@@ -34,6 +35,7 @@ def run(
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     sidecars: Optional[list[Sidecar]] = None,
+    env: Optional[list[EnvVariable]] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
@@ -49,6 +51,7 @@ def run(
             yt_path=yt_path,
             mesh=mesh,
             sidecars=sidecars,
+            env=env,
             yt_client=yt_client,
             wandb_enabled=wandb_enabled,
             wandb_api_key=wandb_api_key,
@@ -62,6 +65,7 @@ def run(
             yt_path=yt_path,
             mesh=mesh,
             sidecars=sidecars,
+            env=env,
             user_config=user_config,
             resources=resources,
             yt_client=yt_client,
@@ -85,6 +89,7 @@ def run_script(
     binds_local: Optional[list[BindLocal]] = None,
     binds_local_lib: Optional[list[str]] = None,
     sidecars: Optional[list[Sidecar]] = None,
+    env: Optional[list[EnvVariable]] = None,
     local: bool = False,
     yt_operation_spec: Optional[dict[Any, Any]] = None,
     yt_task_spec: Optional[dict[Any, Any]] = None,
@@ -97,6 +102,7 @@ def run_script(
             yt_path=yt_path,
             mesh=mesh,
             sidecars=sidecars,
+            env=env,
             yt_client=None,
             tensorproxy=tensorproxy,
         )
@@ -113,6 +119,7 @@ def run_script(
             binds_local_lib=binds_local_lib,
             tensorproxy=tensorproxy,
             sidecars=sidecars,
+            env=env,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
         )

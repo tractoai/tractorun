@@ -27,6 +27,7 @@ def main() -> None:
         path=config.path,
         yt_client_config=config.yt_client_config,
         sidecars=config.sidecars,
+        env=config.env,
         command=sys.argv[1:],
         tensorproxy=config.tensorproxy,
     )

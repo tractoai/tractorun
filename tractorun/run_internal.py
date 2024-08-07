@@ -34,6 +34,7 @@ from tractorun.constants import (
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
 )
+from tractorun.env import EnvVariable
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
 from tractorun.helpers import AttrSerializer
@@ -151,6 +152,7 @@ class UserFunction(Runnable):
                     yt_client_config=config.yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=config.sidecars,
+                    env=config.env,
                     tensorproxy=config.tensorproxy,
                 )
 
@@ -193,6 +195,7 @@ def _run_tracto(
     binds_local_lib: Optional[list[str]] = None,
     tensorproxy: Optional[TensorproxySidecar] = None,
     sidecars: Optional[list[Sidecar]] = None,
+    env: Optional[list[EnvVariable]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -204,6 +207,7 @@ def _run_tracto(
     binds_local = binds_local if binds_local is not None else []
     binds_local_lib = binds_local_lib if binds_local_lib is not None else []
     sidecars = sidecars if sidecars is not None else []
+    env = env if env is not None else []
     yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
     yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
 
@@ -221,6 +225,7 @@ def _run_tracto(
     bootstrap_config = BootstrapConfig(
         mesh=mesh,
         sidecars=sidecars,
+        env=env,
         path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
@@ -302,6 +307,7 @@ def _run_local(
     yt_path: str,
     mesh: Mesh,
     sidecars: Optional[list[Sidecar]] = None,
+    env: Optional[list[EnvVariable]] = None,
     tensorproxy: Optional[TensorproxySidecar] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
@@ -324,6 +330,12 @@ def _run_local(
     os.environ["WANDB_ENABLED"] = str(int(wandb_enabled))
     if wandb_api_key:
         os.environ["YT_SECURE_VAULT_WANDB_API_KEY"] = wandb_api_key
+
+    for var in env or []:
+        if var.cypress_path:
+            os.environ[var.name] = yt_client.get(var.cypress_path)
+        else:
+            os.environ[var.name] = var.value
 
     # TODO: look for free ports
 

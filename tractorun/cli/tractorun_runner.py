@@ -15,6 +15,7 @@ import yaml
 
 from tractorun.bind import BindLocal
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.env import EnvVariable
 from tractorun.exceptions import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -82,6 +83,7 @@ class Config:
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
     sidecars: list[SidecarConfig] = attrs.field(default=None)
+    env: list[EnvVariable] = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
 
     @classmethod
@@ -133,6 +135,7 @@ class EffectiveConfig:
     mesh: EffectiveMeshConfig
     resources: EffectiveResourcesConfig
     sidecars: list[EffectiveSidecarConfig]
+    env: list[EnvVariable]
     tensorproxy: EffectiveTensorproxyConfig
 
     @classmethod
@@ -192,6 +195,7 @@ class EffectiveConfig:
                 )
                 for sidecar in sidecars
             ],
+            env=config.env,
             command=command,
             mesh=EffectiveMeshConfig(
                 node_count=_choose_value(
@@ -358,6 +362,7 @@ def main() -> None:
             )
             for s in effective_config.sidecars
         ],
+        env=effective_config.env,
         user_config=effective_config.user_config,
         yt_operation_spec=effective_config.yt_operation_spec,
         yt_task_spec=effective_config.yt_task_spec,

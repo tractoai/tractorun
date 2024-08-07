@@ -14,7 +14,7 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
         with:
-         ref: ${{ inputs.tag }}
+         ref: ${{ inputs.git_tag }}
 
       - name: "Install Python"
         uses: actions/setup-python@v5
@@ -33,4 +33,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
           TWINE_NON_INTERACTIVE: "1"
           TWINE_REPOSITORY_URL: "https://artifactory.nebius.dev/artifactory/api/pypi/nyt"
-        run: "twine upload -r local dist/tractorun-${{ inputs.tag }}-py3-none-any.whl"
+        run: "twine upload -r local dist/tractorun-${{ inputs.git_tag }}-py3-none-any.whl"

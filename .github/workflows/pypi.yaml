@@ -1,17 +1,11 @@
 name: Build and upload to internal pypi
 
-# just to trigger GHA ...
-
 on:
   workflow_dispatch:
     inputs:
       git_tag:
         description: Git tag
         required: true
-        default: 0.7.0  # TODO: DELETE
-
-  pull_request_target: {}  # TODO: DELETE
-
 
 jobs:
   build-and-upload:
@@ -20,8 +14,7 @@ jobs:
       - name: "Checkout code"
         uses: actions/checkout@v4
         with:
-#          ref: ${{ inputs.tag }}
-          ref: 0.7.0  # TODO: DELETE
+         ref: ${{ inputs.tag }}
 
       - name: "Install Python"
         uses: actions/setup-python@v5
@@ -37,8 +30,7 @@ jobs:
       - name: "Upload the wheel"
         env:
           TWINE_USERNAME: svc-yt-dev@nebius.com
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD_1 }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
           TWINE_NON_INTERACTIVE: "1"
           TWINE_REPOSITORY_URL: "https://artifactory.nebius.dev/artifactory/api/pypi/nyt"
-#        run: "twine upload -r local dist/tractorun-${{ inputs.tag }}-py3-none-any.whl"
-        run: "twine upload -r local dist/tractorun-0.7.0-py3-none-any.whl"  # TODO: DELETE
+        run: "twine upload -r local dist/tractorun-${{ inputs.tag }}-py3-none-any.whl"

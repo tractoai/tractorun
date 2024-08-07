@@ -19,6 +19,7 @@ from tractorun.run_internal import (
     _run_tracto,
 )
 from tractorun.sidecar import Sidecar
+from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 
 
@@ -79,6 +80,7 @@ def run_script(
     mesh: Mesh,
     docker_image: str,
     resources: Resources,
+    tensorproxy: TensorproxySidecar,
     user_config: Optional[dict[Any, Any]] = None,
     binds_local: Optional[list[BindLocal]] = None,
     binds_local_lib: Optional[list[str]] = None,
@@ -96,6 +98,7 @@ def run_script(
             mesh=mesh,
             sidecars=sidecars,
             yt_client=None,
+            tensorproxy=tensorproxy,
         )
     else:
         return _run_tracto(
@@ -108,6 +111,7 @@ def run_script(
             docker_image=docker_image,
             binds_local=binds_local,
             binds_local_lib=binds_local_lib,
+            tensorproxy=tensorproxy,
             sidecars=sidecars,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,

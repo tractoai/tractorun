@@ -15,6 +15,7 @@ from typing import (
 
 import attrs
 from yt import wrapper as yt
+from yt.wrapper import TaskSpecBuilder
 
 from tractorun import constants as const
 from tractorun.base_backend import BackendBase
@@ -39,6 +40,11 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
+from tractorun.tensorproxy import (
+    TensorproxyBootstrap,
+    TensorproxyConfigurator,
+    TensorproxySidecar,
+)
 from tractorun.toolbox import Toolbox
 
 
@@ -66,6 +72,7 @@ class Runnable(abc.ABC):
         sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
+        tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
         pass
 
@@ -93,6 +100,7 @@ class Command(Runnable):
         sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
+        tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -101,6 +109,7 @@ class Command(Runnable):
                 yt_client_config=yt_client_config,
                 command=self.get_bootstrap_command(),
                 sidecars=sidecars,
+                tensorproxy=tensorproxy,
             )
 
         return wrapped
@@ -142,6 +151,7 @@ class UserFunction(Runnable):
                     yt_client_config=config.yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=config.sidecars,
+                    tensorproxy=config.tensorproxy,
                 )
 
         return wrapped
@@ -152,6 +162,7 @@ class UserFunction(Runnable):
         sidecars: list[Sidecar],
         yt_path: str,
         yt_client_config: str,
+        tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -165,6 +176,7 @@ class UserFunction(Runnable):
                     yt_client_config=yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=sidecars,
+                    tensorproxy=tensorproxy,
                 )
 
         return wrapped
@@ -179,6 +191,7 @@ def _run_tracto(
     user_config: Optional[dict[Any, Any]] = None,
     binds_local: Optional[list[BindLocal]] = None,
     binds_local_lib: Optional[list[str]] = None,
+    tensorproxy: Optional[TensorproxySidecar] = None,
     sidecars: Optional[list[Sidecar]] = None,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
@@ -201,17 +214,21 @@ def _run_tracto(
     yt_client.config["pickling"]["ignore_system_modules"] = True
 
     yt_client_config: dict = yt.config.get_config(yt_client)
+    tmp_dir = tempfile.TemporaryDirectory()
 
-    config = BootstrapConfig(
+    tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
+
+    bootstrap_config = BootstrapConfig(
         mesh=mesh,
         sidecars=sidecars,
         path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
+        tensorproxy=tp_bootstrap,
     )
-    tmp_dir = tempfile.TemporaryDirectory()
+
     bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
     with open(bootstrap_config_path, "w") as f:
-        f.write(AttrSerializer(BootstrapConfig).serialize(config))
+        f.write(AttrSerializer(BootstrapConfig).serialize(bootstrap_config))
 
     binds_packer = BindsPacker(
         binds=binds_local,
@@ -233,15 +250,15 @@ def _run_tracto(
     )
 
     yt_command = runnable.make_yt_command()
-    task_spec = yt.VanillaSpecBuilder().begin_task("task")
+    task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
 
-    task_spec = task_spec.file_paths(yt_file_bindings)
+    task_spec = task_spec.file_paths(yt_file_bindings + tp_yt_files)
 
     task_spec = runnable.modify_task(
         task_spec.command(yt_command)
         .job_count(mesh.node_count)
         .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
-        .port_count(mesh.process_per_node)
+        .port_count(mesh.process_per_node + tp_ports)
         .cpu_limit(resources.cpu_limit)
         .memory_limit(resources.memory_limit)
         .docker_image(docker_image)
@@ -285,6 +302,7 @@ def _run_local(
     yt_path: str,
     mesh: Mesh,
     sidecars: Optional[list[Sidecar]] = None,
+    tensorproxy: Optional[TensorproxySidecar] = None,
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
@@ -313,11 +331,14 @@ def _run_local(
     for i in range(mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
+    tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
+
     wrapped = runnable.make_local_command(
         mesh=mesh,
         sidecars=sidecars,
         yt_path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
+        tensorproxy=tp_bootstrap,
     )
     return wrapped()
 

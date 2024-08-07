@@ -55,7 +55,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
             "use_ocdbt": False,
             "use_zarr3": False,
             "checkpoint_path": yt_path,
-        }
+        },
     }
     with tempfile.NamedTemporaryFile(mode="w") as f:
         yaml.safe_dump(run_config, f)

@@ -1,6 +1,6 @@
 name: Build and upload to internal pypi
 
-# just to trigger GHA
+# just to trigger GHA ...
 
 on:
   workflow_dispatch:

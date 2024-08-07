@@ -2,12 +2,50 @@
 
 set -x
 
-exec docker run -it \
-  --mount type=bind,source=.,target=/src \
-  --network=host \
-  -e YT_MODE=external \
-  -e YT_PROXY="${YT_PROXY}" \
-  -e YT_TOKEN="${YT_TOKEN}" \
-  -e PYTHONPATH="/src:$PYTHONPATH" \
-  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24 \
-  pytest /src/tests/generic/$1 ${@:2}
+IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24"
+IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
+
+PATH_GENERIC="/src/tests/generic"
+PATH_TENSORPROXY="/src/tests/tensorproxy"
+
+TEST_TYPE="${1:-all}"
+
+IMAGES=()
+TEST_PATHS=()
+
+case "$TEST_TYPE" in
+  "generic")
+    IMAGES=("$IMAGE_GENERIC")
+    TEST_PATHS=("$PATH_GENERIC")
+    ;;
+  "tensorproxy")
+    IMAGES=("$IMAGE_TENSORPROXY")
+    TEST_PATHS=("$PATH_TENSORPROXY")
+    ;;
+  "all")
+    IMAGES=("$IMAGE_GENERIC" "$IMAGE_TENSORPROXY")
+    TEST_PATHS=("$PATH_GENERIC" "$PATH_TENSORPROXY")
+    ;;
+  *)
+    echo "Invalid test type: $TEST_TYPE. Choose from 'all', 'tensorproxy', or 'generic'."
+    exit 1
+    ;;
+esac
+
+run_tests() {
+  local image=$1
+  local test_path=$2
+  exec docker run -it \
+    --mount type=bind,source=.,target=/src \
+    --network=host \
+    -e YT_MODE=external \
+    -e YT_PROXY="${YT_PROXY}" \
+    -e YT_TOKEN="${YT_TOKEN}" \
+    -e PYTHONPATH="/src:$PYTHONPATH" \
+    "$image" \
+    pytest "$test_path" "${@:3}"
+}
+
+for i in "${!IMAGES[@]}"; do
+  run_tests "${IMAGES[$i]}" "${TEST_PATHS[$i]}" "${@:2}"
+done

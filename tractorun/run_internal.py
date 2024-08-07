@@ -71,6 +71,7 @@ class Runnable(abc.ABC):
         self,
         mesh: Mesh,
         sidecars: list[Sidecar],
+        env: list[EnvVariable],
         yt_path: str,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
@@ -99,6 +100,7 @@ class Command(Runnable):
         self,
         mesh: Mesh,
         sidecars: list[Sidecar],
+        env: list[EnvVariable],
         yt_path: str,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
@@ -110,6 +112,7 @@ class Command(Runnable):
                 yt_client_config=yt_client_config,
                 command=self.get_bootstrap_command(),
                 sidecars=sidecars,
+                env=env,
                 tensorproxy=tensorproxy,
             )
 
@@ -162,6 +165,7 @@ class UserFunction(Runnable):
         self,
         mesh: Mesh,
         sidecars: list[Sidecar],
+        env: list[EnvVariable],
         yt_path: str,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
@@ -178,6 +182,7 @@ class UserFunction(Runnable):
                     yt_client_config=yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=sidecars,
+                    env=env,
                     tensorproxy=tensorproxy,
                 )
 
@@ -331,12 +336,6 @@ def _run_local(
     if wandb_api_key:
         os.environ["YT_SECURE_VAULT_WANDB_API_KEY"] = wandb_api_key
 
-    for var in env or []:
-        if var.cypress_path:
-            os.environ[var.name] = yt_client.get(var.cypress_path)
-        else:
-            os.environ[var.name] = var.value
-
     # TODO: look for free ports
 
     start_port = random.randint(10000, 20000)
@@ -348,6 +347,7 @@ def _run_local(
     wrapped = runnable.make_local_command(
         mesh=mesh,
         sidecars=sidecars,
+        env=env or [],
         yt_path=yt_path,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,

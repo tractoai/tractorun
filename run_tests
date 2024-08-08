@@ -35,7 +35,7 @@ esac
 run_tests() {
   local image=$1
   local test_path=$2
-  exec docker run -it \
+  docker run -it \
     --mount type=bind,source=.,target=/src \
     --network=host \
     -e YT_MODE=external \

@@ -1,6 +1,6 @@
 mesh:
   node_count: 2
-  process_per_mode: 1
+  process_per_node: 1
   gpu_per_process: 0
 user-config:
   foo: bar

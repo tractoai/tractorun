@@ -45,7 +45,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
     run_config = {
         "mesh": {
             "node_count": 1,
-            "process_per_mode": 1,
+            "process_per_node": 1,
             "gpu_per_process": 0,
         },
         "tensorproxy": {

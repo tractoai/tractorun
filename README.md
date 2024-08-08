@@ -8,11 +8,11 @@
 ```shell
 ./run_build torchesaurus_runtime --push
 ```
-Don't forget to update images in `run.py`
 
 ### Build and push new image for tests
 ```shell
 ./run_build torchesaurus_tests --push
+./run_build tensorproxy_tests --push
 ```
 and update image in `run_tests`
 
@@ -24,6 +24,18 @@ and update image in `run_tests`
 ### Run tests
 ```shell
 YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests . -s
+```
+
+It is possible to run separate test suites or individual tests:
+```shell
+YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests general . -s
+YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests tensorproxy . -s
+```
+
+To run an individual test:
+```shell
+YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests generic test_sidecars.py
+YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests generic test_sidecars.py::test_sidecar_run
 ```
 
 ### Bump library version

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 (2024-08-09)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.8.0...0.9.0)
+
+### Changes
+
+- Workaround vpc problems (#39). [01af5fe](https://github.com/tractoai/tractorun/commit/01af5feb1f7df43fa89653e2bf78a3ecfc50c98a)
+    
+
 ## 0.8.0 (2024-08-08)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.7.0...0.8.0)

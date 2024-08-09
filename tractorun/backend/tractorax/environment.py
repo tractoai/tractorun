@@ -1,8 +1,8 @@
 import socket
 import sys
+from urllib.parse import urlparse
 
 import jax
-from urllib.parse import urlparse
 
 from tractorun.base_backend import EnvironmentBase
 from tractorun.closet import Closet

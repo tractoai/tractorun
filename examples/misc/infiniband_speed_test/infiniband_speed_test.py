@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import socket
 
 from tractorun.backend.generic import GenericBackend
 from tractorun.run import prepare_and_get_toolbox
@@ -21,14 +22,19 @@ if toolbox.coordinator.is_primary():
     print("Running ib_send_bw as primary", file=sys.stderr)
     run_cmd(["ib_send_bw", "--report_gbits", "-D", "10"])
 else:
+    print("Running ib_send_bw as secondary", file=sys.stderr)
     primary_address = toolbox.coordinator.get_primary_endpoint()
-    # TODO: Remove after DNS is set up
-    if "a4hfmmhvepq79spp0kce-ohoz" in primary_address:
-        primary_address = "172.20.0.54"
-    else:
-        assert "a4hf4vura28j50o0ju7q-urot" in primary_address
-        primary_address = "172.20.0.149"
+    print("Primary address", primary_address)
+    # primary_host, primary_port = toolbox.coordinator.get_primary_endpoint().split(":")
 
-    print("Running ib_send_bw as subordinate", file=sys.stderr)
-    print("Primary endpoint is ", primary_address, file=sys.stderr)
-    run_cmd(["ib_send_bw", primary_address, "--report_gbits", "-D", "10"])
+    # primary_ip = socket.getaddrinfo(primary_host, primary_port)[0][4][0]
+    if "e00ypsy4gwrt0b2920" in primary_address:
+        primary_ip = "192.168.0.36"
+    else:
+        assert "e00q0mwgg70qbs7fzd" in primary_address
+        primary_ip = "192.168.0.27"
+
+    print("Primary endpoint is ", primary_ip, file=sys.stderr)
+    cmd = ["ib_send_bw", "--report_gbits", "-D", "10", primary_ip]
+    print(f"run command {cmd}")
+    run_cmd(cmd)

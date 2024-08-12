@@ -133,7 +133,7 @@ target "papyrax_demo" {
     "${DOCKER_REPO}/papyrax_demo:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
-FROM cr.ai.nebius.cloud/crnf2coti090683j5ssi/ytsaurus/papyrax_main:2024-07-11-03
+FROM cr.ai.nebius.cloud/crnf2coti090683j5ssi/ytsaurus/papyrax_main:2024-08-09-21-29
 
 RUN ln -fns /usr/bin/python3.10 /usr/bin/python3
 

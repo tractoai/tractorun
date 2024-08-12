@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import socket
 
 from tractorun.backend.generic import GenericBackend
 from tractorun.run import prepare_and_get_toolbox

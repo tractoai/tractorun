@@ -2,60 +2,113 @@ from collections import Counter
 import json
 import os
 import shutil
+import sys
+from typing import List
 import zipfile
 
 import attrs
 
 
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+def _to_abs_path(path: str) -> str:
+    # mypy workaround
+    return os.path.abspath(path)
+
+
+@attrs.define(kw_only=True, slots=True)
 class BindLocal:
-    source: str
-    destination: str
+    # TODO: just use pathlib
+    source: str = attrs.field(converter=_to_abs_path)
+    destination: str = attrs.field(converter=_to_abs_path)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class PackedBind:
-    archive_name: str
-    path: str
+    yt_path: str
+    local_path: str
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsPacker:
-    _binds: list[BindLocal]
+    _files: List[BindLocal]
+    _dirs: List[BindLocal]
+
+    @classmethod
+    def from_binds(cls, binds: list[BindLocal]) -> "BindsPacker":
+        files: list[BindLocal] = []
+        dirs: list[BindLocal] = []
+
+        for bind in sorted(binds, key=lambda x: x.source):
+            if os.path.isdir(bind.source):
+                dirs.append(bind)
+            else:
+                files.append(bind)
+        print(f"Files {files} and dirs {dirs}", file=sys.stderr)
+        return BindsPacker(files=files, dirs=dirs)
+
+    def _pack_file(self, archive_path: str, archive_name: str, source_path: str, destination_name: str) -> PackedBind:
+        with zipfile.ZipFile(archive_path + ".zip", "w") as zipf:
+            zipf.write(source_path, arcname=destination_name)
+        return PackedBind(
+            yt_path=f"{archive_name}.zip",
+            local_path=f"{archive_path}.zip",
+        )
+
+    def _pack_dir(self, archive_path: str, archive_name: str, source_path: str) -> PackedBind:
+        shutil.make_archive(archive_path, "zip", source_path)
+        return PackedBind(
+            yt_path=f"{archive_name}.zip",
+            local_path=f"{archive_path}.zip",
+        )
 
     def pack(self, base_result_path: str) -> list[PackedBind]:
-        binds = sorted(self._binds, key=lambda b: b.source)
         result: list[PackedBind] = []
-        for idx, bind in enumerate(binds):
-            archive_name = f"__{idx}"
+        for idx, bind in enumerate(self._dirs):
+            archive_name = f"__dir_{idx}"
             path = os.path.join(base_result_path, archive_name)
-            root_dir, base_dir = os.path.split(os.path.abspath(bind.source))
-            shutil.make_archive(path, "zip", root_dir, base_dir)
-            result.append(
-                PackedBind(
-                    archive_name=f"{archive_name}.zip",
-                    path=f"{path}.zip",
-                ),
+            packed_bind = self._pack_dir(
+                archive_path=path,
+                archive_name=archive_name,
+                source_path=bind.source,
             )
+            result.append(packed_bind)
+        for idx, bind in enumerate(self._files):
+            archive_name = f"__file_{idx}"
+            path = os.path.join(base_result_path, archive_name)
+            destination_name = os.path.split(bind.destination)[1]
+            packed_bind = self._pack_file(
+                archive_path=path,
+                archive_name=archive_name,
+                source_path=bind.source,
+                destination_name=destination_name,
+            )
+            result.append(packed_bind)
         return result
 
     def unpack(self) -> None:
-        binds = sorted(self._binds, key=lambda b: b.source)
-        for idx, bind in enumerate(binds):
-            path_w = f"__{idx}.zip"
+        for idx, bind in enumerate(self._dirs):
+            path_w = f"__dir_{idx}.zip"
             with zipfile.ZipFile(path_w, "r") as zipf:
                 zipf.extractall(path=bind.destination)
+        for idx, bind in enumerate(self._files):
+            path_w = f"__file_{idx}.zip"
+            destination = os.path.split(bind.destination)[0]
+            with zipfile.ZipFile(path_w, "r") as zipf:
+                zipf.extractall(path=destination)
 
     def to_env(self) -> str:
-        # sorry
-        return json.dumps([attrs.asdict(bind) for bind in self._binds])  # type: ignore
+        return json.dumps(
+            {
+                "files": [attrs.asdict(bind) for bind in self._files],  # type: ignore
+                "dirs": [attrs.asdict(bind) for bind in self._dirs],  # type: ignore
+            },
+        )
 
     @classmethod
     def from_env(cls, content: str) -> "BindsPacker":
-        # sorry
         parsed = json.loads(content)
-        binds = [BindLocal(source=record["source"], destination=record["destination"]) for record in parsed]
-        return BindsPacker(binds=binds)
+        files = [BindLocal(source=record["source"], destination=record["destination"]) for record in parsed["files"]]
+        dirs = [BindLocal(source=record["source"], destination=record["destination"]) for record in parsed["dirs"]]
+        return BindsPacker(files=files, dirs=dirs)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

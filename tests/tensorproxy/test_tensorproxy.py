@@ -31,7 +31,7 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
             "--user-config",
             json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
             "--bind-local",
-            f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests",
+            f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
         ],
     )
     op_run = tracto_cli.run()
@@ -75,7 +75,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
                 "--user-config",
                 json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
                 "--bind-local",
-                f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests",
+                f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
             ],
         )
         op_run = tracto_cli.run()

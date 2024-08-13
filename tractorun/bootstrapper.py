@@ -144,6 +144,8 @@ def bootstrap(
         exit_codes = [process.poll() for process in processes]
         match check_status(exit_codes):
             case PoolStatus.failed:
+                for run in sidecar_runs:
+                    run.terminate()
                 sys.exit(1)
             case PoolStatus.success:
                 for run in sidecar_runs:
@@ -153,18 +155,17 @@ def bootstrap(
         for run in sidecar_runs:
             match run.need_restart():
                 case RestartVerdict.restart:
+                    print(f"Restart sidecar {run.command}", file=sys.stderr)
                     run.restart()
                 case RestartVerdict.fail:
-                    print("Sidecar has been failed", file=sys.stderr)
+                    print(f"Sidecar {run.command} has been failed", file=sys.stderr)
                     sys.exit(1)
                 case RestartVerdict.skip:
                     pass
                 case RestartVerdict.unknown:
-                    print("Warning: unknown restart policy", file=sys.stderr)
-                    pass
+                    print(f"Warning: unknown restart policy for {run.command}", file=sys.stderr)
                 case _:
-                    print("Warning: unknown restart verdict", file=sys.stderr)
-                    pass
+                    print(f"Warning: unknown restart verdict for {run.command}", file=sys.stderr)
 
 
 def has_failed(exit_codes: list[Optional[int]]) -> bool:

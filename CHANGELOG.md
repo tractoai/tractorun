@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 (2024-08-13)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.9.0...0.10.0)
+
+### Changes
+
+- NYT-624: fix logging, terminate sidecars if operation is failed (#41). [60e74af](https://github.com/tractoai/tractorun/commit/60e74afe9b845700cf4bf6e040c33edb3df91b35)
+    
+- NYT-624: test infiniband on plack (#40). [4745613](https://github.com/tractoai/tractorun/commit/4745613b3e20b59b79645b94f0e84fc8b0d6dacf)
+    
+
 ## 0.9.0 (2024-08-09)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.8.0...0.9.0)

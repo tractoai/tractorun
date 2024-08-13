@@ -240,7 +240,7 @@ def _run_tracto(
     with open(bootstrap_config_path, "w") as f:
         f.write(AttrSerializer(BootstrapConfig).serialize(bootstrap_config))
 
-    binds_packer = BindsPacker(
+    binds_packer = BindsPacker.from_binds(
         binds=binds_local,
     )
     packed_binds = binds_packer.pack(tmp_dir.name)
@@ -252,7 +252,7 @@ def _run_tracto(
 
     yt_file_bindings = []
     yt_file_bindings.extend(
-        [yt.LocalFile(packed_bind.path, packed_bind.archive_name) for packed_bind in packed_binds],
+        [yt.LocalFile(packed_bind.local_path, packed_bind.yt_path) for packed_bind in packed_binds],
     )
     yt_file_bindings.extend([yt.LocalFile(packed_lib.path, packed_lib.archive_name) for packed_lib in packed_libs])
     yt_file_bindings.append(

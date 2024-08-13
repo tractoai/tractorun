@@ -362,7 +362,12 @@ def main() -> None:
     binds: list[BindLocal] = []
     for bind in effective_config.bind_local:
         source, destination = bind.split(":")
-        binds.append(BindLocal(source=source, destination=destination))
+        binds.append(
+            BindLocal(
+                source=source,
+                destination=destination,
+            ),
+        )
 
     if args["dump_effective_config"]:
         print("Parsed args:")

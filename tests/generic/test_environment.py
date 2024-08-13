@@ -78,7 +78,7 @@ def test_run_script(yt_instance: YtInstance, yt_secret_path: str, yt_path: str) 
             "--user-config",
             json.dumps({"secret_env_value": SECRET_ENV_VALUE, "not_secret_env_value": NOT_SECRET_ENV_VALUE}),
             "--bind-local",
-            f"{get_data_path('../data/env_script.py')}:/tractorun_tests",
+            f"{get_data_path('../data/env_script.py')}:/tractorun_tests/env_script.py",
         ],
     )
     op_run = tracto_cli.run()
@@ -121,7 +121,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, yt_secret
                 "--yt-path",
                 yt_path,
                 "--bind-local",
-                f"{get_data_path('../data/env_script.py')}:/tractorun_tests",
+                f"{get_data_path('../data/env_script.py')}:/tractorun_tests/env_script.py",
             ],
         )
         op_run = tracto_cli.run()

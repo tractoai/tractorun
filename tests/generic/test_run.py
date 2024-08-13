@@ -211,7 +211,7 @@ def test_run_script(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
             "--bind-local",
-            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests/torch_run_script.py",
         ],
     )
     op_run = tracto_cli.run()
@@ -232,7 +232,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_
             "--user-config",
             json.dumps({"MNIST_DS_PATH": mnist_ds_path}),
             "--bind-local",
-            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests/torch_run_script.py",
         ],
     )
     op_run = tracto_cli.run()

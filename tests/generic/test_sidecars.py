@@ -89,7 +89,7 @@ def test_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
                 },
             ),
             "--bind-local",
-            f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
+            f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests/sidecar_script.py",
         ],
     )
     op_run = tracto_cli.run()
@@ -135,7 +135,7 @@ def test_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
                     },
                 ),
                 "--bind-local",
-                f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests",
+                f"{get_data_path('../data/sidecar_script.py')}:/tractorun_tests/sidecar_script.py",
             ],
         )
         op_run = tracto_cli.run()

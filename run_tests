@@ -42,6 +42,7 @@ run_tests() {
     -e YT_PROXY="${YT_PROXY}" \
     -e YT_TOKEN="${YT_TOKEN}" \
     -e PYTHONPATH="/src:$PYTHONPATH" \
+    -e PYTHONDONTWRITEBYTECODE=1 \
     "$image" \
     pytest "$test_path" "${@:3}"
 }

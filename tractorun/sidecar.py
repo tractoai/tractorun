@@ -32,6 +32,10 @@ class SidecarRun:
     _process: subprocess.Popen
     _env: dict[str, str]
 
+    @property
+    def command(self) -> list[str]:
+        return self._sidecar.command
+
     @classmethod
     def _run_process(cls, sidecar: Sidecar, env: dict[str, str]) -> subprocess.Popen:
         return subprocess.Popen(

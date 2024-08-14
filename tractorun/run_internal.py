@@ -7,7 +7,6 @@ import random
 import shlex
 import sys
 import tempfile
-import time
 from typing import (
     Any,
     Callable,
@@ -52,9 +51,6 @@ from tractorun.training_dir import (
     TrainingDir,
     prepare_training_dir,
 )
-
-
-OPERATION_POLL_TIMEOUT = 5
 
 
 class Runnable(abc.ABC):

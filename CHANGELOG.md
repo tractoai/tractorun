@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0 (2024-08-14)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.10.0...0.11.0)
+
+### Changes
+
+- NYT-627: make bindings behave like docker/docker-compose (#42). [de9c66c](https://github.com/tractoai/tractorun/commit/de9c66c7a0db1d8036a225808ba011d28c164bb2)
+    
+
 ## 0.10.0 (2024-08-13)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.9.0...0.10.0)

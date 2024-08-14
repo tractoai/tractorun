@@ -24,7 +24,7 @@ def main() -> None:
         config: BootstrapConfig = deserializer.deserialize(data=content)
     bootstrap(
         mesh=config.mesh,
-        path=config.path,
+        training_dir=config.training_dir,
         yt_client_config=config.yt_client_config,
         sidecars=config.sidecars,
         env=config.env,

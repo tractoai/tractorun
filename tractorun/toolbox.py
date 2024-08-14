@@ -10,6 +10,7 @@ from tractorun.checkpoints import CheckpointManager
 from tractorun.closet import TrainingMetadata
 from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
+from tractorun.training_dir import TrainingDir
 
 
 @attrs.define
@@ -18,7 +19,7 @@ class Toolbox:
     checkpoint_manager: CheckpointManager
     yt_client: yt.YtClient
     mesh: Mesh
-    _yt_path: str
+    training_dir: TrainingDir
     _training_metadata: TrainingMetadata
 
     @staticmethod
@@ -27,14 +28,11 @@ class Toolbox:
 
     def save_model(self, data: bytes, dataset_path: str, metadata: dict[str, str]) -> str:
         incarnation_id = self.coordinator.get_incarnation_id()
-        # TODO: refactor path creation
-        models_path = self._yt_path + "/models"
-        path = models_path + f"/{incarnation_id}"
+        path = self.training_dir.models_path + f"/{incarnation_id}"
 
         if not self.coordinator.is_primary():
             return path
 
-        self.yt_client.create("map_node", models_path, ignore_existing=True)
         self.yt_client.write_file(path, data)
         attributes = {
             "dataset_path": dataset_path,

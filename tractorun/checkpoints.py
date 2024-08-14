@@ -47,8 +47,6 @@ class CheckpointManager:
     _last_checkpoint_index: int = -1
 
     def initialize(self) -> None:
-        self._yt_client.create("map_node", self._path, ignore_existing=True)
-
         last_checkpoint_index = -1
         for index in self._yt_client.list(self._path):
             try:

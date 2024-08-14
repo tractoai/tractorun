@@ -45,7 +45,7 @@ def run(
     local: bool = False,
 ) -> None:
     if local:
-        return _run_local(
+        _run_local(
             UserFunction(
                 function=user_function,
                 backend=backend,
@@ -59,7 +59,7 @@ def run(
             wandb_api_key=wandb_api_key,
         )
     else:
-        return _run_tracto(
+        _run_tracto(
             UserFunction(
                 function=user_function,
                 backend=backend,
@@ -101,7 +101,7 @@ def run_script(
     if binds_local is None:
         binds_local = []
     if local:
-        return _run_local(
+        _run_local(
             runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
@@ -111,7 +111,7 @@ def run_script(
             tensorproxy=tensorproxy,
         )
     else:
-        return _run_tracto(
+        _run_tracto(
             runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,

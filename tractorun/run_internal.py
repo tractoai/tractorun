@@ -7,6 +7,7 @@ import random
 import shlex
 import sys
 import tempfile
+import time
 from typing import (
     Any,
     Callable,
@@ -47,6 +48,13 @@ from tractorun.tensorproxy import (
     TensorproxySidecar,
 )
 from tractorun.toolbox import Toolbox
+from tractorun.training_dir import (
+    TrainingDir,
+    prepare_training_dir,
+)
+
+
+OPERATION_POLL_TIMEOUT = 5
 
 
 class Runnable(abc.ABC):
@@ -72,7 +80,7 @@ class Runnable(abc.ABC):
         mesh: Mesh,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
-        yt_path: str,
+        training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
@@ -101,14 +109,14 @@ class Command(Runnable):
         mesh: Mesh,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
-        yt_path: str,
+        training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
                 mesh=mesh,
-                path=yt_path,
+                training_dir=training_dir,
                 yt_client_config=yt_client_config,
                 command=self.get_bootstrap_command(),
                 sidecars=sidecars,
@@ -151,7 +159,7 @@ class UserFunction(Runnable):
                     config: BootstrapConfig = deserializer.deserialize(data=content)
                 bootstrap(
                     mesh=config.mesh,
-                    path=config.path,
+                    training_dir=config.training_dir,
                     yt_client_config=config.yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=config.sidecars,
@@ -166,7 +174,7 @@ class UserFunction(Runnable):
         mesh: Mesh,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
-        yt_path: str,
+        training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
     ) -> Callable:
@@ -178,7 +186,7 @@ class UserFunction(Runnable):
             else:
                 bootstrap(
                     mesh=mesh,
-                    path=yt_path,
+                    training_dir=training_dir,
                     yt_client_config=yt_client_config,
                     command=self.get_bootstrap_command(),
                     sidecars=sidecars,
@@ -221,9 +229,11 @@ def _run_tracto(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
-
     yt_client_config: dict = yt.config.get_config(yt_client)
+
     tmp_dir = tempfile.TemporaryDirectory()
+    training_dir = TrainingDir.create(yt_path)
+    prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
 
@@ -231,7 +241,7 @@ def _run_tracto(
         mesh=mesh,
         sidecars=sidecars,
         env=env,
-        path=yt_path,
+        training_dir=training_dir,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
     )
@@ -302,7 +312,8 @@ def _run_tracto(
     operation_spec = operation_spec.spec(yt_operation_spec)
     operation_spec = runnable.modify_operation(operation_spec)
 
-    yt_client.run_operation(operation_spec)
+    yt_client.run_operation(operation_spec, sync=True)
+
     tmp_dir.cleanup()
 
 
@@ -325,6 +336,8 @@ def _run_local(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
+    training_dir = TrainingDir.create(yt_path)
+    prepare_training_dir(training_dir, yt_client)
     # TODO: respawn in docker
 
     # Fake YT job environment.
@@ -348,7 +361,7 @@ def _run_local(
         mesh=mesh,
         sidecars=sidecars,
         env=env or [],
-        yt_path=yt_path,
+        training_dir=training_dir,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
     )

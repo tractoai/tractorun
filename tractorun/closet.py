@@ -12,6 +12,7 @@ from tractorun.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.coordinator import Coordinator
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
+from tractorun.training_dir import TrainingDir
 
 
 @attrs.define
@@ -26,7 +27,7 @@ class Closet:
     mesh: Mesh
     coordinator: Coordinator
     yt_client: YtClient
-    yt_path: str
+    training_dir: TrainingDir
     training_metadata: TrainingMetadata
 
 
@@ -48,7 +49,7 @@ def get_closet() -> Closet:
     )
     coordinator = Coordinator.create(
         yt_client=yt_client,
-        yt_path=config.path,
+        training_dir=config.training_dir,
         self_endpoint=self_endpoint,
         mesh=config.mesh,
         node_index=config.node_index,
@@ -61,6 +62,6 @@ def get_closet() -> Closet:
         mesh=config.mesh,
         coordinator=coordinator,
         yt_client=yt_client,
-        yt_path=config.path,
+        training_dir=config.training_dir,
         training_metadata=training_metadata,
     )

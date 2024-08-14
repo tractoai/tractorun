@@ -22,6 +22,7 @@ from tractorun.sidecar import (
     SidecarRun,
 )
 from tractorun.tensorproxy import TensorproxyBootstrap
+from tractorun.training_dir import TrainingDir
 
 
 TIMEOUT = 10
@@ -33,7 +34,7 @@ class ProcConfig:
     node_index: int
     proc_index: int
     port: int
-    path: str
+    training_dir: TrainingDir
     yt_client_config: str
 
 
@@ -42,14 +43,14 @@ class BootstrapConfig:
     mesh: Mesh
     sidecars: list[Sidecar]
     env: list[EnvVariable]
-    path: str
+    training_dir: TrainingDir
     yt_client_config: str
     tensorproxy: Optional[TensorproxyBootstrap]
 
 
 def bootstrap(
     mesh: Mesh,
-    path: str,
+    training_dir: TrainingDir,
     yt_client_config: str,
     command: list[str],
     sidecars: list[Sidecar],
@@ -98,7 +99,7 @@ def bootstrap(
             node_index=int(os.environ["YT_JOB_COOKIE"]),
             proc_index=i,
             port=int(os.environ[f"YT_PORT_{i}"]),
-            path=path,
+            training_dir=training_dir,
             yt_client_config=base64.b64encode(pickle.dumps(yt_config)).decode("utf-8"),
         )
         config_name = f"config_{i}.json"

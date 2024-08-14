@@ -6,6 +6,7 @@ import yt.wrapper as yt
 
 from tractorun.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
+from tractorun.training_dir import TrainingDir
 
 
 @attrs.define(kw_only=True)
@@ -26,12 +27,10 @@ class Coordinator:
         mesh: Mesh,
         process_index: int,
         yt_client: yt.YtClient,
-        yt_path: str,
+        training_dir: TrainingDir,
         operation_id: str,
         job_id: str,
     ) -> "Coordinator":
-        cls._create_directory(yt_client=yt_client, yt_path=yt_path)
-
         self_index = node_index * mesh.process_per_node + process_index
         if self_index == 0:
             return cls._make_primary(
@@ -40,7 +39,7 @@ class Coordinator:
                 mesh=mesh,
                 process_index=process_index,
                 yt_client=yt_client,
-                yt_path=yt_path,
+                training_dir=training_dir,
                 operation_id=operation_id,
                 job_id=job_id,
                 self_index=self_index,
@@ -51,8 +50,8 @@ class Coordinator:
                 node_index=node_index,
                 mesh=mesh,
                 process_index=process_index,
+                training_dir=training_dir,
                 yt_client=yt_client,
-                yt_path=yt_path,
                 self_index=self_index,
                 operation_id=operation_id,
                 job_id=job_id,
@@ -75,22 +74,10 @@ class Coordinator:
         return self._self_index == 0
 
     def get_primary_endpoint(self) -> str:
-        if self._primary_endpoint is None:
-            raise RuntimeError("Torchesaurus coordinator is not prepared yet")
         return self._primary_endpoint
 
     def get_process_index(self) -> int:
         return self._process_index
-
-    @classmethod
-    def _create_directory(
-        cls,
-        yt_client: yt.YtClient,
-        yt_path: str,
-    ) -> None:
-        yt_client.create("map_node", yt_path, attributes={"incarnation_id": -1}, ignore_existing=True)
-        yt_client.create("map_node", yt_path + "/primary_lock", ignore_existing=True)
-        yt_client.create("map_node", yt_path + "/incarnations", ignore_existing=True)
 
     @classmethod
     def _make_primary(
@@ -103,7 +90,7 @@ class Coordinator:
         operation_id: str,
         job_id: str,
         yt_client: yt.YtClient,
-        yt_path: str,
+        training_dir: TrainingDir,
     ) -> "Coordinator":
         incarnation_transaction_id = yt_client.start_transaction()
         assert incarnation_transaction_id is not None
@@ -114,14 +101,14 @@ class Coordinator:
             ping=False,
         ):
             yt_client.lock(
-                yt_path + "/primary_lock",
+                training_dir.primary_lock_path,
                 mode="exclusive",
                 waitable=True,
                 wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
             )
 
-        if yt_client.exists(yt_path + "/@incarnation_id"):
-            last_incarnation_id = yt_client.get(yt_path + "/@incarnation_id")
+        if yt_client.exists(training_dir.base_path + "/@incarnation_id"):
+            last_incarnation_id = yt_client.get(training_dir.base_path + "/@incarnation_id")
         else:
             last_incarnation_id = -1
         incarnation_id = last_incarnation_id + 1
@@ -133,13 +120,13 @@ class Coordinator:
 
         with incarnation_yt_client.Transaction():
             incarnation_yt_client.set(
-                yt_path + "/@incarnation_id",
+                training_dir.base_path + "/@incarnation_id",
                 incarnation_id,
             )
 
         with incarnation_yt_client.Transaction():
             incarnation_path = cls._get_incarnation_path(
-                yt_path=yt_path,
+                yt_path=training_dir.incarnations_path,
                 incarnation_id=incarnation_id,
             )
             incarnation_yt_client.create("map_node", incarnation_path)
@@ -190,12 +177,14 @@ class Coordinator:
         operation_id: str,
         job_id: str,
         yt_client: yt.YtClient,
-        yt_path: str,
+        training_dir: TrainingDir,
     ) -> "Coordinator":
         while True:
             try:
-                incarnation_id = yt_client.get(yt_path + "/@incarnation_id")
-                incarnation_path = cls._get_incarnation_path(yt_path=yt_path, incarnation_id=incarnation_id)
+                incarnation_id = yt_client.get(training_dir.base_path + "/@incarnation_id")
+                incarnation_path = cls._get_incarnation_path(
+                    yt_path=training_dir.incarnations_path, incarnation_id=incarnation_id
+                )
                 if (
                     yt_client.get(
                         incarnation_path + "/@incarnation_operation_id",
@@ -236,4 +225,4 @@ class Coordinator:
 
     @classmethod
     def _get_incarnation_path(cls, yt_path: str, incarnation_id: int) -> str:
-        return yt_path + f"/incarnations/{incarnation_id:05d}"
+        return yt_path + f"/{incarnation_id:05d}"

@@ -16,9 +16,9 @@ class YtStderrReader:
         last = b""
         while True:
             current = self._stderr_getter()
-            if self._stop_on_none and current is None:
-                return
-            else:
+            if current is None:
+                if self._stop_on_none:
+                    return
                 current = b""
             new_data = self._get_new_data(last, current)
             yield new_data

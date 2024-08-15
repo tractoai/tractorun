@@ -40,6 +40,10 @@ class TestStderrProvider:
             [b"a", b"b"],
             [b"a", b"b"],
         ),
+        # (
+        #     [b"ab", b"ab"],
+        #     [b"ab", b"ab"],
+        # ),
         (
             [b"a", b"abcde", b"defg", b"abc"],
             [b"a", b"bcde", b"fg", b"abc"],

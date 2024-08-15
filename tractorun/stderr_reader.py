@@ -1,6 +1,7 @@
 from typing import (
     Callable,
     Generator,
+    Optional,
 )
 
 import attrs
@@ -8,12 +9,17 @@ import attrs
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class YtStderrReader:
-    _stderr_getter: Callable[[], bytes]
+    _stderr_getter: Callable[[], Optional[bytes]]
+    _stop_on_none: bool = attrs.field(default=False)
 
     def tail_output(self) -> Generator[bytes, None, None]:
         last = b""
         while True:
             current = self._stderr_getter()
+            if self._stop_on_none and current is None:
+                return
+            else:
+                current = b""
             new_data = self._get_new_data(last, current)
             yield new_data
             last = current

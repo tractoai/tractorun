@@ -23,6 +23,7 @@ optional-dependencies.all = { file = ["requirements_torch.txt", "requirements_ja
 [project.scripts]
 tractorun = "tractorun.cli.tractorun_runner:main"
 _tractorun_bootstrap = "tractorun.cli.tractorun_bootstrap:main"
+yt_stderr_reader = "tractorun.cli.yt_stderr_reader:main"
 
 [tool.black]
 line-length = 120

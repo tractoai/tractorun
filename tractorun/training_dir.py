@@ -20,6 +20,9 @@ class TrainingDir:
             checkpoints_path=path + "/checkpoints",
         )
 
+    def get_incarnation_path(self, incarnation_id: int) -> str:
+        return self.incarnations_path + f"/{incarnation_id:05d}"
+
 
 def prepare_training_dir(training_dir: TrainingDir, yt_client: yt.YtClient) -> None:
     yt_client.create("map_node", training_dir.base_path, attributes={"incarnation_id": -1}, ignore_existing=True)

@@ -125,10 +125,7 @@ class Coordinator:
             )
 
         with incarnation_yt_client.Transaction():
-            incarnation_path = cls._get_incarnation_path(
-                yt_path=training_dir.incarnations_path,
-                incarnation_id=incarnation_id,
-            )
+            incarnation_path = training_dir.get_incarnation_path(incarnation_id)
             incarnation_yt_client.create("map_node", incarnation_path)
             incarnation_yt_client.set(
                 incarnation_path + "/@incarnation_transaction_id",
@@ -182,9 +179,7 @@ class Coordinator:
         while True:
             try:
                 incarnation_id = yt_client.get(training_dir.base_path + "/@incarnation_id")
-                incarnation_path = cls._get_incarnation_path(
-                    yt_path=training_dir.incarnations_path, incarnation_id=incarnation_id
-                )
+                incarnation_path = training_dir.get_incarnation_path(incarnation_id)
                 if (
                     yt_client.get(
                         incarnation_path + "/@incarnation_operation_id",
@@ -222,7 +217,3 @@ class Coordinator:
                 self_endpoint=self_endpoint,
                 primary_endpoint=primary_endpoint,
             )
-
-    @classmethod
-    def _get_incarnation_path(cls, yt_path: str, incarnation_id: int) -> str:
-        return yt_path + f"/{incarnation_id:05d}"

@@ -13,6 +13,7 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper.errors import YtError
 
+from tractorun.exceptions import StderrReaderException
 from tractorun.mesh import Mesh
 from tractorun.training_dir import TrainingDir
 
@@ -61,18 +62,22 @@ class YtStderrReader:
         return self.get_output()
 
 
-def get_job_stderr(yt_client: yt.YtClient, operation_id: str, job_id: str, retry_interval: float = YT_RETRY_INTERVAL) -> Callable[[], bytes]:
+def get_job_stderr(
+    yt_client: yt.YtClient, operation_id: str, job_id: str, retry_interval: float = YT_RETRY_INTERVAL
+) -> Callable[[], bytes]:
     def _wrapped() -> bytes:
         while True:
             try:
                 data = yt_client.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
                 return data
             except YtError:
-                time.sleep(YT_RETRY_INTERVAL)
+                time.sleep(retry_interval)
+
     return _wrapped
 
 
-class StderrSource(str, enum.Enum):
+class StderrMode(str, enum.Enum):
+    disabled = "disabled"
     master = "master"
     all = "all"
 
@@ -82,7 +87,7 @@ class StderrReaderWorker:
     _prev_incarnation_id: int
     _training_dir: TrainingDir
     _yt_client_config_pickled: str
-    _source: StderrSource
+    _mode: StderrMode
     _mesh: Mesh
     _stop: bool = False
 
@@ -96,7 +101,9 @@ class StderrReaderWorker:
         incarnation = self._prev_incarnation_id
         topology = []
         operation_id = None
-        while incarnation == self._prev_incarnation_id or operation_id is None or len(topology) != self._mesh.node_count:
+        while (
+            incarnation == self._prev_incarnation_id or operation_id is None or len(topology) != self._mesh.node_count
+        ):
             try:
                 incarnation = yt_client.get(self._training_dir.base_path + "/@incarnation_id")
                 incarnation_path = self._training_dir.get_incarnation_path(incarnation)
@@ -105,16 +112,21 @@ class StderrReaderWorker:
             except Exception:
                 pass
 
-        if self._source == StderrSource.master:
+        if self._mode == StderrMode.master:
             job_ids = [topology[0]["job_id"]]
-        else:
+        elif self._mode == StderrMode.all:
             job_ids = [el["job_id"] for el in topology]
-        output_streams: list[str, Generator[bytes, None, None]] = []
+        else:
+            raise StderrReaderException(f"Unknown mode {self._mode}")
+        output_streams: list[tuple[str, Generator[bytes, None, None]]] = []
         for job_id in job_ids:
-            stderr_getter = get_job_stderr(yt_client=yt_client, operation_id=operation_id, job_id=job_id, retry_interval=self._yt_retry_interval)
+            stderr_getter = get_job_stderr(
+                yt_client=yt_client, operation_id=operation_id, job_id=job_id, retry_interval=self._yt_retry_interval
+            )
             output_streams.append(
                 (
-                    job_id,YtStderrReader(stderr_getter=stderr_getter).get_output(),
+                    job_id,
+                    YtStderrReader(stderr_getter=stderr_getter).get_output(),
                 ),
             )
 
@@ -128,7 +140,7 @@ class StderrReaderWorker:
                     pass
             time.sleep(self._polling_interval)
 
-    def stop(self):
+    def stop(self) -> None:
         self._stop = True
 
     def start(self) -> None:

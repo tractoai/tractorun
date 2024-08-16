@@ -2,7 +2,6 @@ from collections import Counter
 import json
 import os
 import shutil
-import sys
 from typing import List
 import zipfile
 

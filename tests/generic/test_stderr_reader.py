@@ -1,10 +1,8 @@
 import sys
-from typing import Generator
 
+from _pytest.capture import CaptureFixture
 import attrs
 import pytest
-from _pytest.capture import CaptureFixture
-from yt import wrapper as yt
 
 from tests.utils import DOCKER_IMAGE
 from tests.yt_instances import YtInstance
@@ -68,7 +66,7 @@ def test_stderr_reader(lines: list[bytes], expected: list[bytes]) -> None:
     assert result == expected
 
 
-def test_stderr_from_operation_pickling(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]):
+def test_stderr_from_operation_pickling(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
     test_strings = ["hello", "my dear", "friend"]
 
     def checker(toolbox: Toolbox) -> None:

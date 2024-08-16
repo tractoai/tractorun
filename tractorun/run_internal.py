@@ -7,7 +7,6 @@ import random
 import shlex
 import sys
 import tempfile
-import threading
 from typing import (
     Any,
     Callable,
@@ -43,7 +42,10 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
-from tractorun.stderr_reader import StderrReaderWorker, StderrSource
+from tractorun.stderr_reader import (
+    StderrMode,
+    StderrReaderWorker,
+)
 from tractorun.tensorproxy import (
     TensorproxyBootstrap,
     TensorproxyConfigurator,
@@ -202,6 +204,7 @@ def _run_tracto(
     docker_image: str,
     yt_path: str,
     mesh: Mesh,
+    proxy_stderr_mode: StderrMode,
     user_config: Optional[dict[Any, Any]] = None,
     binds_local: Optional[list[BindLocal]] = None,
     binds_local_lib: Optional[list[str]] = None,
@@ -317,7 +320,7 @@ def _run_tracto(
         prev_incarnation_id=prev_incarnation_id,
         training_dir=training_dir,
         yt_client_config_pickled=yt_client_config_pickled,
-        source=StderrSource.master,
+        mode=proxy_stderr_mode,
         mesh=mesh,
     )
 

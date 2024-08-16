@@ -23,6 +23,7 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 
 
@@ -33,6 +34,7 @@ TENSORPROXY_ENABLED_DEFAULT = False
 TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
+PROXY_STDERR_MODE_DEFAULT = StderrMode.disabled
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -84,6 +86,7 @@ class Config:
     local: Optional[bool] = attrs.field(default=None)
     bind_local: Optional[list[str]] = attrs.field(default=None)
     bind_local_lib: Optional[list[str]] = attrs.field(default=None)
+    proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -143,6 +146,7 @@ class EffectiveConfig:
     local: bool
     bind_local: list[str]
     bind_local_lib: list[str]
+    proxy_stderr_mode: StderrMode
     command: list[str]
 
     mesh: EffectiveMeshConfig
@@ -215,6 +219,11 @@ class EffectiveConfig:
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             bind_local=bind,
             bind_local_lib=bind_lib,
+            proxy_stderr_mode=_choose_value(
+                args_value=args["proxy_stderr_mode"],
+                config_value=config.proxy_stderr_mode,
+                default=PROXY_STDERR_MODE_DEFAULT,
+            ),
             sidecars=[
                 EffectiveSidecarConfig(
                     command=sidecar.command,
@@ -344,6 +353,11 @@ def main() -> None:
         + ", ".join(p for p in RestartPolicy),
     )
     parser.add_argument(
+        "--proxy-stderr-mode",
+        type=StderrMode,
+        help="Proxy jobs stderr to terminal. Mode: " + ", ".join(m for m in StderrMode),
+    )
+    parser.add_argument(
         "--env",
         action="append",
         help='set env variable by value or from cypress node. JSON message like `{"name": "foo", "value: "real value", "cypress_path": "//tmp/foo"}`',
@@ -409,6 +423,7 @@ def main() -> None:
             yt_path=effective_config.tensorproxy.yt_path,
             restart_policy=effective_config.tensorproxy.restart_policy,
         ),
+        proxy_stderr_mode=effective_config.proxy_stderr_mode,
         sidecars=[
             Sidecar(
                 command=s.command,

@@ -4,9 +4,11 @@ import os
 import random
 import string
 import subprocess
-import sys
 import tempfile
-from typing import Any
+from typing import (
+    Any,
+    Generator,
+)
 import uuid
 
 import attrs
@@ -42,12 +44,16 @@ class TractoCliRun:
         return operation_spec["tasks"]["task"]["job_count"] == job_count
 
     @property
-    def stdout(self):
-        return self._process.stdout.read()
+    def stdout(self) -> bytes:
+        assert self._process.stdout is not None
+        data = self._process.stdout.read()
+        return data
 
     @property
-    def stderr(self):
-        return self._process.stderr.read()
+    def stderr(self) -> bytes:
+        assert self._process.stderr is not None
+        data = self._process.stderr.read()
+        return data
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -95,7 +101,7 @@ class TractoCli:
 
 
 @contextlib.contextmanager
-def run_config_file(config: dict[str, Any]) -> str:
+def run_config_file(config: dict[str, Any]) -> Generator[str, None, None]:
     with tempfile.NamedTemporaryFile(mode="w") as f:
         yaml.safe_dump(config, f)
         yield f.name

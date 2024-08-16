@@ -7,7 +7,8 @@ import yt.wrapper as yt
 from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
-    get_data_path, run_config_file,
+    get_data_path,
+    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend

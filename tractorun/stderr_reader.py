@@ -1,7 +1,6 @@
 import base64
 import enum
 import pickle
-import sys
 import threading
 import time
 from typing import (
@@ -71,7 +70,7 @@ def get_job_stderr(
             try:
                 data = yt_client.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
                 return data
-            except YtError as e:
+            except YtError:
                 # TODO: add debug logs
                 time.sleep(retry_interval)
 

@@ -360,7 +360,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         "--sidecar",
         action="append",
         help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
-             + ", ".join(p for p in RestartPolicy),
+        + ", ".join(p for p in RestartPolicy),
     )
     parser.add_argument(
         "--proxy-stderr-mode",

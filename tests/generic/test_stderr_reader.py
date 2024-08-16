@@ -5,12 +5,20 @@ from _pytest.capture import CaptureFixture
 import attrs
 import pytest
 
-from tests.utils import DOCKER_IMAGE, TractoCli, get_data_path, run_config_file
+from tests.utils import (
+    DOCKER_IMAGE,
+    TractoCli,
+    get_data_path,
+    run_config_file,
+)
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
 from tractorun.run import run
-from tractorun.stderr_reader import YtStderrReader, StderrMode
+from tractorun.stderr_reader import (
+    StderrMode,
+    YtStderrReader,
+)
 from tractorun.toolbox import Toolbox
 
 
@@ -74,7 +82,9 @@ def test_stderr_reader(lines: list[bytes], expected: list[bytes]) -> None:
     "mode",
     [StderrMode.primary, StderrMode.disabled],
 )
-def test_operation_pickling(mode: StderrMode, yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+def test_operation_pickling(
+    mode: StderrMode, yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]
+) -> None:
     def checker(toolbox: Toolbox) -> None:
         marker = "primary" if toolbox.coordinator.is_primary() else "secondary"
         for test_string in TEST_STRINGS:

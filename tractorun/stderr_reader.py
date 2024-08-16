@@ -1,6 +1,7 @@
 import base64
 import enum
 import pickle
+import sys
 import threading
 import time
 from typing import (
@@ -70,7 +71,8 @@ def get_job_stderr(
             try:
                 data = yt_client.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
                 return data
-            except YtError:
+            except YtError as e:
+                # TODO: add debug logs
                 time.sleep(retry_interval)
 
     return _wrapped
@@ -78,8 +80,7 @@ def get_job_stderr(
 
 class StderrMode(str, enum.Enum):
     disabled = "disabled"
-    master = "master"
-    all = "all"
+    primary = "primary"
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -110,14 +111,14 @@ class StderrReaderWorker:
                 operation_id = yt_client.get(incarnation_path + "/@incarnation_operation_id")
                 topology = yt_client.get(incarnation_path + "/@topology")
             except Exception:
+                # TODO: add debug logs
                 pass
 
-        if self._mode == StderrMode.master:
-            job_ids = [topology[0]["job_id"]]
-        elif self._mode == StderrMode.all:
-            job_ids = [el["job_id"] for el in topology]
-        else:
-            raise StderrReaderException(f"Unknown mode {self._mode}")
+        match self._mode:
+            case StderrMode.primary:
+                job_ids = [topology[0]["job_id"]]
+            case _:
+                raise StderrReaderException(f"Unknown mode {self._mode}")
         output_streams: list[tuple[str, Generator[bytes, None, None]]] = []
         for job_id in job_ids:
             stderr_getter = get_job_stderr(
@@ -135,8 +136,9 @@ class StderrReaderWorker:
                 try:
                     data = next(output_stream)
                     if data:
-                        print(f"{job_id}\t{data}", end="")
+                        print(data.decode("unicode_escape"), end="")
                 except Exception:
+                    # TODO: add debug logs
                     pass
             time.sleep(self._polling_interval)
 
@@ -144,5 +146,7 @@ class StderrReaderWorker:
         self._stop = True
 
     def start(self) -> None:
+        if self._mode == StderrMode.disabled:
+            return
         stderr_thread = threading.Thread(target=self._start)
         stderr_thread.start()

@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import sys
 from typing import (
     Any,
     Optional,
@@ -23,6 +24,7 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 
 
@@ -33,6 +35,7 @@ TENSORPROXY_ENABLED_DEFAULT = False
 TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
+PROXY_STDERR_MODE_DEFAULT = StderrMode.disabled
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -84,6 +87,7 @@ class Config:
     local: Optional[bool] = attrs.field(default=None)
     bind_local: Optional[list[str]] = attrs.field(default=None)
     bind_local_lib: Optional[list[str]] = attrs.field(default=None)
+    proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -141,8 +145,9 @@ class EffectiveConfig:
     yt_operation_spec: Optional[dict[str, Any]]
     yt_task_spec: Optional[dict[str, Any]]
     local: bool
-    bind_local: list[str]
+    bind_local: list[BindLocal]
     bind_local_lib: list[str]
+    proxy_stderr_mode: StderrMode
     command: list[str]
 
     mesh: EffectiveMeshConfig
@@ -171,9 +176,18 @@ class EffectiveConfig:
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
-        bind = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
-        if bind is None:
-            bind = []
+        binds = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
+        if binds is None:
+            binds = []
+        effective_binds: list[BindLocal] = []
+        for bind in binds:
+            source, destination = bind.split(":")
+            effective_binds.append(
+                BindLocal(
+                    source=source,
+                    destination=destination,
+                ),
+            )
 
         bind_lib = _choose_value(args_value=args["bind_local_lib"], config_value=config.bind_local_lib)
         if bind_lib is None:
@@ -213,8 +227,13 @@ class EffectiveConfig:
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
-            bind_local=bind,
+            bind_local=effective_binds,
             bind_local_lib=bind_lib,
+            proxy_stderr_mode=_choose_value(
+                args_value=args["proxy_stderr_mode"],
+                config_value=config.proxy_stderr_mode,
+                default=PROXY_STDERR_MODE_DEFAULT,
+            ),
             sidecars=[
                 EffectiveSidecarConfig(
                     command=sidecar.command,
@@ -283,7 +302,7 @@ class EffectiveConfig:
         return new_config
 
 
-def main() -> None:
+def make_cli_parser() -> argparse.ArgumentParser:
     # Defaults shouldn't be set in argparse
     # because it interferes with merging with configs.
     # We don't want to use config values as defaults too.
@@ -344,30 +363,28 @@ def main() -> None:
         + ", ".join(p for p in RestartPolicy),
     )
     parser.add_argument(
+        "--proxy-stderr-mode",
+        type=StderrMode,
+        help="Proxy jobs stderr to terminal. Mode: " + ", ".join(m for m in StderrMode),
+    )
+    parser.add_argument(
         "--env",
         action="append",
         help='set env variable by value or from cypress node. JSON message like `{"name": "foo", "value: "real value", "cypress_path": "//tmp/foo"}`',
     )
     parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
+    return parser
 
-    args = vars(parser.parse_args())
 
+def main() -> None:
+    parser = make_cli_parser()
+    args = vars(parser.parse_args(sys.argv[1:]))
     file_config_content = Config.load_yaml(args["run_config_path"]) if args["run_config_path"] else Config()
     effective_config = EffectiveConfig.configure(
         config=file_config_content,
         args=args,
     )
-
-    binds: list[BindLocal] = []
-    for bind in effective_config.bind_local:
-        source, destination = bind.split(":")
-        binds.append(
-            BindLocal(
-                source=source,
-                destination=destination,
-            ),
-        )
 
     if args["dump_effective_config"]:
         print("Parsed args:")
@@ -402,13 +419,14 @@ def main() -> None:
         ),
         yt_path=effective_config.yt_path,
         docker_image=effective_config.docker_image,
-        binds_local=binds,
+        binds_local=effective_config.bind_local,
         binds_local_lib=effective_config.bind_local_lib,
         tensorproxy=TensorproxySidecar(
             enabled=effective_config.tensorproxy.enabled,
             yt_path=effective_config.tensorproxy.yt_path,
             restart_policy=effective_config.tensorproxy.restart_policy,
         ),
+        proxy_stderr_mode=effective_config.proxy_stderr_mode,
         sidecars=[
             Sidecar(
                 command=s.command,

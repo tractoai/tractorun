@@ -3,6 +3,7 @@ import time
 
 import attrs
 import yt.wrapper as yt
+from yt.wrapper.errors import YtResolveError
 
 from tractorun.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
@@ -107,10 +108,7 @@ class Coordinator:
                 wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
             )
 
-        if yt_client.exists(training_dir.base_path + "/@incarnation_id"):
-            last_incarnation_id = yt_client.get(training_dir.base_path + "/@incarnation_id")
-        else:
-            last_incarnation_id = -1
+        last_incarnation_id = get_incarnation_id(yt_client, training_dir)
         incarnation_id = last_incarnation_id + 1
 
         incarnation_yt_client = create_prerequisite_client(
@@ -178,7 +176,7 @@ class Coordinator:
     ) -> "Coordinator":
         while True:
             try:
-                incarnation_id = yt_client.get(training_dir.base_path + "/@incarnation_id")
+                incarnation_id = get_incarnation_id(yt_client, training_dir, raise_if_not_exists=True)
                 incarnation_path = training_dir.get_incarnation_path(incarnation_id)
                 if (
                     yt_client.get(
@@ -217,3 +215,12 @@ class Coordinator:
                 self_endpoint=self_endpoint,
                 primary_endpoint=primary_endpoint,
             )
+
+
+def get_incarnation_id(yt_client: yt.YtClient, training_dir: TrainingDir, raise_if_not_exists: bool = False) -> int:
+    try:
+        return yt_client.get(training_dir.base_path + "/@incarnation_id")
+    except YtResolveError:
+        if raise_if_not_exists:
+            raise
+        return -1

@@ -1,15 +1,14 @@
 import json
 import os
-import tempfile
 
 import pytest
-import yaml
 import yt.wrapper as yt
 
 from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -110,14 +109,12 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, yt_secret
             "not_secret_env_value": NOT_SECRET_ENV_VALUE,
         },
     }
-    with tempfile.NamedTemporaryFile(mode="w") as f:
-        yaml.safe_dump(run_config, f)
-
+    with run_config_file(run_config) as run_config_path:
         tracto_cli = TractoCli(
             command=["python3", "/tractorun_tests/env_script.py"],
             args=[
                 "--run-config-path",
-                f.name,
+                run_config_path,
                 "--yt-path",
                 yt_path,
                 "--bind-local",

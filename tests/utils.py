@@ -1,12 +1,18 @@
+import contextlib
 import json
 import os
 import random
 import string
 import subprocess
-from typing import Any
+import tempfile
+from typing import (
+    Any,
+    Generator,
+)
 import uuid
 
 import attrs
+import yaml
 from yt import wrapper as yt
 
 
@@ -36,6 +42,18 @@ class TractoCliRun:
         operation_id = operations[0]["id"]
         operation_spec = yt_client.get_operation(operation_id)["spec"]
         return operation_spec["tasks"]["task"]["job_count"] == job_count
+
+    @property
+    def stdout(self) -> bytes:
+        assert self._process.stdout is not None
+        data = self._process.stdout.read()
+        return data
+
+    @property
+    def stderr(self) -> bytes:
+        assert self._process.stderr is not None
+        data = self._process.stderr.read()
+        return data
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -74,9 +92,16 @@ class TractoCli:
             *self._command,
         ]
 
-        process = subprocess.Popen(command)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.wait()
         return TractoCliRun(
             process=process,
             operation_title=operation_title,
         )
+
+
+@contextlib.contextmanager
+def run_config_file(config: dict[str, Any]) -> Generator[str, None, None]:
+    with tempfile.NamedTemporaryFile(mode="w") as f:
+        yaml.safe_dump(config, f)
+        yield f.name

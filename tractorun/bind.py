@@ -2,7 +2,6 @@ from collections import Counter
 import json
 import os
 import shutil
-import sys
 from typing import List
 import zipfile
 
@@ -42,7 +41,6 @@ class BindsPacker:
                 dirs.append(bind)
             else:
                 files.append(bind)
-        print(f"Files {files} and dirs {dirs}", file=sys.stderr)
         return BindsPacker(files=files, dirs=dirs)
 
     def _pack_file(self, archive_path: str, archive_name: str, source_path: str, destination_name: str) -> PackedBind:

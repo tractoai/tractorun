@@ -20,6 +20,7 @@ from tractorun.run_internal import (
     _run_tracto,
 )
 from tractorun.sidecar import Sidecar
+from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 
@@ -43,6 +44,7 @@ def run(
     yt_operation_spec: Optional[dict[Any, Any]] = None,
     yt_task_spec: Optional[dict[Any, Any]] = None,
     local: bool = False,
+    proxy_stderr_mode: StderrMode = StderrMode.disabled,
 ) -> None:
     if local:
         _run_local(
@@ -78,6 +80,7 @@ def run(
             wandb_api_key=wandb_api_key,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
+            proxy_stderr_mode=proxy_stderr_mode,
         )
 
 
@@ -89,14 +92,15 @@ def run_script(
     docker_image: str,
     resources: Resources,
     tensorproxy: TensorproxySidecar,
-    user_config: Optional[dict[Any, Any]] = None,
-    binds_local: Optional[list[BindLocal]] = None,
-    binds_local_lib: Optional[list[str]] = None,
-    sidecars: Optional[list[Sidecar]] = None,
-    env: Optional[list[EnvVariable]] = None,
-    local: bool = False,
-    yt_operation_spec: Optional[dict[Any, Any]] = None,
-    yt_task_spec: Optional[dict[Any, Any]] = None,
+    user_config: Optional[dict[Any, Any]],
+    binds_local: list[BindLocal],
+    binds_local_lib: list[str],
+    sidecars: list[Sidecar],
+    env: list[EnvVariable],
+    local: bool,
+    yt_operation_spec: Optional[dict[Any, Any]],
+    yt_task_spec: Optional[dict[Any, Any]],
+    proxy_stderr_mode: StderrMode,
 ) -> None:
     if binds_local is None:
         binds_local = []
@@ -124,6 +128,7 @@ def run_script(
             tensorproxy=tensorproxy,
             sidecars=sidecars,
             env=env,
+            proxy_stderr_mode=proxy_stderr_mode,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
         )

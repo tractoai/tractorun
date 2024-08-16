@@ -7,6 +7,7 @@ import random
 import shlex
 import sys
 import tempfile
+import threading
 from typing import (
     Any,
     Callable,
@@ -34,6 +35,7 @@ from tractorun.constants import (
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
 )
+from tractorun.coordinator import get_incarnation_id
 from tractorun.env import EnvVariable
 from tractorun.environment import get_toolbox
 from tractorun.exceptions import TractorunInvalidConfiguration
@@ -41,6 +43,7 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
+from tractorun.stderr_reader import StderrReaderWorker, StderrSource
 from tractorun.tensorproxy import (
     TensorproxyBootstrap,
     TensorproxyConfigurator,
@@ -226,6 +229,7 @@ def _run_tracto(
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
     yt_client_config: dict = yt.config.get_config(yt_client)
+    yt_client_config_pickled = base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8")
 
     tmp_dir = tempfile.TemporaryDirectory()
     training_dir = TrainingDir.create(yt_path)
@@ -238,7 +242,7 @@ def _run_tracto(
         sidecars=sidecars,
         env=env,
         training_dir=training_dir,
-        yt_client_config=base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8"),
+        yt_client_config=yt_client_config_pickled,
         tensorproxy=tp_bootstrap,
     )
 
@@ -308,7 +312,18 @@ def _run_tracto(
     operation_spec = operation_spec.spec(yt_operation_spec)
     operation_spec = runnable.modify_operation(operation_spec)
 
+    prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
+    reader = StderrReaderWorker(
+        prev_incarnation_id=prev_incarnation_id,
+        training_dir=training_dir,
+        yt_client_config_pickled=yt_client_config_pickled,
+        source=StderrSource.master,
+        mesh=mesh,
+    )
+
+    reader.start()
     yt_client.run_operation(operation_spec, sync=True)
+    reader.stop()
 
     tmp_dir.cleanup()
 

@@ -37,7 +37,7 @@ from tractorun.constants import (
 from tractorun.coordinator import get_incarnation_id
 from tractorun.env import EnvVariable
 from tractorun.environment import get_toolbox
-from tractorun.exceptions import TractorunInvalidConfiguration
+from tractorun.exceptions import TractorunConfigurationError
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
@@ -344,7 +344,7 @@ def _run_local(
     sidecars = sidecars if sidecars is not None else []
 
     if mesh.node_count != 1:
-        raise TractorunInvalidConfiguration("local mode only supports 1 node")
+        raise TractorunConfigurationError("local mode only supports 1 node")
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 

@@ -154,7 +154,6 @@ class StderrReaderWorker:
 
     def __enter__(self) -> None:
         self.start()
-        return
 
     def __exit__(
         self,

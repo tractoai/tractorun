@@ -316,17 +316,15 @@ def _run_tracto(
     operation_spec = runnable.modify_operation(operation_spec)
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
-    reader = StderrReaderWorker(
+
+    with StderrReaderWorker(
         prev_incarnation_id=prev_incarnation_id,
         training_dir=training_dir,
         yt_client_config_pickled=yt_client_config_pickled,
         mode=proxy_stderr_mode,
         mesh=mesh,
-    )
-
-    reader.start()
-    yt_client.run_operation(operation_spec, sync=True)
-    reader.stop()
+    ):
+        yt_client.run_operation(operation_spec, sync=True)
 
     tmp_dir.cleanup()
 

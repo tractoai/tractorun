@@ -3,10 +3,12 @@ import enum
 import pickle
 import threading
 import time
+from types import TracebackType
 from typing import (
     Callable,
     Generator,
     Optional,
+    Type,
 )
 
 import attrs
@@ -149,3 +151,16 @@ class StderrReaderWorker:
             return
         stderr_thread = threading.Thread(target=self._start)
         stderr_thread.start()
+        stderr_thread.is_alive()
+
+    def __enter__(self) -> None:
+        self.start()
+        return
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        self.stop()

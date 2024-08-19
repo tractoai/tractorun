@@ -1,9 +1,11 @@
 import json
 import sys
+import threading
 
 from _pytest.capture import CaptureFixture
 import attrs
 import pytest
+from yt.wrapper import YtOperationFailedError
 
 from tests.utils import (
     DOCKER_IMAGE,
@@ -16,6 +18,7 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.stderr_reader import (
+    STDERR_READER_THREAD_NAME,
     StderrMode,
     YtStderrReader,
 )
@@ -176,3 +179,29 @@ def test_operation_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
     stdout = op_run.stdout.decode("utf-8")
     for s in TEST_STRINGS:
         assert f"{s}\n" in stdout
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [StderrMode.primary, StderrMode.disabled],
+)
+def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -> None:
+    def checker(toolbox: Toolbox) -> None:
+        print("message", file=sys.stderr)
+        raise Exception("fail operation")
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    with pytest.raises(YtOperationFailedError):
+        run(
+            checker,
+            backend=GenericBackend(),
+            yt_path=yt_path,
+            mesh=mesh,
+            yt_client=yt_client,
+            docker_image=DOCKER_IMAGE,
+            proxy_stderr_mode=mode,
+            yt_operation_spec={"max_failed_job_count": 1},
+        )
+    names = [thread.name for thread in threading.enumerate()]
+    assert STDERR_READER_THREAD_NAME not in names

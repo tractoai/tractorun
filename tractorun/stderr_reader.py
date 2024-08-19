@@ -3,10 +3,12 @@ import enum
 import pickle
 import threading
 import time
+from types import TracebackType
 from typing import (
     Callable,
     Generator,
     Optional,
+    Type,
 )
 
 import attrs
@@ -19,6 +21,7 @@ from tractorun.training_dir import TrainingDir
 
 
 YT_RETRY_INTERVAL = 5
+STDERR_READER_THREAD_NAME = "tractorun_stderr_reader"
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -93,6 +96,7 @@ class StderrReaderWorker:
 
     _polling_interval: float = attrs.field(default=1.0)
     _yt_retry_interval: float = attrs.field(default=YT_RETRY_INTERVAL)
+    _thread: threading.Thread = attrs.field(init=False, default=None)
 
     def _start(self) -> None:
         yt_config = pickle.loads(base64.b64decode(self._yt_client_config_pickled))
@@ -142,10 +146,24 @@ class StderrReaderWorker:
             time.sleep(self._polling_interval)
 
     def stop(self) -> None:
-        self._stop = True
+        if self._thread is not None:
+            self._stop = True
+            self._thread.join(timeout=self._polling_interval * 2)
 
     def start(self) -> None:
+        assert self._thread is None
         if self._mode == StderrMode.disabled:
             return
-        stderr_thread = threading.Thread(target=self._start)
-        stderr_thread.start()
+        self._thread = threading.Thread(target=self._start, name=STDERR_READER_THREAD_NAME)
+        self._thread.start()
+
+    def __enter__(self) -> None:
+        self.start()
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        self.stop()

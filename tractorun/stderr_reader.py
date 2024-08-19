@@ -151,7 +151,6 @@ class StderrReaderWorker:
             return
         stderr_thread = threading.Thread(target=self._start)
         stderr_thread.start()
-        stderr_thread.is_alive()
 
     def __enter__(self) -> None:
         self.start()

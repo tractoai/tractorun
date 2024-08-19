@@ -10,5 +10,9 @@ class TractorunConfigError(BaseTractorunException):
     pass
 
 
-class TractorunInvalidConfiguration(BaseTractorunException):
+class TractorunConfigurationError(BaseTractorunException):
+    pass
+
+
+class TractorunWandbError(BaseTractorunException):
     pass

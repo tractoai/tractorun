@@ -123,7 +123,7 @@ class BindsLibPacker:
         paths = [os.path.abspath(path) for path in self._paths]
         lib_to_original_path = {os.path.split(path)[1]: path for path in paths}
         non_uniq_names = [name for name, count in Counter(lib_to_original_path.keys()).items() if count > 1]
-        assert len(non_uniq_names) == 0, f"Some libraries has the same names: {non_uniq_names}"
+        assert len(non_uniq_names) == 0, f"Some libraries have the same names: {non_uniq_names}"
 
         result: list[PackedLib] = []
         for lib_name, original_path in lib_to_original_path.items():

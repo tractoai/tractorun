@@ -1,5 +1,6 @@
 import json
 import sys
+import threading
 
 from _pytest.capture import CaptureFixture
 import attrs
@@ -18,7 +19,7 @@ from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.stderr_reader import (
     StderrMode,
-    YtStderrReader,
+    YtStderrReader, STDERR_READER_THREAD_NAME,
 )
 from tractorun.toolbox import Toolbox
 
@@ -201,3 +202,6 @@ def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -
             proxy_stderr_mode=mode,
             yt_operation_spec={"max_failed_job_count": 1},
         )
+    names = [thread.name for thread in threading.enumerate()]
+    assert STDERR_READER_THREAD_NAME not in names
+

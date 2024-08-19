@@ -18,8 +18,9 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.stderr_reader import (
+    STDERR_READER_THREAD_NAME,
     StderrMode,
-    YtStderrReader, STDERR_READER_THREAD_NAME,
+    YtStderrReader,
 )
 from tractorun.toolbox import Toolbox
 
@@ -204,4 +205,3 @@ def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -
         )
     names = [thread.name for thread in threading.enumerate()]
     assert STDERR_READER_THREAD_NAME not in names
-

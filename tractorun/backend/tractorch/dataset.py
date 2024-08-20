@@ -2,7 +2,6 @@ from typing import (
     TYPE_CHECKING,
     Callable,
     Iterator,
-    Optional,
     Sized,
 )
 
@@ -33,8 +32,8 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
         path: str,
         transform: Callable[[list[str], dict], T_co],
         start: int = 0,
-        end: Optional[int] = None,
-        columns: Optional[list] = None,
+        end: int | None = None,
+        columns: list | None = None,
     ) -> None:
         self._yt_client = toolbox.yt_client
 
@@ -75,8 +74,8 @@ class YtTensorDataset(YtDataset[tuple]):
         toolbox: Toolbox,
         path: str,
         start: int = 0,
-        end: Optional[int] = None,
-        columns: Optional[list] = None,
+        end: int | None = None,
+        columns: list | None = None,
     ) -> None:
         super().__init__(
             toolbox=toolbox,

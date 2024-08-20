@@ -1,7 +1,7 @@
 import attrs
 
 from tractorun.backend.generic.environment import Environment
-from tractorun.private.base_backend import BackendBase
+from tractorun.base_backend import BackendBase
 
 
 @attrs.define

@@ -12,12 +12,14 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
+from tractorun.private.sidecar import (
+    RestartVerdict,
+    SidecarRun,
+)
 from tractorun.run import run
 from tractorun.sidecar import (
     RestartPolicy,
-    RestartVerdict,
     Sidecar,
-    SidecarRun,
 )
 from tractorun.toolbox import Toolbox
 

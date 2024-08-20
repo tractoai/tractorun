@@ -18,10 +18,10 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
 from tractorun.private.stderr_reader import (
     STDERR_READER_THREAD_NAME,
-    StderrMode,
     YtStderrReader,
 )
 from tractorun.run import run
+from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
 

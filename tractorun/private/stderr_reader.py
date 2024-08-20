@@ -1,5 +1,4 @@
 import base64
-import enum
 import pickle
 import threading
 import time
@@ -18,6 +17,7 @@ from yt.wrapper.errors import YtError
 from tractorun.exception import StderrReaderException
 from tractorun.mesh import Mesh
 from tractorun.private.training_dir import TrainingDir
+from tractorun.stderr_reader import StderrMode
 
 
 YT_RETRY_INTERVAL = 5
@@ -78,11 +78,6 @@ def get_job_stderr(
                 time.sleep(retry_interval)
 
     return _wrapped
-
-
-class StderrMode(str, enum.Enum):
-    disabled = "disabled"
-    primary = "primary"
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

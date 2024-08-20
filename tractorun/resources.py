@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Optional as _Optional
 
-import attrs
+import attrs as _attrs
 
 
-@attrs.define
+@_attrs.define
 class Resources:
-    cpu_limit: Optional[float] = None
-    memory_limit: Optional[int] = None
+    cpu_limit: _Optional[float] = None
+    memory_limit: _Optional[int] = None

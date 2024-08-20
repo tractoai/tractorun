@@ -18,13 +18,13 @@ from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
-from tractorun.private.stderr_reader import StderrMode
+from tractorun.private.run import run_script
 from tractorun.resources import Resources
-from tractorun.run import run_script
 from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 
 

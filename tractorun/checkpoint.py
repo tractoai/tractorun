@@ -14,7 +14,7 @@ _T = _TypeVar("_T")
 
 
 @attrs.define
-class Checkpoint:
+class _Checkpoint:
     index: int
     value: bytes
     metadata: dict
@@ -54,7 +54,7 @@ class CheckpointManager:
             last_checkpoint_index = max(last_checkpoint_index, index)
         self._last_checkpoint_index = last_checkpoint_index
 
-    def get_last_checkpoint(self) -> _Optional[Checkpoint]:
+    def get_last_checkpoint(self) -> _Optional[_Checkpoint]:
         if self._last_checkpoint_index == -1:
             return None
 
@@ -62,7 +62,7 @@ class CheckpointManager:
         value = self._yt_client.read_file(checkpoint_path + "/value").read()
         metadata = _json.loads(self._yt_client.read_file(checkpoint_path + "/metadata").read())
 
-        return Checkpoint(self._last_checkpoint_index, value, metadata)
+        return _Checkpoint(self._last_checkpoint_index, value, metadata)
 
     def save_checkpoint(self, value: bytes, metadata: _Optional[dict] = None) -> _Task:
         if metadata is None:

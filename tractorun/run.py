@@ -6,22 +6,18 @@ from typing import (
 
 import yt.wrapper as yt
 
+from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
-from tractorun.private.base_backend import BackendBase
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
-from tractorun.private.run_internal import (
-    Command,
-    UserFunction,
-    _prepare_and_get_toolbox,
-    _run_local,
-    _run_tracto,
-)
-from tractorun.private.stderr_reader import StderrMode
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE as _DEFAULT_DOCKER_IMAGE
+from tractorun.private.run_internal import UserFunction as _UserFunction
+from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_and_get_toolbox
+from tractorun.private.run_internal import run_local as _run_local
+from tractorun.private.run_internal import run_tracto as _run_tracto
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
-from tractorun.tensorproxy import TensorproxySidecar
+from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
 
@@ -32,7 +28,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: Optional[dict[Any, Any]] = None,
-    docker_image: str = DEFAULT_DOCKER_IMAGE,
+    docker_image: str = _DEFAULT_DOCKER_IMAGE,
     resources: Optional[Resources] = None,
     yt_client: Optional[yt.YtClient] = None,
     binds_local: Optional[list[BindLocal]] = None,
@@ -48,7 +44,7 @@ def run(
 ) -> None:
     if local:
         _run_local(
-            UserFunction(
+            _UserFunction(
                 function=user_function,
                 backend=backend,
             ),
@@ -62,7 +58,7 @@ def run(
         )
     else:
         _run_tracto(
-            UserFunction(
+            _UserFunction(
                 function=user_function,
                 backend=backend,
             ),
@@ -81,56 +77,6 @@ def run(
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
             proxy_stderr_mode=proxy_stderr_mode,
-        )
-
-
-def run_script(
-    command: list[str],
-    *,
-    yt_path: str,
-    mesh: Mesh,
-    docker_image: str,
-    resources: Resources,
-    tensorproxy: TensorproxySidecar,
-    user_config: Optional[dict[Any, Any]],
-    binds_local: list[BindLocal],
-    binds_local_lib: list[str],
-    sidecars: list[Sidecar],
-    env: list[EnvVariable],
-    local: bool,
-    yt_operation_spec: Optional[dict[Any, Any]],
-    yt_task_spec: Optional[dict[Any, Any]],
-    proxy_stderr_mode: StderrMode,
-) -> None:
-    if binds_local is None:
-        binds_local = []
-    if local:
-        _run_local(
-            runnable=Command(command=command),
-            yt_path=yt_path,
-            mesh=mesh,
-            sidecars=sidecars,
-            env=env,
-            yt_client=None,
-            tensorproxy=tensorproxy,
-        )
-    else:
-        _run_tracto(
-            runnable=Command(command=command),
-            yt_path=yt_path,
-            mesh=mesh,
-            user_config=user_config,
-            resources=resources,
-            yt_client=None,
-            docker_image=docker_image,
-            binds_local=binds_local,
-            binds_local_lib=binds_local_lib,
-            tensorproxy=tensorproxy,
-            sidecars=sidecars,
-            env=env,
-            proxy_stderr_mode=proxy_stderr_mode,
-            yt_operation_spec=yt_operation_spec,
-            yt_task_spec=yt_task_spec,
         )
 
 

@@ -17,12 +17,12 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
+from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
 from tractorun.private import constants as const
-from tractorun.private.base_backend import BackendBase
 from tractorun.private.bind import (
     BindsLibPacker,
     BindsPacker,
@@ -40,9 +40,10 @@ from tractorun.private.constants import (
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.environment import get_toolbox
 from tractorun.private.helpers import AttrSerializer
-from tractorun.private.stderr_reader import (
-    StderrMode,
-    StderrReaderWorker,
+from tractorun.private.stderr_reader import StderrReaderWorker
+from tractorun.private.tensorproxy import (
+    TensorproxyBootstrap,
+    TensorproxyConfigurator,
 )
 from tractorun.private.training_dir import (
     TrainingDir,
@@ -50,11 +51,8 @@ from tractorun.private.training_dir import (
 )
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
-from tractorun.tensorproxy import (
-    TensorproxyBootstrap,
-    TensorproxyConfigurator,
-    TensorproxySidecar,
-)
+from tractorun.stderr_reader import StderrMode
+from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 
 
@@ -148,7 +146,7 @@ class UserFunction(Runnable):
         def wrapped() -> None:
             # run on YT
             if "TRACTO_CONFIG" in os.environ:
-                toolbox = _prepare_and_get_toolbox(backend=self._backend)
+                toolbox = prepare_and_get_toolbox(backend=self._backend)
                 self.function(toolbox)
             else:
                 binds_packer = BindsPacker.from_env(os.environ[BIND_PATHS_ENV_VAR])
@@ -182,7 +180,7 @@ class UserFunction(Runnable):
         def wrapped() -> None:
             # run on YT
             if "TRACTO_CONFIG" in os.environ:
-                toolbox = _prepare_and_get_toolbox(backend=self._backend)
+                toolbox = prepare_and_get_toolbox(backend=self._backend)
                 self.function(toolbox)
             else:
                 bootstrap(
@@ -198,7 +196,7 @@ class UserFunction(Runnable):
         return wrapped
 
 
-def _run_tracto(
+def run_tracto(
     runnable: Runnable,
     *,
     docker_image: str,
@@ -329,7 +327,7 @@ def _run_tracto(
     tmp_dir.cleanup()
 
 
-def _run_local(
+def run_local(
     runnable: Runnable,
     *,
     yt_path: str,
@@ -380,7 +378,7 @@ def _run_local(
     return wrapped()
 
 
-def _prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
+def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     # Runs in a job
     closet = get_closet()
     backend.environment.prepare(closet)

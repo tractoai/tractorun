@@ -1,8 +1,8 @@
 from tractorun.base_backend import EnvironmentBase
-from tractorun.private.closet import Closet
-from tractorun.private.environment import prepare_environment as common_prepare_environment
+from tractorun.private.closet import Closet as _Closet
+from tractorun.private.environment import prepare_environment as _common_prepare_environment
 
 
 class Environment(EnvironmentBase):
-    def prepare(self, closet: Closet) -> None:
-        common_prepare_environment(closet)
+    def prepare(self, closet: _Closet) -> None:
+        _common_prepare_environment(closet)

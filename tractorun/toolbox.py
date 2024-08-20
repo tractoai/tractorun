@@ -19,7 +19,7 @@ class Toolbox:
     checkpoint_manager: CheckpointManager
     yt_client: yt.YtClient
     mesh: Mesh
-    training_dir: TrainingDir
+    _training_dir: TrainingDir
     _training_metadata: TrainingMetadata
 
     @staticmethod
@@ -28,7 +28,7 @@ class Toolbox:
 
     def save_model(self, data: bytes, dataset_path: str, metadata: dict[str, str]) -> str:
         incarnation_id = self.coordinator.get_incarnation_id()
-        path = self.training_dir.models_path + f"/{incarnation_id}"
+        path = self._training_dir.models_path + f"/{incarnation_id}"
 
         if not self.coordinator.is_primary():
             return path

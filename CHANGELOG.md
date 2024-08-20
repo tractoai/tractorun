@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.12.0 (2024-08-20)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.11.0...0.12.0)
+
+### Changes
+
+- NYT-639: add yaml to dependencies (#49). [bf1afbc](https://github.com/tractoai/tractorun/commit/bf1afbc6914a486fd8bf134bfed091f6f71d40bf)
+    
+- Delete empty file tractorun/dataset.py (#48). [3151eff](https://github.com/tractoai/tractorun/commit/3151efffbf276183ab4f982445e9aaa57f88cb59)
+    
+- NYT-639: fix tractorun deps (#47). [2d29963](https://github.com/tractoai/tractorun/commit/2d29963cb30e99449c4890bfec7ec34f8b1e5986)
+    
+- NYT-629: stop stderr reader if operation fails (#46). [6413351](https://github.com/tractoai/tractorun/commit/6413351402be2c2d274afacca4eb6082c02414d5)
+    
+- NYT-629: add stderr read option (#45). [b1608c8](https://github.com/tractoai/tractorun/commit/b1608c809396f8955c7b584dd90db21c5e2f2ecb)
+    
+- NYT-629: move stderr to common codebase, add tests (#44). [5eededf](https://github.com/tractoai/tractorun/commit/5eededfcba2a548c9dcefbb576e2bb1597436b61)
+    
+- NYT-629: create base training dirs during local run (#43). [163c8f6](https://github.com/tractoai/tractorun/commit/163c8f684b9be3bd982af3b88b17007871dbb126)
+    
+  some preparations for stderr reader
+
 ## 0.11.0 (2024-08-14)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.10.0...0.11.0)

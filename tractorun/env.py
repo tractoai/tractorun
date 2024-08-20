@@ -1,4 +1,4 @@
-import attrs as attrs
+import attrs
 
 
 __all__ = ["EnvVariable"]

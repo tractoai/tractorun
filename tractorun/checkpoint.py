@@ -6,21 +6,21 @@ from typing import Generic as _Generic
 from typing import Optional as _Optional
 from typing import TypeVar as _TypeVar
 
-import attrs
-import yt.wrapper as yt
+import attrs as _attrs
+import yt.wrapper as _yt
 
 
 _T = _TypeVar("_T")
 
 
-@attrs.define
+@_attrs.define
 class _Checkpoint:
     index: int
     value: bytes
     metadata: dict
 
 
-def _save_checkpoint(yt_client: yt.YtClient, path: str, metadata: bytes, value: bytes) -> None:
+def _save_checkpoint(yt_client: _yt.YtClient, path: str, metadata: bytes, value: bytes) -> None:
     with yt_client.Transaction():
         yt_client.create("map_node", path)
         yt_client.write_file(path + "/value", value)
@@ -30,7 +30,7 @@ def _save_checkpoint(yt_client: yt.YtClient, path: str, metadata: bytes, value: 
         )
 
 
-@attrs.define
+@_attrs.define
 class _Task(_Generic[_T]):
     _task: _asyncio.Future[_T]
 
@@ -38,10 +38,10 @@ class _Task(_Generic[_T]):
         return _asyncio.get_event_loop().run_until_complete(_asyncio.wait_for(self._task, timeout=timeout))
 
 
-@attrs.define
+@_attrs.define
 class CheckpointManager:
     _path: str
-    _yt_client: yt.YtClient
+    _yt_client: _yt.YtClient
     _last_checkpoint_index: int = -1
 
     def initialize(self) -> None:
@@ -74,7 +74,7 @@ class CheckpointManager:
         serialized_metadata = _json.dumps(metadata).encode("utf-8")
         self._last_checkpoint_index = checkpoint_index
 
-        yt_client = yt.YtClient(config=_copy.deepcopy(self._yt_client.config))
+        yt_client = _yt.YtClient(config=_copy.deepcopy(self._yt_client.config))
         save_checkpoint_task = _partial(
             _save_checkpoint,
             yt_client=yt_client,

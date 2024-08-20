@@ -24,7 +24,7 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
-from tractorun.stderr_reader import StderrMode
+from tractorun.private.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 
 

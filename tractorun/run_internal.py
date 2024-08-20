@@ -18,17 +18,17 @@ from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
 from tractorun import constants as const
-from tractorun.base_backend import BackendBase
+from tractorun.private.base_backend import BackendBase
 from tractorun.bind import (
     BindLocal,
     BindsLibPacker,
     BindsPacker,
 )
-from tractorun.bootstrapper import (
+from tractorun.private.bootstrapper import (
     BootstrapConfig,
     bootstrap,
 )
-from tractorun.closet import get_closet
+from tractorun.private.closet import get_closet
 from tractorun.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
@@ -42,7 +42,7 @@ from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
-from tractorun.stderr_reader import (
+from tractorun.private.stderr_reader import (
     StderrMode,
     StderrReaderWorker,
 )
@@ -52,7 +52,7 @@ from tractorun.tensorproxy import (
     TensorproxySidecar,
 )
 from tractorun.toolbox import Toolbox
-from tractorun.training_dir import (
+from tractorun.private.training_dir import (
     TrainingDir,
     prepare_training_dir,
 )

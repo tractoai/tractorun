@@ -1,8 +1,8 @@
 import torch
 import torch.distributed
 
-from tractorun.base_backend import EnvironmentBase
-from tractorun.closet import Closet
+from tractorun.private.base_backend import EnvironmentBase
+from tractorun.private.closet import Closet
 from tractorun.environment import prepare_environment as common_prepare_environment
 
 

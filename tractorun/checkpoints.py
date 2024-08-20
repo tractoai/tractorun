@@ -33,7 +33,7 @@ def _save_checkpoint(yt_client: yt.YtClient, path: str, metadata: bytes, value: 
 
 
 @attrs.define
-class Task(Generic[_T]):
+class _Task(Generic[_T]):
     _task: asyncio.Future[_T]
 
     def wait(self, timeout: int) -> _T:
@@ -66,7 +66,7 @@ class CheckpointManager:
 
         return Checkpoint(self._last_checkpoint_index, value, metadata)
 
-    def save_checkpoint(self, value: bytes, metadata: Optional[dict] = None) -> Task:
+    def save_checkpoint(self, value: bytes, metadata: Optional[dict] = None) -> _Task:
         if metadata is None:
             metadata = {}
         # TODO: prerequisites
@@ -85,6 +85,6 @@ class CheckpointManager:
             value=value,
         )
         task = asyncio.get_event_loop().run_in_executor(None, save_checkpoint_task)
-        return Task[None](
+        return _Task[None](
             task=task,
         )

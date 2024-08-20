@@ -22,7 +22,7 @@ from tractorun.sidecar import (
     SidecarRun,
 )
 from tractorun.tensorproxy import TensorproxyBootstrap
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 TIMEOUT = 10

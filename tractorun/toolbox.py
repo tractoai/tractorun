@@ -7,10 +7,10 @@ import yt.wrapper as yt
 
 from tractorun import constants as const
 from tractorun.checkpoints import CheckpointManager
-from tractorun.closet import TrainingMetadata
+from tractorun.private.closet import TrainingMetadata
 from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 @attrs.define

@@ -7,12 +7,12 @@ import socket
 import attrs
 from yt.wrapper import YtClient
 
-from tractorun.bootstrapper import ProcConfig
+from tractorun.private.bootstrapper import ProcConfig
 from tractorun.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.coordinator import Coordinator
 from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 @attrs.define

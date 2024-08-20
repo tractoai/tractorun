@@ -1,6 +1,6 @@
 import abc
 
-from tractorun.closet import Closet
+from tractorun.private.closet import Closet
 
 
 class EnvironmentBase(abc.ABC):

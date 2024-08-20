@@ -7,7 +7,7 @@ from yt.wrapper.errors import YtResolveError
 
 from tractorun.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 @attrs.define(kw_only=True)

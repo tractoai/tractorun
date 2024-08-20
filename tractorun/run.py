@@ -6,7 +6,7 @@ from typing import (
 
 import yt.wrapper as yt
 
-from tractorun.base_backend import BackendBase
+from tractorun.private.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.env import EnvVariable
@@ -20,7 +20,7 @@ from tractorun.run_internal import (
     _run_tracto,
 )
 from tractorun.sidecar import Sidecar
-from tractorun.stderr_reader import StderrMode
+from tractorun.private.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 

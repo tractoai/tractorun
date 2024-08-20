@@ -17,7 +17,7 @@ from yt.wrapper.errors import YtError
 
 from tractorun.exceptions import StderrReaderException
 from tractorun.mesh import Mesh
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 YT_RETRY_INTERVAL = 5

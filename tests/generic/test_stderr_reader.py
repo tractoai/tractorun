@@ -17,7 +17,7 @@ from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
 from tractorun.run import run
-from tractorun.stderr_reader import (
+from tractorun.private.stderr_reader import (
     STDERR_READER_THREAD_NAME,
     StderrMode,
     YtStderrReader,

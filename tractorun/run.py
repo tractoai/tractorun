@@ -6,11 +6,12 @@ from typing import (
 
 import yt.wrapper as yt
 
-from tractorun.private.base_backend import BackendBase
 from tractorun.bind import BindLocal
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
+from tractorun.private.base_backend import BackendBase
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.private.stderr_reader import StderrMode
 from tractorun.resources import Resources
 from tractorun.run_internal import (
     Command,
@@ -20,7 +21,6 @@ from tractorun.run_internal import (
     _run_tracto,
 )
 from tractorun.sidecar import Sidecar
-from tractorun.private.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 

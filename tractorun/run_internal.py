@@ -17,13 +17,17 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
-from tractorun.private import constants as const
-from tractorun.private.base_backend import BackendBase
 from tractorun.bind import (
     BindLocal,
     BindsLibPacker,
     BindsPacker,
 )
+from tractorun.coordinator import get_incarnation_id
+from tractorun.env import EnvVariable
+from tractorun.exceptions import TractorunConfigurationError
+from tractorun.mesh import Mesh
+from tractorun.private import constants as const
+from tractorun.private.base_backend import BackendBase
 from tractorun.private.bootstrapper import (
     BootstrapConfig,
     bootstrap,
@@ -34,28 +38,24 @@ from tractorun.private.constants import (
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
 )
-from tractorun.coordinator import get_incarnation_id
-from tractorun.env import EnvVariable
 from tractorun.private.environment import get_toolbox
-from tractorun.exceptions import TractorunConfigurationError
 from tractorun.private.helpers import AttrSerializer
-from tractorun.mesh import Mesh
-from tractorun.resources import Resources
-from tractorun.sidecar import Sidecar
 from tractorun.private.stderr_reader import (
     StderrMode,
     StderrReaderWorker,
 )
+from tractorun.private.training_dir import (
+    TrainingDir,
+    prepare_training_dir,
+)
+from tractorun.resources import Resources
+from tractorun.sidecar import Sidecar
 from tractorun.tensorproxy import (
     TensorproxyBootstrap,
     TensorproxyConfigurator,
     TensorproxySidecar,
 )
 from tractorun.toolbox import Toolbox
-from tractorun.private.training_dir import (
-    TrainingDir,
-    prepare_training_dir,
-)
 
 
 class Runnable(abc.ABC):

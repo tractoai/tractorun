@@ -2,8 +2,8 @@ import os
 from typing import Optional
 
 from tractorun.checkpoints import CheckpointManager
-from tractorun.private.closet import Closet
 from tractorun.exceptions import TractorunWandbError
+from tractorun.private.closet import Closet
 from tractorun.toolbox import Toolbox
 
 

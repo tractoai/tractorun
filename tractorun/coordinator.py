@@ -5,8 +5,8 @@ import attrs
 import yt.wrapper as yt
 from yt.wrapper.errors import YtResolveError
 
-from tractorun.private.helpers import create_prerequisite_client
 from tractorun.mesh import Mesh
+from tractorun.private.helpers import create_prerequisite_client
 from tractorun.private.training_dir import TrainingDir
 
 

@@ -12,17 +12,17 @@ import attrs
 from yt.common import update_inplace
 import yt.wrapper as yt
 
-from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.env import EnvVariable
-from tractorun.private.helpers import AttrSerializer
 from tractorun.mesh import Mesh
+from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
+from tractorun.private.helpers import AttrSerializer
+from tractorun.private.training_dir import TrainingDir
 from tractorun.sidecar import (
     RestartVerdict,
     Sidecar,
     SidecarRun,
 )
 from tractorun.tensorproxy import TensorproxyBootstrap
-from tractorun.private.training_dir import TrainingDir
 
 
 TIMEOUT = 10

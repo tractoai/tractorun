@@ -5,11 +5,11 @@ from typing import Any
 import attrs
 import yt.wrapper as yt
 
-from tractorun.private import constants as const
 from tractorun.checkpoints import CheckpointManager
-from tractorun.private.closet import TrainingMetadata
 from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
+from tractorun.private import constants as const
+from tractorun.private.closet import TrainingMetadata
 from tractorun.private.training_dir import TrainingDir
 
 

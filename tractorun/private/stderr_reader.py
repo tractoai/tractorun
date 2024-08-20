@@ -15,7 +15,7 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper.errors import YtError
 
-from tractorun.exceptions import StderrReaderException
+from tractorun.exception import StderrReaderException
 from tractorun.mesh import Mesh
 from tractorun.private.training_dir import TrainingDir
 

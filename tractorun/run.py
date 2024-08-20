@@ -13,7 +13,7 @@ from tractorun.private.base_backend import BackendBase
 from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.private.stderr_reader import StderrMode
 from tractorun.resources import Resources
-from tractorun.run_internal import (
+from tractorun.private.run_internal import (
     Command,
     UserFunction,
     _prepare_and_get_toolbox,

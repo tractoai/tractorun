@@ -2,7 +2,7 @@
 import os
 import sys
 
-from tractorun.bind import BindsPacker
+from tractorun.private.bind import BindsPacker
 from tractorun.private.bootstrapper import (
     BootstrapConfig,
     bootstrap,

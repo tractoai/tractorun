@@ -1,8 +1,8 @@
 import os
 from typing import Optional
 
-from tractorun.checkpoints import CheckpointManager
-from tractorun.exceptions import TractorunWandbError
+from tractorun.checkpoint import CheckpointManager
+from tractorun.exception import TractorunWandbError
 from tractorun.private.closet import Closet
 from tractorun.toolbox import Toolbox
 

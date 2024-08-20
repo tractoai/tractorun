@@ -1,0 +1,19 @@
+name: tests
+
+on:
+  pull_request: {}
+
+jobs:
+  run_tests:
+    runs-on: tractoai-runners
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - run: pip install -r requirements.txt -r requirements_tests.txt
+      - run: pip install --index-url https://download.pytorch.org/whl/cpu -r requirements_torch.txt
+      - run: pip install --no-deps .
+      - run: pytest tests/generic/test_environment.py -s
+        env:
+          YT_MODE: testcontainers

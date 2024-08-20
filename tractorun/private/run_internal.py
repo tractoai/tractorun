@@ -229,7 +229,12 @@ def run_tracto(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
-    yt_client_config: dict = yt.config.get_config(yt_client)
+    yt_client.config["is_local_mode"] = True
+    yt_client.config["token"] = ""
+    yt_client.config["proxy"]["enable_proxy_discovery"] = False
+    import copy
+    yt_client_config: dict = copy.deepcopy(yt.config.get_config(yt_client))
+    yt_client_config["proxy"]["url"] = "http://localhost:80"
     yt_client_config_pickled = base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8")
 
     tmp_dir = tempfile.TemporaryDirectory()
@@ -298,7 +303,7 @@ def run_tracto(
         )
     )
 
-    operation_spec = task_spec.end_task()
+    operation_spec = task_spec.end_task().max_failed_job_count(1)
 
     if mesh.pool_trees is not None:
         operation_spec = operation_spec.pool_trees(mesh.pool_trees)
@@ -318,7 +323,7 @@ def run_tracto(
     with StderrReaderWorker(
         prev_incarnation_id=prev_incarnation_id,
         training_dir=training_dir,
-        yt_client_config_pickled=yt_client_config_pickled,
+        yt_client_config_pickled=base64.b64encode(pickle.dumps(yt.config.get_config(yt_client))).decode("utf-8"),
         mode=proxy_stderr_mode,
         mesh=mesh,
     ):

@@ -8,7 +8,7 @@ import yt.wrapper as yt
 
 from tractorun.private.base_backend import BackendBase
 from tractorun.bind import BindLocal
-from tractorun.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources

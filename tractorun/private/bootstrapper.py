@@ -12,9 +12,9 @@ import attrs
 from yt.common import update_inplace
 import yt.wrapper as yt
 
-from tractorun.constants import TRACTO_CONFIG_ENV_VAR
+from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.env import EnvVariable
-from tractorun.helpers import AttrSerializer
+from tractorun.private.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.sidecar import (
     RestartVerdict,
@@ -57,7 +57,7 @@ def bootstrap(
     env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
 ) -> None:
-    # Runs in a job
+    # Runs inside a job
 
     processes = []
     yt_config = pickle.loads(base64.b64decode(yt_client_config))

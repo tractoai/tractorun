@@ -14,7 +14,7 @@ import cattr
 import yaml
 
 from tractorun.bind import BindLocal
-from tractorun.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.env import EnvVariable
 from tractorun.exceptions import TractorunConfigError
 from tractorun.mesh import Mesh

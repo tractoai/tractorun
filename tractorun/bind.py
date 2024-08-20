@@ -83,6 +83,7 @@ class BindsPacker:
         return result
 
     def unpack(self) -> None:
+        # Runs inside a job
         for idx, bind in enumerate(self._dirs):
             path_w = f"__dir_{idx}.zip"
             with zipfile.ZipFile(path_w, "r") as zipf:

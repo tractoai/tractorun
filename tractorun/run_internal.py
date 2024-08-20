@@ -17,7 +17,7 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
-from tractorun import constants as const
+from tractorun.private import constants as const
 from tractorun.private.base_backend import BackendBase
 from tractorun.bind import (
     BindLocal,
@@ -29,16 +29,16 @@ from tractorun.private.bootstrapper import (
     bootstrap,
 )
 from tractorun.private.closet import get_closet
-from tractorun.constants import (
+from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
 )
 from tractorun.coordinator import get_incarnation_id
 from tractorun.env import EnvVariable
-from tractorun.environment import get_toolbox
+from tractorun.private.environment import get_toolbox
 from tractorun.exceptions import TractorunConfigurationError
-from tractorun.helpers import AttrSerializer
+from tractorun.private.helpers import AttrSerializer
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar

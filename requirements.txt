@@ -2,3 +2,4 @@ attrs >= 23.1.0
 cattrs >= 23.1.0
 ytsaurus-client >= 0.13.16
 ytsaurus-yson >= 0.4.5
+PyYAML >= 5.4

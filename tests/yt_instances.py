@@ -38,6 +38,7 @@ class YtInstanceTestContainers(YtInstance):
     def __enter__(self) -> "YtInstanceTestContainers":
         self.yt_container.start()
         import os
+
         os.environ["YT_PROXY"] = self.yt_container.proxy_url_http
         return self
 

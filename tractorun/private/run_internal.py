@@ -233,6 +233,7 @@ def run_tracto(
     yt_client.config["token"] = ""
     yt_client.config["proxy"]["enable_proxy_discovery"] = False
     import copy
+
     yt_client_config: dict = copy.deepcopy(yt.config.get_config(yt_client))
     yt_client_config["proxy"]["url"] = "http://localhost:80"
     yt_client_config_pickled = base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8")

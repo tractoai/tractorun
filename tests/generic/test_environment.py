@@ -39,6 +39,7 @@ def test_environment(yt_secret_path: str, yt_instance: YtInstance, yt_path: str)
         assert os.environ["NOT_SECRET"] == NOT_SECRET_ENV_VALUE
 
     from tractorun.stderr_reader import StderrMode
+
     run(
         env_checker,
         backend=GenericBackend(),

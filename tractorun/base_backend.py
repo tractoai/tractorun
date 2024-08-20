@@ -1,11 +1,11 @@
 import abc
 
-from tractorun.closet import Closet
+from tractorun.private.closet import Closet as _Closet
 
 
 class EnvironmentBase(abc.ABC):
     @abc.abstractmethod
-    def prepare(self, closet: Closet) -> None:
+    def prepare(self, closet: _Closet) -> None:
         pass
 
 

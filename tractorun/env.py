@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional as _Optional
 
-import attrs
+import attrs as _attrs
 
 
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+@_attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EnvVariable:
     name: str
-    value: Optional[str] = None
-    cypress_path: Optional[str] = None
+    value: _Optional[str] = None
+    cypress_path: _Optional[str] = None

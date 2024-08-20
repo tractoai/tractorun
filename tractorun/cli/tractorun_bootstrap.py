@@ -2,16 +2,16 @@
 import os
 import sys
 
-from tractorun.bind import BindsPacker
-from tractorun.bootstrapper import (
+from tractorun.private.bind import BindsPacker
+from tractorun.private.bootstrapper import (
     BootstrapConfig,
     bootstrap,
 )
-from tractorun.constants import (
+from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
 )
-from tractorun.helpers import AttrSerializer
+from tractorun.private.helpers import AttrSerializer
 
 
 def main() -> None:

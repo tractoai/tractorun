@@ -5,11 +5,11 @@ from typing import Callable
 import yt.wrapper as yt
 from yt.wrapper.errors import YtResolveError
 
-from tractorun.stderr_reader import (
+from tractorun.private.stderr_reader import (
     YtStderrReader,
     get_job_stderr,
 )
-from tractorun.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir
 
 
 def main() -> None:

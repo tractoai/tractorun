@@ -1,22 +1,20 @@
-import asyncio
-import copy
-from functools import partial
-import json
-from typing import (
-    Generic,
-    Optional,
-    TypeVar,
-)
+import asyncio as _asyncio
+import copy as _copy
+from functools import partial as _partial
+import json as _json
+from typing import Generic as _Generic
+from typing import Optional as _Optional
+from typing import TypeVar as _TypeVar
 
 import attrs
 import yt.wrapper as yt
 
 
-_T = TypeVar("_T")
+_T = _TypeVar("_T")
 
 
 @attrs.define
-class Checkpoint:
+class _Checkpoint:
     index: int
     value: bytes
     metadata: dict
@@ -33,11 +31,11 @@ def _save_checkpoint(yt_client: yt.YtClient, path: str, metadata: bytes, value: 
 
 
 @attrs.define
-class Task(Generic[_T]):
-    _task: asyncio.Future[_T]
+class _Task(_Generic[_T]):
+    _task: _asyncio.Future[_T]
 
     def wait(self, timeout: int) -> _T:
-        return asyncio.get_event_loop().run_until_complete(asyncio.wait_for(self._task, timeout=timeout))
+        return _asyncio.get_event_loop().run_until_complete(_asyncio.wait_for(self._task, timeout=timeout))
 
 
 @attrs.define
@@ -56,35 +54,35 @@ class CheckpointManager:
             last_checkpoint_index = max(last_checkpoint_index, index)
         self._last_checkpoint_index = last_checkpoint_index
 
-    def get_last_checkpoint(self) -> Optional[Checkpoint]:
+    def get_last_checkpoint(self) -> _Optional[_Checkpoint]:
         if self._last_checkpoint_index == -1:
             return None
 
         checkpoint_path = self._path + "/" + str(self._last_checkpoint_index)
         value = self._yt_client.read_file(checkpoint_path + "/value").read()
-        metadata = json.loads(self._yt_client.read_file(checkpoint_path + "/metadata").read())
+        metadata = _json.loads(self._yt_client.read_file(checkpoint_path + "/metadata").read())
 
-        return Checkpoint(self._last_checkpoint_index, value, metadata)
+        return _Checkpoint(self._last_checkpoint_index, value, metadata)
 
-    def save_checkpoint(self, value: bytes, metadata: Optional[dict] = None) -> Task:
+    def save_checkpoint(self, value: bytes, metadata: _Optional[dict] = None) -> _Task:
         if metadata is None:
             metadata = {}
         # TODO: prerequisites
 
         checkpoint_index = self._last_checkpoint_index + 1
         checkpoint_path = self._path + "/" + str(checkpoint_index)
-        serialized_metadata = json.dumps(metadata).encode("utf-8")
+        serialized_metadata = _json.dumps(metadata).encode("utf-8")
         self._last_checkpoint_index = checkpoint_index
 
-        yt_client = yt.YtClient(config=copy.deepcopy(self._yt_client.config))
-        save_checkpoint_task = partial(
+        yt_client = yt.YtClient(config=_copy.deepcopy(self._yt_client.config))
+        save_checkpoint_task = _partial(
             _save_checkpoint,
             yt_client=yt_client,
             path=checkpoint_path,
             metadata=serialized_metadata,
             value=value,
         )
-        task = asyncio.get_event_loop().run_in_executor(None, save_checkpoint_task)
-        return Task[None](
+        task = _asyncio.get_event_loop().run_in_executor(None, save_checkpoint_task)
+        return _Task[None](
             task=task,
         )

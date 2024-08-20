@@ -12,17 +12,17 @@ import attrs
 from yt.common import update_inplace
 import yt.wrapper as yt
 
-from tractorun.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.env import EnvVariable
-from tractorun.helpers import AttrSerializer
 from tractorun.mesh import Mesh
-from tractorun.sidecar import (
+from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
+from tractorun.private.helpers import AttrSerializer
+from tractorun.private.sidecar import (
     RestartVerdict,
-    Sidecar,
     SidecarRun,
 )
-from tractorun.tensorproxy import TensorproxyBootstrap
-from tractorun.training_dir import TrainingDir
+from tractorun.private.tensorproxy import TensorproxyBootstrap
+from tractorun.private.training_dir import TrainingDir
+from tractorun.sidecar import Sidecar
 
 
 TIMEOUT = 10
@@ -57,7 +57,7 @@ def bootstrap(
     env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
 ) -> None:
-    # Runs in a job
+    # Runs inside a job
 
     processes = []
     yt_config = pickle.loads(base64.b64decode(yt_client_config))

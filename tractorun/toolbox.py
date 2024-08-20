@@ -5,30 +5,30 @@ from typing import Any
 import attrs
 import yt.wrapper as yt
 
-from tractorun import constants as const
-from tractorun.checkpoints import CheckpointManager
-from tractorun.closet import TrainingMetadata
-from tractorun.coordinator import Coordinator
+from tractorun.checkpoint import CheckpointManager
 from tractorun.mesh import Mesh
-from tractorun.training_dir import TrainingDir
+from tractorun.private import constants as _constants
+from tractorun.private.closet import TrainingMetadata as _TrainingMetadata
+from tractorun.private.coordinator import Coordinator as _Coordinator
+from tractorun.private.training_dir import TrainingDir as _TrainingDir
 
 
 @attrs.define
 class Toolbox:
-    coordinator: Coordinator
+    coordinator: _Coordinator
     checkpoint_manager: CheckpointManager
     yt_client: yt.YtClient
     mesh: Mesh
-    training_dir: TrainingDir
-    _training_metadata: TrainingMetadata
+    _training_dir: _TrainingDir
+    _training_metadata: _TrainingMetadata
 
     @staticmethod
     def get_user_config() -> dict[Any, Any]:
-        return json.loads(os.environ[const.YT_USER_CONFIG_ENV_VAR])
+        return json.loads(os.environ[_constants.YT_USER_CONFIG_ENV_VAR])
 
     def save_model(self, data: bytes, dataset_path: str, metadata: dict[str, str]) -> str:
         incarnation_id = self.coordinator.get_incarnation_id()
-        path = self.training_dir.models_path + f"/{incarnation_id}"
+        path = self._training_dir.models_path + f"/{incarnation_id}"
 
         if not self.coordinator.is_primary():
             return path

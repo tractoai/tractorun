@@ -14,12 +14,12 @@ import cattr
 import yaml
 
 from tractorun.bind import BindLocal
-from tractorun.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.env import EnvVariable
-from tractorun.exceptions import TractorunConfigError
+from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.private.run import run_script
 from tractorun.resources import Resources
-from tractorun.run import run_script
 from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,

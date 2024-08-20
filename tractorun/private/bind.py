@@ -1,9 +1,9 @@
+from collections import Counter
 import json
 import os
 import shutil
-import zipfile
-from collections import Counter
 from typing import List
+import zipfile
 
 import attrs
 
@@ -101,6 +101,12 @@ class BindsPacker:
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class PackedLib:
+    archive_name: str
+    path: str
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsLibPacker:
     _paths: list[str]
 
@@ -122,9 +128,3 @@ class BindsLibPacker:
                 )
             )
         return result
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class PackedLib:
-    archive_name: str
-    path: str

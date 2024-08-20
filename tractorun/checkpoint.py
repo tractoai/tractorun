@@ -2,11 +2,9 @@ import asyncio as _asyncio
 import copy as _copy
 from functools import partial as _partial
 import json as _json
-from typing import (
-    Generic as _Generic,
-    Optional as _Optional,
-    TypeVar as _TypeVar,
-)
+from typing import Generic as _Generic
+from typing import Optional as _Optional
+from typing import TypeVar as _TypeVar
 
 import attrs
 import yt.wrapper as yt

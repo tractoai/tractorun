@@ -5,9 +5,9 @@ import attrs
 from yt import wrapper as yt
 
 from tractorun.mesh import Mesh
-from tractorun.private.coordinator import get_incarnation_id
-from tractorun.private.helpers import create_prerequisite_client
-from tractorun.private.training_dir import TrainingDir
+from tractorun.private.coordinator import get_incarnation_id as _get_incarnation_id
+from tractorun.private.helpers import create_prerequisite_client as _create_prerequisite_client
+from tractorun.private.training_dir import TrainingDir as _TrainingDir
 
 
 @attrs.define(kw_only=True)
@@ -28,7 +28,7 @@ class Coordinator:
         mesh: Mesh,
         process_index: int,
         yt_client: yt.YtClient,
-        training_dir: TrainingDir,
+        training_dir: _TrainingDir,
         operation_id: str,
         job_id: str,
     ) -> "Coordinator":
@@ -91,7 +91,7 @@ class Coordinator:
         operation_id: str,
         job_id: str,
         yt_client: yt.YtClient,
-        training_dir: TrainingDir,
+        training_dir: _TrainingDir,
     ) -> "Coordinator":
         incarnation_transaction_id = yt_client.start_transaction()
         assert incarnation_transaction_id is not None
@@ -108,10 +108,10 @@ class Coordinator:
                 wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
             )
 
-        last_incarnation_id = get_incarnation_id(yt_client, training_dir)
+        last_incarnation_id = _get_incarnation_id(yt_client, training_dir)
         incarnation_id = last_incarnation_id + 1
 
-        incarnation_yt_client = create_prerequisite_client(
+        incarnation_yt_client = _create_prerequisite_client(
             yt_client,
             [incarnation_transaction_id],
         )
@@ -172,11 +172,11 @@ class Coordinator:
         operation_id: str,
         job_id: str,
         yt_client: yt.YtClient,
-        training_dir: TrainingDir,
+        training_dir: _TrainingDir,
     ) -> "Coordinator":
         while True:
             try:
-                incarnation_id = get_incarnation_id(yt_client, training_dir, raise_if_not_exists=True)
+                incarnation_id = _get_incarnation_id(yt_client, training_dir, raise_if_not_exists=True)
                 incarnation_path = training_dir.get_incarnation_path(incarnation_id)
                 if (
                     yt_client.get(
@@ -190,7 +190,7 @@ class Coordinator:
                     incarnation_path + "/@incarnation_transaction_id",
                 )
                 assert incarnation_transaction_id is not None
-                incarnation_yt_client = create_prerequisite_client(
+                incarnation_yt_client = _create_prerequisite_client(
                     yt_client,
                     [incarnation_transaction_id],
                 )

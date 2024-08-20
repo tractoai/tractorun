@@ -4,6 +4,9 @@ from typing import Optional
 import torch
 
 
+__all__ = ["TensorSerializer"]
+
+
 class TensorSerializer:
     def serialize(self, tensor: object) -> bytes:
         buffer = io.BytesIO()

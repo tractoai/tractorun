@@ -1,9 +1,10 @@
-from typing import Optional as _Optional
-
-import attrs as _attrs
+import attrs
 
 
-@_attrs.define
+__all__ = ["Resources"]
+
+
+@attrs.define
 class Resources:
-    cpu_limit: _Optional[float] = None
-    memory_limit: _Optional[int] = None
+    cpu_limit: float | None = None
+    memory_limit: int | None = None

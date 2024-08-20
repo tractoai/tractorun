@@ -1,6 +1,9 @@
-import enum as _enum
+import enum
 
 
-class StderrMode(str, _enum.Enum):
+__all__ = ["StderrMode"]
+
+
+class StderrMode(str, enum.Enum):
     disabled = "disabled"
     primary = "primary"

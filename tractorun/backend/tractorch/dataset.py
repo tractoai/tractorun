@@ -15,6 +15,9 @@ from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.toolbox import Toolbox
 
 
+__all__ = ["YTTensorTransform", "YtTensorDataset", "YtDataset"]
+
+
 @attrs.define(frozen=True, slots=True)
 class YTTensorTransform:
     _serializer: TensorSerializer = attrs.field(default=TensorSerializer())

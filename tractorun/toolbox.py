@@ -6,10 +6,10 @@ import attrs
 import yt.wrapper as yt
 
 from tractorun.checkpoint import CheckpointManager
+from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
 from tractorun.private import constants as _constants
 from tractorun.private.closet import TrainingMetadata as _TrainingMetadata
-from tractorun.private.coordinator import Coordinator as _Coordinator
 from tractorun.private.training_dir import TrainingDir as _TrainingDir
 
 
@@ -18,7 +18,7 @@ __all__ = ["Toolbox"]
 
 @attrs.define
 class Toolbox:
-    coordinator: _Coordinator
+    coordinator: Coordinator
     checkpoint_manager: CheckpointManager
     yt_client: yt.YtClient
     mesh: Mesh

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.0 (2024-08-21)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.12.0...0.13.0)
+
+### Changes
+
+- NYT-641: add tests for public interface, make public interface better (#52). [a2442cf](https://github.com/tractoai/tractorun/commit/a2442cf56c01a17363ba9eab1432214151eb58c9)
+    
+- NYT-641: hide extra imports in public code (#51). [2d86fd4](https://github.com/tractoai/tractorun/commit/2d86fd4f2f1dd8d6843ea154cb3bcc4641d8522c)
+    
+- [NYT-641] make stable public interface (#50). [36275ca](https://github.com/tractoai/tractorun/commit/36275ca691459ae932cae23014af6d09429be0ec)
+    
+
 ## 0.12.0 (2024-08-20)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.11.0...0.12.0)

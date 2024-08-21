@@ -11,6 +11,7 @@ from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
 from tractorun.private.bootstrapper import ProcConfig
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
+from tractorun.private.coordinator import CoordinatorFactory
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
 
@@ -47,7 +48,7 @@ def get_closet() -> Closet:
         operation_id=os.environ["YT_OPERATION_ID"],
         job_id=os.environ["YT_JOB_ID"],
     )
-    coordinator = Coordinator.create(
+    coordinator = CoordinatorFactory(
         yt_client=yt_client,
         training_dir=config.training_dir,
         self_endpoint=self_endpoint,
@@ -56,7 +57,7 @@ def get_closet() -> Closet:
         process_index=config.proc_index,
         operation_id=training_metadata.operation_id,
         job_id=training_metadata.job_id,
-    )
+    ).create()
 
     return Closet(
         mesh=config.mesh,

@@ -10,3 +10,7 @@ class Mesh:
     process_per_node: int = attrs.field()
     gpu_per_process: int = attrs.field()
     pool_trees: list[str] | None = attrs.field(default=None)
+
+    @property
+    def peer_count(self) -> int:
+        return self.node_count * self.process_per_node

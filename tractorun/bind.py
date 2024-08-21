@@ -1,15 +1,18 @@
-import os as _os
+import os
 
-import attrs as _attrs
+import attrs
+
+
+__all__ = ["BindLocal"]
 
 
 def _to_abs_path(path: str) -> str:
     # mypy workaround
-    return _os.path.abspath(path)
+    return os.path.abspath(path)
 
 
-@_attrs.define(kw_only=True, slots=True)
+@attrs.define(kw_only=True, slots=True)
 class BindLocal:
     # TODO: just use pathlib
-    source: str = _attrs.field(converter=_to_abs_path)
-    destination: str = _attrs.field(converter=_to_abs_path)
+    source: str = attrs.field(converter=_to_abs_path)
+    destination: str = attrs.field(converter=_to_abs_path)

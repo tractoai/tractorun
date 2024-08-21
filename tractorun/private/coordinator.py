@@ -2,128 +2,75 @@ import datetime
 import time
 
 import attrs
-import yt.wrapper as yt
+from yt import wrapper as yt
 from yt.wrapper.errors import YtResolveError
 
+from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
 from tractorun.private.helpers import create_prerequisite_client
 from tractorun.private.training_dir import TrainingDir
+from tractorun.private.training_dir import TrainingDir as _TrainingDir
 
 
-@attrs.define(kw_only=True)
-class Coordinator:
-    _mesh: Mesh
-    _self_index: int
-    _node_index: int
-    _process_index: int
+def get_incarnation_id(yt_client: yt.YtClient, training_dir: TrainingDir, raise_if_not_exists: bool = False) -> int:
+    try:
+        return yt_client.get(training_dir.base_path + "/@incarnation_id")
+    except YtResolveError:
+        if raise_if_not_exists:
+            raise
+        return -1
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class CoordinatorFactory:
     _self_endpoint: str
-    _incarnation_id: int
-    _primary_endpoint: str
+    _node_index: int
+    _mesh: Mesh
+    _process_index: int
+    _yt_client: yt.YtClient
+    _training_dir: _TrainingDir
+    _operation_id: str
+    _job_id: str
 
-    @classmethod
-    def create(
-        cls,
-        self_endpoint: str,
-        node_index: int,
-        mesh: Mesh,
-        process_index: int,
-        yt_client: yt.YtClient,
-        training_dir: TrainingDir,
-        operation_id: str,
-        job_id: str,
-    ) -> "Coordinator":
-        self_index = node_index * mesh.process_per_node + process_index
+    def create(self) -> Coordinator:
+        self_index = self._node_index * self._mesh.process_per_node + self._process_index
         if self_index == 0:
-            return cls._make_primary(
-                self_endpoint=self_endpoint,
-                node_index=node_index,
-                mesh=mesh,
-                process_index=process_index,
-                yt_client=yt_client,
-                training_dir=training_dir,
-                operation_id=operation_id,
-                job_id=job_id,
-                self_index=self_index,
-            )
+            return self._make_primary(self_index=self_index)
         else:
-            return cls._make_subordinate(
-                self_endpoint=self_endpoint,
-                node_index=node_index,
-                mesh=mesh,
-                process_index=process_index,
-                training_dir=training_dir,
-                yt_client=yt_client,
-                self_index=self_index,
-                operation_id=operation_id,
-                job_id=job_id,
-            )
+            return self._make_subordinate(self_index=self_index)
 
-    def get_self_index(self) -> int:
-        return self._self_index
-
-    @classmethod
-    def _get_total_peer_count(cls, mesh: Mesh) -> int:
-        return mesh.node_count * mesh.process_per_node
-
-    def get_total_peer_count(self) -> int:
-        return self._get_total_peer_count(self._mesh)
-
-    def get_incarnation_id(self) -> int:
-        return self._incarnation_id
-
-    def is_primary(self) -> bool:
-        return self._self_index == 0
-
-    def get_primary_endpoint(self) -> str:
-        return self._primary_endpoint
-
-    def get_process_index(self) -> int:
-        return self._process_index
-
-    @classmethod
-    def _make_primary(
-        cls,
-        self_index: int,
-        self_endpoint: str,
-        node_index: int,
-        mesh: Mesh,
-        process_index: int,
-        operation_id: str,
-        job_id: str,
-        yt_client: yt.YtClient,
-        training_dir: TrainingDir,
-    ) -> "Coordinator":
-        incarnation_transaction_id = yt_client.start_transaction()
+    def _make_primary(self, self_index: int) -> "Coordinator":
+        incarnation_transaction_id = self._yt_client.start_transaction()
         assert incarnation_transaction_id is not None
 
-        with yt_client.Transaction(
+        with self._yt_client.Transaction(
             transaction_id=incarnation_transaction_id,
             acquire=False,
             ping=False,
         ):
-            yt_client.lock(
-                training_dir.primary_lock_path,
+            self._yt_client.lock(
+                self._training_dir.primary_lock_path,
                 mode="exclusive",
                 waitable=True,
                 wait_for=int(datetime.timedelta(minutes=5).total_seconds() * 1000),
             )
 
-        last_incarnation_id = get_incarnation_id(yt_client, training_dir)
+        last_incarnation_id = get_incarnation_id(self._yt_client, self._training_dir)
         incarnation_id = last_incarnation_id + 1
 
         incarnation_yt_client = create_prerequisite_client(
-            yt_client,
+            self._yt_client,
             [incarnation_transaction_id],
         )
 
         with incarnation_yt_client.Transaction():
             incarnation_yt_client.set(
-                training_dir.base_path + "/@incarnation_id",
+                self._training_dir.base_path + "/@incarnation_id",
                 incarnation_id,
             )
 
         with incarnation_yt_client.Transaction():
-            incarnation_path = training_dir.get_incarnation_path(incarnation_id)
+            incarnation_path = self._training_dir.get_incarnation_path(incarnation_id)
             incarnation_yt_client.create("map_node", incarnation_path)
             incarnation_yt_client.set(
                 incarnation_path + "/@incarnation_transaction_id",
@@ -131,21 +78,21 @@ class Coordinator:
             )
             incarnation_yt_client.set(
                 incarnation_path + "/@incarnation_operation_id",
-                operation_id,
+                self._operation_id,
             )
             incarnation_yt_client.set(
                 incarnation_path + "/@primary_endpoint",
-                self_endpoint,
+                self._self_endpoint,
             )
 
             topology = [
                 {
-                    "endpoint": self_endpoint,
-                    "job_id": job_id,
+                    "endpoint": self._self_endpoint,
+                    "job_id": self._job_id,
                 },
             ] + [
                 {"address": "", "job_id": ""}
-            ] * (cls._get_total_peer_count(mesh) - 1)
+            ] * (self._mesh.peer_count - 1)
             incarnation_yt_client.set(
                 incarnation_path + "/@topology",
                 topology,
@@ -154,50 +101,42 @@ class Coordinator:
         return Coordinator(
             self_index=self_index,
             incarnation_id=incarnation_id,
-            mesh=mesh,
-            node_index=node_index,
-            process_index=process_index,
-            self_endpoint=self_endpoint,
-            primary_endpoint=self_endpoint,
+            mesh=self._mesh,
+            node_index=self._node_index,
+            process_index=self._process_index,
+            self_endpoint=self._self_endpoint,
+            primary_endpoint=self._self_endpoint,
         )
 
-    @classmethod
-    def _make_subordinate(
-        cls,
-        self_index: int,
-        self_endpoint: str,
-        node_index: int,
-        mesh: Mesh,
-        process_index: int,
-        operation_id: str,
-        job_id: str,
-        yt_client: yt.YtClient,
-        training_dir: TrainingDir,
-    ) -> "Coordinator":
+    def _make_subordinate(self, self_index: int) -> Coordinator:
         while True:
             try:
-                incarnation_id = get_incarnation_id(yt_client, training_dir, raise_if_not_exists=True)
-                incarnation_path = training_dir.get_incarnation_path(incarnation_id)
+                incarnation_id = get_incarnation_id(
+                    self._yt_client,
+                    self._training_dir,
+                    raise_if_not_exists=True,
+                )
+                incarnation_path = self._training_dir.get_incarnation_path(incarnation_id)
                 if (
-                    yt_client.get(
+                    self._yt_client.get(
                         incarnation_path + "/@incarnation_operation_id",
                     )
-                    != operation_id
+                    != self._operation_id
                 ):
                     raise RuntimeError("Operation id mismatch")
 
-                incarnation_transaction_id: str = yt_client.get(
+                incarnation_transaction_id: str = self._yt_client.get(
                     incarnation_path + "/@incarnation_transaction_id",
                 )
                 assert incarnation_transaction_id is not None
                 incarnation_yt_client = create_prerequisite_client(
-                    yt_client,
+                    self._yt_client,
                     [incarnation_transaction_id],
                 )
 
                 incarnation_yt_client.set(
                     incarnation_path + f"/@topology/{self_index}",
-                    {"address": self_endpoint, "job_id": job_id},
+                    {"address": self._self_endpoint, "job_id": self._job_id},
                 )
 
                 primary_endpoint = incarnation_yt_client.get(
@@ -209,18 +148,9 @@ class Coordinator:
             return Coordinator(
                 self_index=self_index,
                 incarnation_id=incarnation_id,
-                mesh=mesh,
-                node_index=node_index,
-                process_index=process_index,
-                self_endpoint=self_endpoint,
+                mesh=self._mesh,
+                node_index=self._node_index,
+                process_index=self._process_index,
+                self_endpoint=self._self_endpoint,
                 primary_endpoint=primary_endpoint,
             )
-
-
-def get_incarnation_id(yt_client: yt.YtClient, training_dir: TrainingDir, raise_if_not_exists: bool = False) -> int:
-    try:
-        return yt_client.get(training_dir.base_path + "/@incarnation_id")
-    except YtResolveError:
-        if raise_if_not_exists:
-            raise
-        return -1

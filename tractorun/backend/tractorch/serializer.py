@@ -1,7 +1,9 @@
 import io
-from typing import Optional
 
 import torch
+
+
+__all__ = ["TensorSerializer"]
 
 
 class TensorSerializer:
@@ -10,7 +12,7 @@ class TensorSerializer:
         torch.save(tensor, buffer)
         return buffer.getvalue()
 
-    def desirialize(self, tensor: bytes, device: Optional[torch.device] = None) -> dict:
+    def desirialize(self, tensor: bytes, device: torch.device | None = None) -> dict:
         if device is None:
             device = torch.device("cpu")
         buffer = io.BytesIO(tensor)

@@ -1,30 +1,33 @@
-import json as _json
-import os as _os
-from typing import Any as _Any
+import json
+import os
+from typing import Any
 
 import attrs
-import yt.wrapper as _yt
+import yt.wrapper as yt
 
-from tractorun.checkpoint import CheckpointManager as _CheckpointManager
-from tractorun.mesh import Mesh as _Mesh
+from tractorun.checkpoint import CheckpointManager
+from tractorun.coordinator import Coordinator
+from tractorun.mesh import Mesh
 from tractorun.private import constants as _constants
 from tractorun.private.closet import TrainingMetadata as _TrainingMetadata
-from tractorun.private.coordinator import Coordinator as _Coordinator
 from tractorun.private.training_dir import TrainingDir as _TrainingDir
+
+
+__all__ = ["Toolbox"]
 
 
 @attrs.define
 class Toolbox:
-    coordinator: _Coordinator
-    checkpoint_manager: _CheckpointManager
-    yt_client: _yt.YtClient
-    mesh: _Mesh
+    coordinator: Coordinator
+    checkpoint_manager: CheckpointManager
+    yt_client: yt.YtClient
+    mesh: Mesh
     _training_dir: _TrainingDir
     _training_metadata: _TrainingMetadata
 
     @staticmethod
-    def get_user_config() -> dict[_Any, _Any]:
-        return _json.loads(_os.environ[_constants.YT_USER_CONFIG_ENV_VAR])
+    def get_user_config() -> dict[Any, Any]:
+        return json.loads(os.environ[_constants.YT_USER_CONFIG_ENV_VAR])
 
     def save_model(self, data: bytes, dataset_path: str, metadata: dict[str, str]) -> str:
         incarnation_id = self.coordinator.get_incarnation_id()

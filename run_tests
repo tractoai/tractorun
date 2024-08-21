@@ -2,7 +2,7 @@
 
 set -x
 
-IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-06-17-15-21-24"
+IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-08-21-17-20-17"
 IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
 
 PATH_GENERIC="/src/tests/generic"

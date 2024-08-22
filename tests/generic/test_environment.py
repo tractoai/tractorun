@@ -38,8 +38,6 @@ def test_environment(yt_secret_path: str, yt_instance: YtInstance, yt_path: str)
         assert os.environ["SECRET"] == SECRET_ENV_VALUE
         assert os.environ["NOT_SECRET"] == NOT_SECRET_ENV_VALUE
 
-    from tractorun.stderr_reader import StderrMode
-
     run(
         env_checker,
         backend=GenericBackend(),
@@ -51,7 +49,6 @@ def test_environment(yt_secret_path: str, yt_instance: YtInstance, yt_path: str)
             EnvVariable(name="SECRET", cypress_path=yt_secret_path),
             EnvVariable(name="NOT_SECRET", value="not_secret"),
         ],
-        proxy_stderr_mode=StderrMode.primary,
     )
 
 

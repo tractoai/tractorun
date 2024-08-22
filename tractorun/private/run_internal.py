@@ -304,7 +304,7 @@ def run_tracto(
         )
     )
 
-    operation_spec = task_spec.end_task().max_failed_job_count(1)
+    operation_spec = task_spec.end_task().max_failed_job_count(2)
 
     if mesh.pool_trees is not None:
         operation_spec = operation_spec.pool_trees(mesh.pool_trees)

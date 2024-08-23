@@ -33,17 +33,15 @@ class YtInstanceTestContainers(YtInstance):
             use_ng_image=True,
             enable_cri_jobs=True,
             privileged=True,
+            set_yt_config_env_var=True,
         )
 
     def __enter__(self) -> "YtInstanceTestContainers":
         self.yt_container.start()
-        import os
-
-        os.environ["YT_PROXY"] = self.yt_container.proxy_url_http
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.yt_container.stop()
 
     def get_client(self) -> YtClient:
-        return self.yt_container.get_client(token="")
+        return self.yt_container.get_client()

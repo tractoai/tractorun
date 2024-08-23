@@ -229,9 +229,7 @@ def run_tracto(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
-    yt_client.config["is_local_mode"] = True
-    yt_client.config["token"] = ""
-    yt_client.config["proxy"]["enable_proxy_discovery"] = False
+
     import copy
 
     yt_client_config: dict = copy.deepcopy(yt.config.get_config(yt_client))

@@ -1,5 +1,6 @@
 import abc
 import base64
+import copy
 import json
 import os
 import pickle
@@ -230,11 +231,17 @@ def run_tracto(
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = True
 
-    import copy
-
-    yt_client_config: dict = copy.deepcopy(yt.config.get_config(yt_client))
-    yt_client_config["proxy"]["url"] = "http://localhost:80"
+    yt_client_config = yt.config.get_config(yt_client)
     yt_client_config_pickled = base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8")
+
+    yt_client_config_for_job: dict = copy.deepcopy(yt_client_config)
+
+    yt_config_for_job_patch_yson_string = os.environ.get("TRACTORUN_YT_CONFIG_FOR_JOB_PATCH")
+    if yt_config_for_job_patch_yson_string:
+        patch = yt.yson.loads(yt_config_for_job_patch_yson_string.encode())
+        yt.common.update_inplace(yt_client_config_for_job, patch)
+
+    yt_client_config_for_job_pickled = base64.b64encode(pickle.dumps(yt_client_config_for_job)).decode("utf-8")
 
     tmp_dir = tempfile.TemporaryDirectory()
     training_dir = TrainingDir.create(yt_path)
@@ -247,7 +254,7 @@ def run_tracto(
         sidecars=sidecars,
         env=env,
         training_dir=training_dir,
-        yt_client_config=yt_client_config_pickled,
+        yt_client_config=yt_client_config_for_job_pickled,
         tensorproxy=tp_bootstrap,
     )
 
@@ -322,7 +329,7 @@ def run_tracto(
     with StderrReaderWorker(
         prev_incarnation_id=prev_incarnation_id,
         training_dir=training_dir,
-        yt_client_config_pickled=base64.b64encode(pickle.dumps(yt.config.get_config(yt_client))).decode("utf-8"),
+        yt_client_config_pickled=yt_client_config_pickled,
         mode=proxy_stderr_mode,
         mesh=mesh,
     ):

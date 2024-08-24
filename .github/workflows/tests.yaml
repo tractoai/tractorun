@@ -4,7 +4,7 @@ on:
   pull_request: {}
 
 jobs:
-  run_tests:
+  generic:
     runs-on: tractoai-runners
     steps:
       - uses: actions/checkout@v4
@@ -17,3 +17,4 @@ jobs:
       - run: pytest tests/generic -s
         env:
           YT_MODE: testcontainers
+          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'

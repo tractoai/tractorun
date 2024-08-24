@@ -53,7 +53,7 @@ def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         yt_path=yt_path,
         sidecars=[
             Sidecar(
-                command=["/usr/local/bin/yt", "set", f"{yt_path}/@{attr_key}", attr_value],
+                command=["yt", "set", f"{yt_path}/@{attr_key}", attr_value],
                 restart_policy=RestartPolicy.ON_FAILURE,
             )
         ],
@@ -85,7 +85,7 @@ def test_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
             "--sidecar",
             json.dumps(
                 {
-                    "command": ["/usr/local/bin/yt", "set", f"{yt_path}/@{attr_key}", attr_value],
+                    "command": ["yt", "set", f"{yt_path}/@{attr_key}", attr_value],
                     "restart_policy": RestartPolicy.ON_FAILURE,
                 },
             ),
@@ -112,7 +112,7 @@ def test_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
         },
         "sidecars": [
             {
-                "command": ["/usr/local/bin/yt", "set", f"{yt_path}/@{attr_key}", attr_value],
+                "command": ["yt", "set", f"{yt_path}/@{attr_key}", attr_value],
                 "restart_policy": RestartPolicy.ON_FAILURE.value,
             },
         ],

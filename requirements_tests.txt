@@ -1,2 +1,2 @@
 pytest < 9
-testcontainers-yt-local == 0.13.0
+testcontainers-yt-local == 0.14.0

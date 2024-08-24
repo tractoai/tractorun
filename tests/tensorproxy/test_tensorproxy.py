@@ -6,7 +6,6 @@ from tests.utils import (
     run_config_file,
 )
 from tests.yt_instances import YtInstance
-from tractorun.stderr_reader import StderrMode
 
 
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
@@ -14,7 +13,6 @@ DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_te
 
 def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
-    yt_client.create("map_node", "//home/tractorun/tensorproxy", recursive=True)
 
     tracto_cli = TractoCli(
         command=["python3", "/tractorun_tests/tensorproxy_script.py"],
@@ -32,8 +30,6 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
             json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
             "--bind-local",
             f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
-            "--proxy-stderr-mode",
-            StderrMode.primary,
         ],
     )
     op_run = tracto_cli.run()
@@ -43,7 +39,6 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
 
 def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
-    yt_client.create("map_node", "//home/tractorun/tensorproxy", recursive=True)
 
     run_config = {
         "mesh": {
@@ -77,8 +72,6 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
                 json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
                 "--bind-local",
                 f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
-                "--proxy-stderr-mode",
-                StderrMode.primary,
             ],
         )
         op_run = tracto_cli.run()

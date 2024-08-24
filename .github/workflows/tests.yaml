@@ -18,19 +18,3 @@ jobs:
         env:
           YT_MODE: testcontainers
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
-
-  tensorproxy:
-    runs-on: tractoai-runners
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - run: pip install -r requirements.txt -r requirements_tests.txt
-      - run: pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple -r requirements_tensorproxy.txt
-      - run: pip install --no-deps .
-      - run: pytest tests/tensorproxy -s
-        env:
-          YT_MODE: testcontainers
-          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
-

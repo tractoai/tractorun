@@ -92,7 +92,8 @@ class TractoCli:
             *self._command,
         ]
 
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        import sys
+        process = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stdout)
         process.wait()
         return TractoCliRun(
             process=process,

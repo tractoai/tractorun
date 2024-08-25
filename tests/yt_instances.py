@@ -29,7 +29,12 @@ class YtInstanceExternal(YtInstance):
 
 class YtInstanceTestContainers(YtInstance):
     def __init__(self) -> None:
-        self.yt_container = testcontainers_yt_local.container.YtLocalContainer()
+        self.yt_container = testcontainers_yt_local.container.YtLocalContainer(
+            use_ng_image=True,
+            enable_cri_jobs=True,
+            privileged=True,
+            set_yt_config_env_var=True,
+        )
 
     def __enter__(self) -> "YtInstanceTestContainers":
         self.yt_container.start()

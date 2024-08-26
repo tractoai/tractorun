@@ -6,6 +6,7 @@ from tests.utils import (
     run_config_file,
 )
 from tests.yt_instances import YtInstance
+from tractorun.stderr_reader import StderrMode
 
 
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
@@ -30,6 +31,8 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> N
             json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
             "--bind-local",
             f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
+            "--proxy-stderr-mode",
+            StderrMode.primary,
         ],
     )
     op_run = tracto_cli.run()
@@ -72,6 +75,8 @@ def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_pat
                 json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
                 "--bind-local",
                 f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
+                "--proxy-stderr-mode",
+                StderrMode.primary,
             ],
         )
         op_run = tracto_cli.run()

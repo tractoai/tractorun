@@ -28,7 +28,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tenso
             "--yt-path",
             yt_path_with_tensorproxy,
             "--user-config",
-            json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
+            json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path_with_tensorproxy}),
             "--bind-local",
             f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
             "--proxy-stderr-mode",
@@ -38,6 +38,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tenso
     op_run = tracto_cli.run()
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
 
 # trigger tests
 def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:

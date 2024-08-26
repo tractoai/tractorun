@@ -157,7 +157,7 @@ ARG TENSORPROXY_BINARY_PATH
 
 RUN mkdir /yt_data
 COPY $TENSORPROXY_BINARY_PATH /yt_data/tensorproxy
-RUN echo 'export YT_CONFIG_PATCHES='{proxy={url="http://localhost:80";enable_proxy_discovery=%false}; is_local_mode=%true}' \n yt create map_node //home/tractorun \n cat /yt_data/tensorproxy | yt upload //home/tractorun/tensorproxy' >> /yt_scripts/yt_init/init_yt_cluster.sh
+RUN echo "export YT_CONFIG_PATCHES='{proxy={url=\"http://localhost:80\";enable_proxy_discovery=%false}; is_local_mode=%true}' \n yt create map_node //home/tractorun \n cat /yt_data/tensorproxy | yt upload //home/tractorun/tensorproxy" >> /yt_scripts/yt_init/init_yt_cluster.sh
 
 EOT
 }

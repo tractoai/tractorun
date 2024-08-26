@@ -36,6 +36,7 @@ def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
 def _get_simple_train(mnist_ds_path: str) -> Callable:
     def _simple_train(toolbox: Toolbox) -> None:
+        raise Exception("foo")
         class Net(nn.Module):
             def __init__(self) -> None:
                 super(Net, self).__init__()
@@ -236,5 +237,5 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_
         ],
     )
     op_run = tracto_cli.run()
-    assert op_run.is_exitcode_valid()
+    assert not op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=2)

@@ -65,6 +65,14 @@ def yt_base_dir_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance) -> st
 
 
 @pytest.fixture(scope="function")
+def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
+    yt_client = yt_instance.get_client()
+    path = f"{yt_base_dir}/{get_random_string(13)}"
+    yt_client.create("map_node", path)
+    return path
+
+
+@pytest.fixture(scope="function")
 def yt_path_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance, yt_base_dir_with_tensorproxy: str) -> str:
     yt_client = yt_instance_with_tensorproxy.get_client()
     path = f"{yt_base_dir_with_tensorproxy}/{get_random_string(13)}"

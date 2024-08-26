@@ -12,7 +12,7 @@ DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_te
 
 
 def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
+    yt_client = yt_instance_with_tensorproxy.get_client()
 
     tracto_cli = TractoCli(
         command=["python3", "/tractorun_tests/tensorproxy_script.py"],
@@ -38,7 +38,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> N
 
 
 def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
+    yt_client = yt_instance_with_tensorproxy.get_client()
 
     run_config = {
         "mesh": {

@@ -40,7 +40,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tenso
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 
-# trigger tests
+# trigger tests 2
 def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:
     yt_client = yt_instance_with_tensorproxy.get_client()
 

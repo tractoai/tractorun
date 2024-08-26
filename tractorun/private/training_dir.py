@@ -25,7 +25,9 @@ class TrainingDir:
 
 
 def prepare_training_dir(training_dir: TrainingDir, yt_client: yt.YtClient) -> None:
-    yt_client.create("map_node", training_dir.base_path, attributes={"incarnation_id": -1}, ignore_existing=True)
+    yt_client.create(
+        "map_node", training_dir.base_path, attributes={"incarnation_id": -1}, recursive=True, ignore_existing=True
+    )
     yt_client.create("map_node", training_dir.primary_lock_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.incarnations_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.models_path, ignore_existing=True)

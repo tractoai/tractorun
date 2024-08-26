@@ -35,7 +35,7 @@ def yt_instance() -> Generator[YtInstance, None, None]:
 def yt_instance_with_tensorproxy() -> Generator[YtInstance, None, None]:
     yt_mode = os.environ.get("YT_MODE", "testcontainers")
     if yt_mode == "testcontainers":
-        with YtInstanceTestContainers(image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/ytsaurus_local_with_tensorproxy:2024-08-26-12-58-41") as yt_instance:
+        with YtInstanceTestContainers(image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/ytsaurus_local_with_tensorproxy:2024-08-26-14-25-17") as yt_instance:
             yield yt_instance
     elif yt_mode == "external":
         proxy_url = os.environ["YT_PROXY"]

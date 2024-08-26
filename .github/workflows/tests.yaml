@@ -33,3 +33,4 @@ jobs:
         env:
           YT_MODE: testcontainers
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
+          TC_MAX_TRIES: 300

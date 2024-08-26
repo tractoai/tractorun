@@ -54,10 +54,19 @@ def yt_base_dir(yt_instance: YtInstance) -> str:
     return path
 
 
+@pytest.fixture(scope="session")
+def yt_base_dir_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance) -> str:
+    yt_client = yt_instance_with_tensorproxy.get_client()
+
+    path = f"//tmp/tractorun_tests/run_{get_random_string(13)}"
+    yt_client.create("map_node", path, recursive=True)
+    return path
+
+
 @pytest.fixture(scope="function")
-def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
-    yt_client = yt_instance.get_client()
-    path = f"{yt_base_dir}/{get_random_string(13)}"
+def yt_path_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance, yt_base_dir_with_tensorproxy: str) -> str:
+    yt_client = yt_instance_with_tensorproxy.get_client()
+    path = f"{yt_base_dir_with_tensorproxy}/{get_random_string(13)}"
     yt_client.create("map_node", path)
     return path
 

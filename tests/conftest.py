@@ -35,6 +35,14 @@ def yt_instance_with_tensorproxy() -> Generator[YtInstance, None, None]:
     yt_mode = os.environ.get("YT_MODE", "testcontainers")
     if yt_mode == "testcontainers":
         with YtInstanceTestContainers(image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/ytsaurus_local_with_tensorproxy:2024-08-26-16-33-53") as yt_instance:
+            yt_cli = yt_instance.get_client()
+            for i in range(60):
+                if yt_cli.exists("//home/tractorun/tensorproxy"):
+                    break
+                import time; time.sleep(5)
+            else:
+                raise Exception("Could not find tensorproxy")
+
             yield yt_instance
     elif yt_mode == "external":
         proxy_url = os.environ["YT_PROXY"]

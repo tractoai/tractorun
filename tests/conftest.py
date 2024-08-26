@@ -32,6 +32,21 @@ def yt_instance() -> Generator[YtInstance, None, None]:
 
 
 @pytest.fixture(scope="session")
+def yt_instance_with_tensorproxy() -> Generator[YtInstance, None, None]:
+    yt_mode = os.environ.get("YT_MODE", "testcontainers")
+    if yt_mode == "testcontainers":
+        with YtInstanceTestContainers(image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/ytsaurus_local_with_tensorproxy:2024-08-26-12-58-41") as yt_instance:
+            yield yt_instance
+    elif yt_mode == "external":
+        proxy_url = os.environ["YT_PROXY"]
+        yt_token = os.environ.get("YT_TOKEN")
+        assert yt_token is not None
+        yield YtInstanceExternal(proxy_url=proxy_url, token=yt_token)
+    else:
+        raise ValueError(f"Unknown yt_mode: {yt_mode}")
+
+
+@pytest.fixture(scope="session")
 def yt_base_dir(yt_instance: YtInstance) -> str:
     yt_client = yt_instance.get_client()
 

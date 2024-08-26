@@ -12,7 +12,7 @@ from tractorun.stderr_reader import StderrMode
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
 
 
-def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> None:
+def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:
     yt_client = yt_instance_with_tensorproxy.get_client()
 
     tracto_cli = TractoCli(
@@ -26,7 +26,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> N
             "--resources.memory-limit",
             "428000000000",
             "--yt-path",
-            yt_path,
+            yt_path_with_tensorproxy,
             "--user-config",
             json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
             "--bind-local",
@@ -40,7 +40,7 @@ def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> N
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 # trigger tests
-def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path: str) -> None:
+def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:
     yt_client = yt_instance_with_tensorproxy.get_client()
 
     run_config = {
@@ -55,7 +55,7 @@ def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_pat
         "user_config": {
             "use_ocdbt": False,
             "use_zarr3": False,
-            "checkpoint_path": yt_path,
+            "checkpoint_path": yt_path_with_tensorproxy,
         },
     }
     with run_config_file(run_config) as run_config_path:
@@ -70,9 +70,9 @@ def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_pat
                 "--resources.memory-limit",
                 "428000000000",
                 "--yt-path",
-                yt_path,
+                yt_path_with_tensorproxy,
                 "--user-config",
-                json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
+                json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path_with_tensorproxy}),
                 "--bind-local",
                 f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
                 "--proxy-stderr-mode",

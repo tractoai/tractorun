@@ -7,6 +7,7 @@ import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
+from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_DOCKER_IMAGE as _DEFAULT_DOCKER_IMAGE
@@ -43,6 +44,7 @@ def run(
     yt_task_spec: dict[Any, Any] | None = None,
     local: bool = False,
     proxy_stderr_mode: StderrMode = StderrMode.disabled,
+    docker_auth: DockerAuthData | None = None,
 ) -> None:
     if local:
         _run_local(
@@ -79,6 +81,7 @@ def run(
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
             proxy_stderr_mode=proxy_stderr_mode,
+            docker_auth=docker_auth,
         )
 
 

@@ -1,9 +1,7 @@
-from typing import (
-    Any,
-    Optional,
-)
+from typing import Any
 
 from tractorun.bind import BindLocal
+from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.private.run_internal import (
@@ -25,15 +23,16 @@ def run_script(
     docker_image: str,
     resources: Resources,
     tensorproxy: TensorproxySidecar,
-    user_config: Optional[dict[Any, Any]],
+    user_config: dict[Any, Any] | None,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: bool,
-    yt_operation_spec: Optional[dict[Any, Any]],
-    yt_task_spec: Optional[dict[Any, Any]],
+    yt_operation_spec: dict[Any, Any] | None,
+    yt_task_spec: dict[Any, Any] | None,
     proxy_stderr_mode: StderrMode,
+    docker_auth: DockerAuthData | None,
 ) -> None:
     if binds_local is None:
         binds_local = []
@@ -64,4 +63,5 @@ def run_script(
             proxy_stderr_mode=proxy_stderr_mode,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
+            docker_auth=docker_auth,
         )

@@ -78,7 +78,7 @@ def bootstrap(
     spec_env = {}
     for var in env:
         if var.cypress_path is not None:
-            spec_env[var.name] = yt.get(var.cypress_path, client=yt_client)
+            spec_env[var.name] = yt_client.get(var.cypress_path)
         else:
             spec_env[var.name] = var.value
 

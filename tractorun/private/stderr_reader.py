@@ -14,7 +14,7 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper.errors import YtError
 
-from tractorun.exception import StderrReaderException
+from tractorun.exception import StderrReaderError
 from tractorun.mesh import Mesh
 from tractorun.private.training_dir import TrainingDir
 from tractorun.stderr_reader import StderrMode
@@ -118,7 +118,7 @@ class StderrReaderWorker:
             case StderrMode.primary:
                 job_ids = [topology[0]["job_id"]]
             case _:
-                raise StderrReaderException(f"Unknown mode {self._mode}")
+                raise StderrReaderError(f"Unknown mode {self._mode}")
         output_streams: list[tuple[str, Generator[bytes, None, None]]] = []
         for job_id in job_ids:
             stderr_getter = get_job_stderr(

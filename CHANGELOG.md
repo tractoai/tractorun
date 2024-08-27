@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.14.0 (2024-08-26)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.13.0...0.14.0)
+
+### Changes
+
+- Create training dir with recursuve=True. [f1441bf](https://github.com/tractoai/tractorun/commit/f1441bf6703433491e5ab1162e74b8e349e91aee)
+    
+- Run tests on pull-requests (#38). [2be4551](https://github.com/tractoai/tractorun/commit/2be4551ff93ad3021cc167c8396b82b35a982a04)
+    
+
 ## 0.13.0 (2024-08-21)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.12.0...0.13.0)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.15.0 (2024-08-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.14.0...0.15.0)
+
+### Changes
+
+- NYT-653: fix stderr reader in case of process_per_node > 1 (#56). [590f396](https://github.com/tractoai/tractorun/commit/590f3961332819ed275adb7566200fb2943deee0)
+    
+
 ## 0.14.0 (2024-08-26)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.13.0...0.14.0)

@@ -205,3 +205,24 @@ def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -
         )
     names = [thread.name for thread in threading.enumerate()]
     assert STDERR_READER_THREAD_NAME not in names
+
+
+def test_multiple_processes(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    message = "test message"
+
+    def checker(toolbox: Toolbox) -> None:
+        print(message, file=sys.stderr)
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=2, gpu_per_process=0)
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+    )
+    captured = capsys.readouterr()
+    assert message in captured.out

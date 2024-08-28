@@ -101,7 +101,12 @@ class StderrReaderWorker:
         topology = []
         operation_id = None
         while (
-            incarnation == self._prev_incarnation_id or operation_id is None or len(topology) != self._mesh.peer_count
+            not self._stop
+            and (
+                incarnation == self._prev_incarnation_id
+                or operation_id is None
+                or len(topology) != self._mesh.peer_count
+            )
         ):
             try:
                 incarnation = yt_client.get(self._training_dir.base_path + "/@incarnation_id")

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.16.0 (2024-08-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.15.0...0.16.0)
+
+### Changes
+
+- NYT-654: fix stderr reader stopping if yt operation is incorrect (#57). [1eb1c3a](https://github.com/tractoai/tractorun/commit/1eb1c3a5f07a526644c54b3585ab63449ea31072)
+    
+
 ## 0.15.0 (2024-08-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.14.0...0.15.0)

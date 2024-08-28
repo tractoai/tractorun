@@ -209,6 +209,7 @@ def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -
 
 def test_multiple_processes(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
     message = "test message"
+
     def checker(toolbox: Toolbox) -> None:
         print(message, file=sys.stderr)
 

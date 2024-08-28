@@ -1,3 +1,3 @@
 pytest < 9
 pytest-xdist ~= 3.6.1
-testcontainers-yt-local == 0.15.0
+testcontainers-yt-local == 0.16.0

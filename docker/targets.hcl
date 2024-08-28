@@ -151,14 +151,14 @@ target "ytsaurus_local_with_tensorproxy" {
     "TENSORPROXY_BINARY_PATH" = "./tmp/tensorproxy"
   }
   dockerfile-inline = <<EOT
-FROM ghcr.io/dmi-feo/ytsaurus-local:0.2.0
+FROM ghcr.io/dmi-feo/ytsaurus-local:0.4.0
 
 ARG TENSORPROXY_BINARY_PATH
 
 RUN mkdir /yt_data
 COPY $TENSORPROXY_BINARY_PATH /yt_data/tensorproxy
-RUN sed -i '$ d' /yt_scripts/yt_init/init_yt_cluster.sh
-RUN echo "export YT_CONFIG_PATCHES='{proxy={url=\"http://localhost:80\";enable_proxy_discovery=%false}; is_local_mode=%true}' \n yt create map_node //home/tractorun \n cat /yt_data/tensorproxy | yt upload //home/tractorun/tensorproxy \n yt remove //sys/@provision_lock -f" >> /yt_scripts/yt_init/init_yt_cluster.sh
+RUN echo "#!/usr/bin/env bash \n export YT_CONFIG_PATCHES='{proxy={url=\"http://localhost:80\";enable_proxy_discovery=%false}; is_local_mode=%true}' \n yt create map_node //home/tractorun \n cat /yt_data/tensorproxy | yt upload //home/tractorun/tensorproxy" > /yt_post_init_scripts/upload_tensorproxy.sh
+RUN chmod +x /yt_post_init_scripts/upload_tensorproxy.sh
 
 EOT
 }

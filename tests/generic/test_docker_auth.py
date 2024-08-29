@@ -5,7 +5,7 @@ from yt import wrapper as yt
 
 from tests.utils import (
     DOCKER_IMAGE,
-    run_config_file,
+    run_config_file, TractoCli, get_data_path,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -93,6 +93,33 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
         docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
     )
     assert run_info.operation_spec["secure_vault"]["docker_auth"] == secret
+
+
+def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    secret = {"auth": "123"}
+    yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
+
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
+            "--mesh.node-count",
+            "1",
+            "--mesh.process-per-node",
+            "1",
+            "--mesh.gpu-per-process",
+            "0",
+            "--yt-path",
+            yt_path,
+            "--bind-local",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests/torch_run_script.py",
+            "--docker-auth-secret.cypress-path",
+            yt_secret_path,
+        ],
+    )
+    run_info = tracto_cli.dry_run()
+    assert run_info["run_info"]["operation_spec"]["secure_vault"]["docker_auth"] == secret
 
 
 @pytest.mark.parametrize(

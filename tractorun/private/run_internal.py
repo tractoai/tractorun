@@ -253,7 +253,6 @@ def run_tracto(
 
     tmp_dir = tempfile.TemporaryDirectory()
     training_dir = TrainingDir.create(yt_path)
-    prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
 

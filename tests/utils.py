@@ -65,6 +65,29 @@ class TractoCli:
     _operation_spec: dict[str, Any] = attrs.field(default={})
 
     def run(self) -> TractoCliRun:
+        command, operation_title, task_title = self._prepare_command()
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process.wait()
+        return TractoCliRun(
+            process=process,
+            operation_title=operation_title,
+        )
+
+    def dry_run(self) -> dict:
+        command, operation_title, task_title = self._prepare_command()
+        command.append("--dry-run")
+
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process.wait()
+        run = TractoCliRun(
+            process=process,
+            operation_title=operation_title,
+        )
+        assert run.is_exitcode_valid(), run.stderr
+        return json.loads(run.stdout)
+
+    def _prepare_command(self) -> tuple[list[str], str, str]:
         operation_title = f"test operation {uuid.uuid4()}"
         task_title = f"test operation's task {uuid.uuid4()}"
 
@@ -91,13 +114,7 @@ class TractoCli:
             *self._args,
             *self._command,
         ]
-
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.wait()
-        return TractoCliRun(
-            process=process,
-            operation_title=operation_title,
-        )
+        return command, operation_title, task_title
 
 
 @contextlib.contextmanager

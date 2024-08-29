@@ -44,6 +44,7 @@ def run_script(
     yt_task_spec: dict[Any, Any] | None,
     proxy_stderr_mode: StderrMode,
     docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
 ) -> LocalRunInfo: ...
 
 
@@ -66,6 +67,7 @@ def run_script(
     yt_task_spec: dict[Any, Any] | None,
     proxy_stderr_mode: StderrMode,
     docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
 ) -> YtRunInfo: ...
 
 
@@ -88,6 +90,7 @@ def run_script(
     yt_task_spec: dict[Any, Any] | None,
     proxy_stderr_mode: StderrMode,
     docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
 ) -> RunInfo: ...
 
 

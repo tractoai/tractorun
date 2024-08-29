@@ -434,6 +434,7 @@ def main() -> None:
             yt_task_spec=effective_config.yt_task_spec,
             local=effective_config.local,
             docker_auth=effective_config.docker_auth_secret,
+            dry_run=effective_config.dry_run,
         )
     except Exception:
         if not effective_config.dry_run:
@@ -447,12 +448,22 @@ def main() -> None:
             ),
             run_info=run_info,
         )
+
         print(
             json.dumps(
                 attrs.asdict(cli_run_info),  # type: ignore
                 indent=4,
+                cls=_BytesEncoder,
             ),
         )
+
+
+class _BytesEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, bytes):
+            return o.decode("utf-8")
+        else:
+            return super().default(o)
 
 
 if __name__ == "__main__":

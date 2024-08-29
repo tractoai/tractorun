@@ -15,16 +15,17 @@ import yaml
 from tractorun.bind import BindLocal
 from tractorun.docker_auth import (
     DockerAuthData,
-    DockerAuthPlainText,
     DockerAuthSecret,
 )
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
-from tractorun.private.helpers import AttrSerializer
+from tractorun.private.docker_auth import DockerAuthInternal
+from tractorun.private.helpers import create_attrs_converter
 from tractorun.private.run import run_script
 from tractorun.resources import Resources
+from tractorun.run_info import RunInfo
 from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
@@ -82,16 +83,6 @@ class DockerAuthSecretConfig:
     cypress_path: str
 
 
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class DockerAuthPlainTextConfig:
-    username: str | None
-    password: str | None
-    auth: str | None
-
-
-DockerAuthConfig = DockerAuthSecretConfig | DockerAuthPlainTextConfig
-
-
 _T = TypeVar("_T")
 
 
@@ -115,13 +106,14 @@ class Config:
     sidecars: Optional[list[SidecarConfig]] = attrs.field(default=None)
     env: Optional[list[EnvVariableConfig]] = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
-    docker_auth: Optional[DockerAuthConfig] = attrs.field(default=None)
+    docker_auth_secret: Optional[DockerAuthSecretConfig] = attrs.field(default=None)
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
         with open(path, "r") as f:
             config = yaml.safe_load(f)
-        return AttrSerializer(Config).deserialize(config)
+        converter = create_attrs_converter()
+        return converter.structure(config, Config)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -142,7 +134,8 @@ class EffectiveConfig:
     sidecars: list[Sidecar]
     env: list[EnvVariable]
     tensorproxy: TensorproxySidecar
-    docker_auth: DockerAuthData | None
+    docker_auth_secret: DockerAuthData | None
+    dry_run: bool
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
@@ -209,29 +202,13 @@ class EffectiveConfig:
         if env is None:
             env = []
 
-        docker_auth_config = config.docker_auth
-        if args["docker_auth"] is not None:
-            TT = TypeVar("TT", bound=DockerAuthConfig)
-            def _hack(t: TT)
-            docker_auth_config = AttrSerializer[DockerAuthConfig](
-                DockerAuthSecretConfig | DockerAuthSecretConfig
-            ).deserialize(
-                args["docker_auth"],
+        docker_auth_secret = None
+        if config.docker_auth_secret is not None:
+            docker_auth_secret = DockerAuthSecret(cypress_path=config.docker_auth_secret.cypress_path)
+        if args["docker_auth_secret.cypress_path"] is not None:
+            docker_auth_secret = DockerAuthSecret(
+                cypress_path=args["docker_auth_secret.cypress_path"],
             )
-        docker_auth: DockerAuthData
-        match docker_auth_config:
-            case DockerAuthSecretConfig():
-                assert isinstance(docker_auth_config, DockerAuthSecret)  # skip type warning in pycharm
-                docker_auth = DockerAuthSecret(cypress_path=docker_auth_config.cypress_path)
-            case DockerAuthPlainTextConfig():
-                assert isinstance(docker_auth_config, DockerAuthPlainTextConfig)  # skip type warning in pycharm
-                docker_auth = DockerAuthPlainText(
-                    username=docker_auth_config.username,
-                    password=docker_auth_config.password,
-                    auth=docker_auth_config.auth,
-                )
-            case _:
-                raise TractorunConfigError("Unknown docker auth type")
 
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
@@ -311,7 +288,8 @@ class EffectiveConfig:
                     default=TENSORPROXY_RESTART_POLICY_DEFAULT,
                 ),
             ),
-            docker_auth=docker_auth,
+            docker_auth_secret=docker_auth_secret,
+            dry_run=args["dry_run"],
         )
         return new_config
 
@@ -327,20 +305,14 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-config-path", type=str, help="path to tractorun config")
     parser.add_argument("--docker-image", type=str, help=f"docker image name. Default: {DEFAULT_DOCKER_IMAGE}")
     parser.add_argument(
-        "--docker-auth",
+        "--docker-auth-secret.cypress-path",
         type=str,
-        help="auth data for docker registry in json: {} or {}".format(
+        help="Path to the cypress node with format {}".format(
             json.dumps(
-                attrs.asdict(
-                    DockerAuthPlainText(password="placeholder", username="placeholder", auth="placeholder"),  # type: ignore
-                ),
-            ),
-            json.dumps(
-                attrs.asdict(
-                    DockerAuthSecret(cypress_path="placeholder"),  # type: ignore
-                ),
+                attrs.asdict(DockerAuthInternal(username="placeholder", password="placeholder", auth="placeholder")),  # type: ignore
             ),
         ),
+        default=None,
     )
     parser.add_argument("--mesh.node-count", type=int, help=f"mesh node count. Default: {MESH_NODE_COUNT_DEFAULT}")
     parser.add_argument(
@@ -400,59 +372,87 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--env",
         action="append",
-        help='set env variable by value or from cypress node. JSON message like `{"name": "foo", "value: "real value", "cypress_path": "//tmp/foo"}`',
+        help="set env variable by value or from cypress node. JSON message like {} or {}".format(
+            EnvVariable(
+                name="placeholder",
+                value="placeholder",
+            ),
+            EnvVariable(
+                name="placeholder",
+                cypress_path="placeholder",
+            ),
+        ),
     )
-    parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
+    parser.add_argument("--dry-run", help="get internal information without running an operation", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
     return parser
 
 
-def main() -> None:
+def make_configuration(cli_args: list) -> tuple[dict, Config, EffectiveConfig]:
     parser = make_cli_parser()
-    args = vars(parser.parse_args(sys.argv[1:]))
+    args = vars(parser.parse_args(cli_args))
     file_config_content = Config.load_yaml(args["run_config_path"]) if args["run_config_path"] else Config()
     effective_config = EffectiveConfig.configure(
         config=file_config_content,
         args=args,
     )
+    return args, file_config_content, effective_config
 
-    if args["dump_effective_config"]:
-        print("Parsed args:")
-        print(json.dumps(args, indent=4))
-        print("\nConfig from file:")
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class ConfigurationDebug:
+    file_config: Config
+    effective_config: EffectiveConfig
+    cli_args: dict
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class CliRunInfo:
+    configuration: ConfigurationDebug
+    run_info: RunInfo | None
+
+
+def main() -> None:
+    args, file_config_content, effective_config = make_configuration(sys.argv[1:])
+
+    run_info = None
+    try:
+        run_info = run_script(
+            command=effective_config.command,
+            mesh=effective_config.mesh,
+            resources=effective_config.resources,
+            yt_path=effective_config.yt_path,
+            docker_image=effective_config.docker_image,
+            binds_local=effective_config.bind_local,
+            binds_local_lib=effective_config.bind_local_lib,
+            tensorproxy=effective_config.tensorproxy,
+            proxy_stderr_mode=effective_config.proxy_stderr_mode,
+            sidecars=effective_config.sidecars,
+            env=effective_config.env,
+            user_config=effective_config.user_config,
+            yt_operation_spec=effective_config.yt_operation_spec,
+            yt_task_spec=effective_config.yt_task_spec,
+            local=effective_config.local,
+            docker_auth=effective_config.docker_auth_secret,
+        )
+    except Exception:
+        if not effective_config.dry_run:
+            raise
+    if effective_config.dry_run:
+        cli_run_info = CliRunInfo(
+            configuration=ConfigurationDebug(
+                file_config=file_config_content,
+                cli_args=args,
+                effective_config=effective_config,
+            ),
+            run_info=run_info,
+        )
         print(
             json.dumps(
-                attrs.asdict(file_config_content),  # type: ignore
+                attrs.asdict(cli_run_info),  # type: ignore
                 indent=4,
             ),
         )
-        print("\nEffective config:")
-        print(
-            json.dumps(
-                attrs.asdict(effective_config),  # type: ignore
-                indent=4,
-            ),
-        )
-        return
-
-    run_script(
-        command=effective_config.command,
-        mesh=effective_config.mesh,
-        resources=effective_config.resources,
-        yt_path=effective_config.yt_path,
-        docker_image=effective_config.docker_image,
-        binds_local=effective_config.bind_local,
-        binds_local_lib=effective_config.bind_local_lib,
-        tensorproxy=effective_config.tensorproxy,
-        proxy_stderr_mode=effective_config.proxy_stderr_mode,
-        sidecars=effective_config.sidecars,
-        env=effective_config.env,
-        user_config=effective_config.user_config,
-        yt_operation_spec=effective_config.yt_operation_spec,
-        yt_task_spec=effective_config.yt_task_spec,
-        local=effective_config.local,
-        docker_auth=effective_config.docker_auth,
-    )
 
 
 if __name__ == "__main__":

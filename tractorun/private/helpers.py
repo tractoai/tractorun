@@ -13,7 +13,7 @@ import yt.wrapper as yt
 _T = TypeVar("_T")
 
 
-def _create_converter() -> cattrs.Converter:
+def create_attrs_converter() -> cattrs.Converter:
     converter = cattrs.Converter()
     converter.register_structure_hook_factory(
         attrs.has,
@@ -25,7 +25,7 @@ def _create_converter() -> cattrs.Converter:
 @attrs.define(slots=True)
 class AttrSerializer(Generic[_T]):
     _type: Type[_T] = attrs.field()
-    _converter: cattrs.Converter = attrs.field(factory=_create_converter)
+    _converter: cattrs.Converter = attrs.field(factory=create_attrs_converter)
 
     def serialize(self, data: _T) -> str:
         return json.dumps(self._converter.unstructure(data))

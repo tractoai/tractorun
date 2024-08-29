@@ -3,7 +3,7 @@ import abc
 import attrs
 
 
-__all__ = ["DockerAuthSecret", "DockerAuthPlainText", "DockerAuthData"]
+__all__ = ["DockerAuthSecret", "DockerAuthData"]
 
 
 class DockerAuthData(abc.ABC):
@@ -13,10 +13,3 @@ class DockerAuthData(abc.ABC):
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class DockerAuthSecret(DockerAuthData):
     cypress_path: str
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class DockerAuthPlainText(DockerAuthData):
-    username: str | None
-    password: str | None
-    auth: str | None

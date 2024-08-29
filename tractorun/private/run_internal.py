@@ -53,6 +53,10 @@ from tractorun.private.training_dir import (
     prepare_training_dir,
 )
 from tractorun.resources import Resources
+from tractorun.run_info import (
+    LocalRunInfo,
+    YtRunInfo,
+)
 from tractorun.sidecar import Sidecar
 from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
@@ -219,7 +223,8 @@ def run_tracto(
     yt_operation_spec: dict[Any, Any] | None = None,
     yt_task_spec: dict[Any, Any] | None = None,
     docker_auth: DockerAuthData | None = None,
-) -> None:
+    dry_run: bool = False,
+) -> YtRunInfo:
     resources = resources if resources is not None else Resources()
     binds_local = binds_local if binds_local is not None else []
     binds_local_lib = binds_local_lib if binds_local_lib is not None else []
@@ -321,7 +326,7 @@ def run_tracto(
     if wandb_enabled:
         secure_vault["WANDB_API_KEY"] = wandb_api_key
     if docker_auth:
-        secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(docker_auth)
+        secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(docker_auth).to_spec()
 
     if secure_vault:
         operation_spec.secure_vault(secure_vault)
@@ -331,16 +336,23 @@ def run_tracto(
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
-    with StderrReaderWorker(
-        prev_incarnation_id=prev_incarnation_id,
-        training_dir=training_dir,
-        yt_client_config_pickled=yt_client_config_pickled,
-        mode=proxy_stderr_mode,
-        mesh=mesh,
-    ):
-        yt_client.run_operation(operation_spec, sync=True)
+    if not dry_run:
+        with StderrReaderWorker(
+            prev_incarnation_id=prev_incarnation_id,
+            training_dir=training_dir,
+            yt_client_config_pickled=yt_client_config_pickled,
+            mode=proxy_stderr_mode,
+            mesh=mesh,
+        ):
+            yt_client.run_operation(operation_spec, sync=True)
+
+    run_info = YtRunInfo(
+        operation_spec=operation_spec.build(client=yt_client),
+    )
 
     tmp_dir.cleanup()
+
+    return run_info
 
 
 def run_local(
@@ -354,7 +366,8 @@ def run_local(
     yt_client: Optional[yt.YtClient] = None,
     wandb_enabled: bool = False,
     wandb_api_key: Optional[str] = None,
-) -> None:
+    dry_run: bool = False,
+) -> LocalRunInfo:
     sidecars = sidecars if sidecars is not None else []
 
     if mesh.node_count != 1:
@@ -362,10 +375,7 @@ def run_local(
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
-    training_dir = TrainingDir.create(yt_path)
-    prepare_training_dir(training_dir, yt_client)
     # TODO: respawn in docker
-
     # Fake YT job environment.
     os.environ["YT_OPERATION_ID"] = "1-2-3-4"
     os.environ["YT_JOB_ID"] = "a-b-c-d"
@@ -381,6 +391,7 @@ def run_local(
     for i in range(mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
+    training_dir = TrainingDir.create(yt_path)
     tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
 
     wrapped = runnable.make_local_command(
@@ -391,7 +402,10 @@ def run_local(
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
     )
-    return wrapped()
+    if not dry_run:
+        prepare_training_dir(training_dir, yt_client)
+        wrapped()
+    return LocalRunInfo()
 
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:

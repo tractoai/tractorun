@@ -459,7 +459,7 @@ def main() -> None:
 
 
 class _BytesEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         if isinstance(o, bytes):
             return o.decode("utf-8")
         else:

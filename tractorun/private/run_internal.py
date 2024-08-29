@@ -336,6 +336,7 @@ def run_tracto(
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
     if not dry_run:
+        prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
         with StderrReaderWorker(
             prev_incarnation_id=prev_incarnation_id,
             training_dir=training_dir,

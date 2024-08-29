@@ -31,8 +31,40 @@ def yt_instance() -> Generator[YtInstance, None, None]:
 
 
 @pytest.fixture(scope="session")
+def yt_instance_with_tensorproxy() -> Generator[YtInstance, None, None]:
+    yt_mode = os.environ.get("YT_MODE", "testcontainers")
+    if yt_mode == "testcontainers":
+        with YtInstanceTestContainers(image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/ytsaurus_local_with_tensorproxy:2024-08-28-11-02-10") as yt_instance:
+            yt_cli = yt_instance.get_client()
+            for i in range(60):
+                if yt_cli.exists("//home/tractorun/tensorproxy"):
+                    break
+                import time; time.sleep(5)
+            else:
+                raise Exception("Could not find tensorproxy")
+
+            yield yt_instance
+    elif yt_mode == "external":
+        proxy_url = os.environ["YT_PROXY"]
+        yt_token = os.environ.get("YT_TOKEN")
+        assert yt_token is not None
+        yield YtInstanceExternal(proxy_url=proxy_url, token=yt_token)
+    else:
+        raise ValueError(f"Unknown yt_mode: {yt_mode}")
+
+
+@pytest.fixture(scope="session")
 def yt_base_dir(yt_instance: YtInstance) -> str:
     yt_client = yt_instance.get_client()
+
+    path = f"//tmp/tractorun_tests/run_{get_random_string(13)}"
+    yt_client.create("map_node", path, recursive=True)
+    return path
+
+
+@pytest.fixture(scope="session")
+def yt_base_dir_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance) -> str:
+    yt_client = yt_instance_with_tensorproxy.get_client()
 
     path = f"//tmp/tractorun_tests/run_{get_random_string(13)}"
     yt_client.create("map_node", path, recursive=True)
@@ -43,6 +75,14 @@ def yt_base_dir(yt_instance: YtInstance) -> str:
 def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
     yt_client = yt_instance.get_client()
     path = f"{yt_base_dir}/{get_random_string(13)}"
+    yt_client.create("map_node", path)
+    return path
+
+
+@pytest.fixture(scope="function")
+def yt_path_with_tensorproxy(yt_instance_with_tensorproxy: YtInstance, yt_base_dir_with_tensorproxy: str) -> str:
+    yt_client = yt_instance_with_tensorproxy.get_client()
+    path = f"{yt_base_dir_with_tensorproxy}/{get_random_string(13)}"
     yt_client.create("map_node", path)
     return path
 

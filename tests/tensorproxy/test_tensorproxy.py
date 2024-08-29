@@ -6,13 +6,14 @@ from tests.utils import (
     run_config_file,
 )
 from tests.yt_instances import YtInstance
+from tractorun.stderr_reader import StderrMode
 
 
 DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
 
 
-def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
+def test_run_script(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:
+    yt_client = yt_instance_with_tensorproxy.get_client()
 
     tracto_cli = TractoCli(
         command=["python3", "/tractorun_tests/tensorproxy_script.py"],
@@ -23,13 +24,15 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
             "--tensorproxy.enabled",
             "1",
             "--resources.memory-limit",
-            "428000000000",
+            "8192000000",
             "--yt-path",
-            yt_path,
+            yt_path_with_tensorproxy,
             "--user-config",
-            json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
+            json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path_with_tensorproxy}),
             "--bind-local",
             f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
+            "--proxy-stderr-mode",
+            StderrMode.primary,
         ],
     )
     op_run = tracto_cli.run()
@@ -37,8 +40,9 @@ def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 
-def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
+# trigger tests 2
+def test_run_script_with_config(yt_instance_with_tensorproxy: YtInstance, yt_path_with_tensorproxy: str) -> None:
+    yt_client = yt_instance_with_tensorproxy.get_client()
 
     run_config = {
         "mesh": {
@@ -52,7 +56,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
         "user_config": {
             "use_ocdbt": False,
             "use_zarr3": False,
-            "checkpoint_path": yt_path,
+            "checkpoint_path": yt_path_with_tensorproxy,
         },
     }
     with run_config_file(run_config) as run_config_path:
@@ -65,13 +69,15 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
                 "--mesh.gpu-per-process",
                 "0",
                 "--resources.memory-limit",
-                "428000000000",
+                "8192000000",
                 "--yt-path",
-                yt_path,
+                yt_path_with_tensorproxy,
                 "--user-config",
-                json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path}),
+                json.dumps({"use_ocdbt": False, "use_zarr3": False, "checkpoint_path": yt_path_with_tensorproxy}),
                 "--bind-local",
                 f"{get_data_path('../data/tensorproxy_script.py')}:/tractorun_tests/tensorproxy_script.py",
+                "--proxy-stderr-mode",
+                StderrMode.primary,
             ],
         )
         op_run = tracto_cli.run()

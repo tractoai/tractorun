@@ -141,3 +141,24 @@ COPY . /src
 RUN pip install /src
 EOT
 }
+
+target "ytsaurus_local_with_tensorproxy" {
+  platforms = ["linux/amd64"]
+  tags = [
+    "${DOCKER_REPO}/ytsaurus_local_with_tensorproxy:${DOCKER_TAG}"
+  ]
+  args = {
+    "TENSORPROXY_BINARY_PATH" = "./tmp/tensorproxy"
+  }
+  dockerfile-inline = <<EOT
+FROM ghcr.io/dmi-feo/ytsaurus-local:0.4.0
+
+ARG TENSORPROXY_BINARY_PATH
+
+RUN mkdir /yt_data
+COPY $TENSORPROXY_BINARY_PATH /yt_data/tensorproxy
+RUN echo "#!/usr/bin/env bash \n export YT_CONFIG_PATCHES='{proxy={url=\"http://localhost:80\";enable_proxy_discovery=%false}; is_local_mode=%true}' \n yt create map_node //home/tractorun \n cat /yt_data/tensorproxy | yt upload //home/tractorun/tensorproxy" > /yt_post_init_scripts/upload_tensorproxy.sh
+RUN chmod +x /yt_post_init_scripts/upload_tensorproxy.sh
+
+EOT
+}

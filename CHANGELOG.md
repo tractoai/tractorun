@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.0 (2024-08-30)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.16.0...0.17.0)
+
+### Changes
+
+- NYT-655: add docker, dry run, and fail on invalid keys in the config (#58). [72083b9](https://github.com/tractoai/tractorun/commit/72083b94f5ab22d32dfc07dfd39be39843f0f2b2)
+    
+
 ## 0.16.0 (2024-08-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.15.0...0.16.0)

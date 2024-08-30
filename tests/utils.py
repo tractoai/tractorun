@@ -4,6 +4,7 @@ import os
 import random
 import string
 import subprocess
+import sys
 import tempfile
 from typing import (
     Any,
@@ -67,7 +68,7 @@ class TractoCli:
     def run(self) -> TractoCliRun:
         command, operation_title, task_title = self._prepare_command()
 
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stdout)
         process.wait()
         return TractoCliRun(
             process=process,
@@ -78,13 +79,13 @@ class TractoCli:
         command, operation_title, task_title = self._prepare_command()
         command.append("--dry-run")
 
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stdout)
         process.wait()
         run = TractoCliRun(
             process=process,
             operation_title=operation_title,
         )
-        assert run.is_exitcode_valid(), run.stderr
+        assert run.is_exitcode_valid()
         return json.loads(run.stdout)
 
     def _prepare_command(self) -> tuple[list[str], str, str]:

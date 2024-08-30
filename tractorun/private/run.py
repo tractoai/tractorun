@@ -1,9 +1,12 @@
 from typing import (
     Any,
-    Optional,
+    Literal,
 )
 
+from typing_extensions import overload
+
 from tractorun.bind import BindLocal
+from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.private.run_internal import (
@@ -12,9 +15,83 @@ from tractorun.private.run_internal import (
     run_tracto,
 )
 from tractorun.resources import Resources
+from tractorun.run_info import (
+    LocalRunInfo,
+    RunInfo,
+    YtRunInfo,
+)
 from tractorun.sidecar import Sidecar
 from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
+
+
+@overload
+def run_script(
+    command: list[str],
+    *,
+    yt_path: str,
+    mesh: Mesh,
+    docker_image: str,
+    resources: Resources,
+    tensorproxy: TensorproxySidecar,
+    user_config: dict[Any, Any] | None,
+    binds_local: list[BindLocal],
+    binds_local_lib: list[str],
+    sidecars: list[Sidecar],
+    env: list[EnvVariable],
+    local: Literal[True],
+    yt_operation_spec: dict[Any, Any] | None,
+    yt_task_spec: dict[Any, Any] | None,
+    proxy_stderr_mode: StderrMode,
+    docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
+) -> LocalRunInfo: ...
+
+
+@overload
+def run_script(
+    command: list[str],
+    *,
+    yt_path: str,
+    mesh: Mesh,
+    docker_image: str,
+    resources: Resources,
+    tensorproxy: TensorproxySidecar,
+    user_config: dict[Any, Any] | None,
+    binds_local: list[BindLocal],
+    binds_local_lib: list[str],
+    sidecars: list[Sidecar],
+    env: list[EnvVariable],
+    local: Literal[False],
+    yt_operation_spec: dict[Any, Any] | None,
+    yt_task_spec: dict[Any, Any] | None,
+    proxy_stderr_mode: StderrMode,
+    docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
+) -> YtRunInfo: ...
+
+
+@overload
+def run_script(
+    command: list[str],
+    *,
+    yt_path: str,
+    mesh: Mesh,
+    docker_image: str,
+    resources: Resources,
+    tensorproxy: TensorproxySidecar,
+    user_config: dict[Any, Any] | None,
+    binds_local: list[BindLocal],
+    binds_local_lib: list[str],
+    sidecars: list[Sidecar],
+    env: list[EnvVariable],
+    local: bool,
+    yt_operation_spec: dict[Any, Any] | None,
+    yt_task_spec: dict[Any, Any] | None,
+    proxy_stderr_mode: StderrMode,
+    docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
+) -> RunInfo: ...
 
 
 def run_script(
@@ -25,20 +102,22 @@ def run_script(
     docker_image: str,
     resources: Resources,
     tensorproxy: TensorproxySidecar,
-    user_config: Optional[dict[Any, Any]],
+    user_config: dict[Any, Any] | None,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: bool,
-    yt_operation_spec: Optional[dict[Any, Any]],
-    yt_task_spec: Optional[dict[Any, Any]],
+    yt_operation_spec: dict[Any, Any] | None,
+    yt_task_spec: dict[Any, Any] | None,
     proxy_stderr_mode: StderrMode,
-) -> None:
+    docker_auth: DockerAuthData | None,
+    dry_run: bool = False,
+) -> RunInfo:
     if binds_local is None:
         binds_local = []
     if local:
-        run_local(
+        return run_local(
             runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
@@ -46,9 +125,10 @@ def run_script(
             env=env,
             yt_client=None,
             tensorproxy=tensorproxy,
+            dry_run=dry_run,
         )
     else:
-        run_tracto(
+        return run_tracto(
             runnable=Command(command=command),
             yt_path=yt_path,
             mesh=mesh,
@@ -64,4 +144,6 @@ def run_script(
             proxy_stderr_mode=proxy_stderr_mode,
             yt_operation_spec=yt_operation_spec,
             yt_task_spec=yt_task_spec,
+            docker_auth=docker_auth,
+            dry_run=dry_run,
         )

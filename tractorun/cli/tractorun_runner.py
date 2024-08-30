@@ -10,16 +10,22 @@ from typing import (
 )
 
 import attrs
-import cattr
 import yaml
 
 from tractorun.bind import BindLocal
+from tractorun.docker_auth import (
+    DockerAuthData,
+    DockerAuthSecret,
+)
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
+from tractorun.private.docker_auth import DockerAuthInternal
+from tractorun.private.helpers import create_attrs_converter
 from tractorun.private.run import run_script
 from tractorun.resources import Resources
+from tractorun.run_info import RunInfo
 from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
@@ -72,6 +78,11 @@ class EnvVariableConfig:
     cypress_path: Optional[str] = None
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class DockerAuthSecretConfig:
+    cypress_path: str
+
+
 _T = TypeVar("_T")
 
 
@@ -95,46 +106,14 @@ class Config:
     sidecars: Optional[list[SidecarConfig]] = attrs.field(default=None)
     env: Optional[list[EnvVariableConfig]] = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
+    docker_auth_secret: Optional[DockerAuthSecretConfig] = attrs.field(default=None)
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
         with open(path, "r") as f:
             config = yaml.safe_load(f)
-        return cattr.structure(config, Config)
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EffectiveMeshConfig:
-    node_count: int
-    process_per_node: int
-    gpu_per_process: int
-    pool_trees: Optional[list[str]]
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EffectiveResourcesConfig:
-    cpu_limit: Optional[float]
-    memory_limit: Optional[int]
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EffectiveSidecarConfig:
-    command: list[str]
-    restart_policy: RestartPolicy
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EffectiveEnvVariableConfig:
-    name: str
-    value: Optional[str] = None
-    cypress_path: Optional[str] = None
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EffectiveTensorproxyConfig:
-    enabled: bool
-    restart_policy: RestartPolicy
-    yt_path: str
+        converter = create_attrs_converter()
+        return converter.structure(config, Config)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -150,14 +129,17 @@ class EffectiveConfig:
     proxy_stderr_mode: StderrMode
     command: list[str]
 
-    mesh: EffectiveMeshConfig
-    resources: EffectiveResourcesConfig
-    sidecars: list[EffectiveSidecarConfig]
-    env: list[EffectiveEnvVariableConfig]
-    tensorproxy: EffectiveTensorproxyConfig
+    mesh: Mesh
+    resources: Resources
+    sidecars: list[Sidecar]
+    env: list[EnvVariable]
+    tensorproxy: TensorproxySidecar
+    docker_auth_secret: DockerAuthData | None
+    dry_run: bool
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
+        # TODO: transform args into some special canonized object
         def _choose_value(args_value: _T, config_value: _T, default: Optional[_T] = None) -> _T:
             result = args_value if args_value is not None else config_value
             if result is None and default is not None:
@@ -220,6 +202,14 @@ class EffectiveConfig:
         if env is None:
             env = []
 
+        docker_auth_secret = None
+        if config.docker_auth_secret is not None:
+            docker_auth_secret = DockerAuthSecret(cypress_path=config.docker_auth_secret.cypress_path)
+        if args["docker_auth_secret.cypress_path"] is not None:
+            docker_auth_secret = DockerAuthSecret(
+                cypress_path=args["docker_auth_secret.cypress_path"],
+            )
+
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
             docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
@@ -235,14 +225,14 @@ class EffectiveConfig:
                 default=PROXY_STDERR_MODE_DEFAULT,
             ),
             sidecars=[
-                EffectiveSidecarConfig(
+                Sidecar(
                     command=sidecar.command,
                     restart_policy=sidecar.restart_policy,
                 )
                 for sidecar in sidecars
             ],
             env=[
-                EffectiveEnvVariableConfig(
+                EnvVariable(
                     name=e.name,
                     value=e.value,
                     cypress_path=e.cypress_path,
@@ -250,7 +240,7 @@ class EffectiveConfig:
                 for e in env
             ],
             command=command,
-            mesh=EffectiveMeshConfig(
+            mesh=Mesh(
                 node_count=_choose_value(
                     args_value=args["mesh.node_count"],
                     config_value=config.mesh.node_count,
@@ -271,7 +261,7 @@ class EffectiveConfig:
                     config_value=config.mesh.pool_trees,
                 ),
             ),
-            resources=EffectiveResourcesConfig(
+            resources=Resources(
                 cpu_limit=_choose_value(
                     args_value=args["resources.cpu_limit"],
                     config_value=config.resources.cpu_limit,
@@ -281,7 +271,7 @@ class EffectiveConfig:
                     config_value=config.resources.memory_limit,
                 ),
             ),
-            tensorproxy=EffectiveTensorproxyConfig(
+            tensorproxy=TensorproxySidecar(
                 enabled=_choose_value(
                     args_value=args["tensorproxy.enabled"],
                     config_value=config.tensorproxy.enabled,
@@ -298,6 +288,8 @@ class EffectiveConfig:
                     default=TENSORPROXY_RESTART_POLICY_DEFAULT,
                 ),
             ),
+            docker_auth_secret=docker_auth_secret,
+            dry_run=args["dry_run"],
         )
         return new_config
 
@@ -312,6 +304,16 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--yt-path", help="YT workdir", type=str)
     parser.add_argument("--run-config-path", type=str, help="path to tractorun config")
     parser.add_argument("--docker-image", type=str, help=f"docker image name. Default: {DEFAULT_DOCKER_IMAGE}")
+    parser.add_argument(
+        "--docker-auth-secret.cypress-path",
+        type=str,
+        help="Path to the cypress node with format {}".format(
+            json.dumps(
+                attrs.asdict(DockerAuthInternal(username="placeholder", password="placeholder", auth="placeholder")),  # type: ignore
+            ),
+        ),
+        default=None,
+    )
     parser.add_argument("--mesh.node-count", type=int, help=f"mesh node count. Default: {MESH_NODE_COUNT_DEFAULT}")
     parser.add_argument(
         "--mesh.process-per-node", type=int, help=f"mesh process per node. Default: {MESH_PROCESS_PER_NODE_DEFAULT}"
@@ -370,83 +372,98 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--env",
         action="append",
-        help='set env variable by value or from cypress node. JSON message like `{"name": "foo", "value: "real value", "cypress_path": "//tmp/foo"}`',
+        help="set env variable by value or from cypress node. JSON message like {} or {}".format(
+            EnvVariable(
+                name="placeholder",
+                value="placeholder",
+            ),
+            EnvVariable(
+                name="placeholder",
+                cypress_path="placeholder",
+            ),
+        ),
     )
-    parser.add_argument("--dump-effective-config", help="print effective configuration", action="store_true")
+    parser.add_argument("--dry-run", help="get internal information without running an operation", action="store_true")
     parser.add_argument("command", nargs="*", help="command to run")
     return parser
 
 
-def main() -> None:
+def make_configuration(cli_args: list) -> tuple[dict, Config, EffectiveConfig]:
     parser = make_cli_parser()
-    args = vars(parser.parse_args(sys.argv[1:]))
+    args = vars(parser.parse_args(cli_args))
     file_config_content = Config.load_yaml(args["run_config_path"]) if args["run_config_path"] else Config()
     effective_config = EffectiveConfig.configure(
         config=file_config_content,
         args=args,
     )
+    return args, file_config_content, effective_config
 
-    if args["dump_effective_config"]:
-        print("Parsed args:")
-        print(json.dumps(args, indent=4))
-        print("\nConfig from file:")
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class ConfigurationDebug:
+    file_config: Config
+    effective_config: EffectiveConfig
+    cli_args: dict
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class CliRunInfo:
+    configuration: ConfigurationDebug
+    run_info: RunInfo | None
+
+
+def main() -> None:
+    args, file_config_content, effective_config = make_configuration(sys.argv[1:])
+
+    run_info = None
+    try:
+        run_info = run_script(
+            command=effective_config.command,
+            mesh=effective_config.mesh,
+            resources=effective_config.resources,
+            yt_path=effective_config.yt_path,
+            docker_image=effective_config.docker_image,
+            binds_local=effective_config.bind_local,
+            binds_local_lib=effective_config.bind_local_lib,
+            tensorproxy=effective_config.tensorproxy,
+            proxy_stderr_mode=effective_config.proxy_stderr_mode,
+            sidecars=effective_config.sidecars,
+            env=effective_config.env,
+            user_config=effective_config.user_config,
+            yt_operation_spec=effective_config.yt_operation_spec,
+            yt_task_spec=effective_config.yt_task_spec,
+            local=effective_config.local,
+            docker_auth=effective_config.docker_auth_secret,
+            dry_run=effective_config.dry_run,
+        )
+    except Exception:
+        if not effective_config.dry_run:
+            raise
+    if effective_config.dry_run:
+        cli_run_info = CliRunInfo(
+            configuration=ConfigurationDebug(
+                file_config=file_config_content,
+                cli_args=args,
+                effective_config=effective_config,
+            ),
+            run_info=run_info,
+        )
+
         print(
             json.dumps(
-                attrs.asdict(file_config_content),  # type: ignore
+                attrs.asdict(cli_run_info),  # type: ignore
                 indent=4,
+                cls=_BytesEncoder,
             ),
         )
-        print("\nEffective config:")
-        print(
-            json.dumps(
-                attrs.asdict(effective_config),  # type: ignore
-                indent=4,
-            ),
-        )
-        return
 
-    run_script(
-        command=effective_config.command,
-        mesh=Mesh(
-            node_count=effective_config.mesh.node_count,
-            process_per_node=effective_config.mesh.process_per_node,
-            gpu_per_process=effective_config.mesh.gpu_per_process,
-            pool_trees=effective_config.mesh.pool_trees,
-        ),
-        resources=Resources(
-            memory_limit=effective_config.resources.memory_limit,
-            cpu_limit=effective_config.resources.cpu_limit,
-        ),
-        yt_path=effective_config.yt_path,
-        docker_image=effective_config.docker_image,
-        binds_local=effective_config.bind_local,
-        binds_local_lib=effective_config.bind_local_lib,
-        tensorproxy=TensorproxySidecar(
-            enabled=effective_config.tensorproxy.enabled,
-            yt_path=effective_config.tensorproxy.yt_path,
-            restart_policy=effective_config.tensorproxy.restart_policy,
-        ),
-        proxy_stderr_mode=effective_config.proxy_stderr_mode,
-        sidecars=[
-            Sidecar(
-                command=s.command,
-                restart_policy=s.restart_policy,
-            )
-            for s in effective_config.sidecars
-        ],
-        env=[
-            EnvVariable(
-                name=e.name,
-                value=e.value,
-                cypress_path=e.cypress_path,
-            )
-            for e in effective_config.env
-        ],
-        user_config=effective_config.user_config,
-        yt_operation_spec=effective_config.yt_operation_spec,
-        yt_task_spec=effective_config.yt_task_spec,
-        local=effective_config.local,
-    )
+
+class _BytesEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        if isinstance(o, bytes):
+            return o.decode("utf-8")
+        else:
+            return super().default(o)
 
 
 if __name__ == "__main__":

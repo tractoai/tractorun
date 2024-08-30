@@ -1,9 +1,10 @@
 __all__ = [
     "BaseTractorunException",
-    "StderrReaderException",
+    "StderrReaderError",
     "TractorunConfigError",
     "TractorunWandbError",
     "TractorunConfigurationError",
+    "DockerAuthDataError",
 ]
 
 
@@ -11,7 +12,7 @@ class BaseTractorunException(Exception):
     pass
 
 
-class StderrReaderException(BaseTractorunException):
+class StderrReaderError(BaseTractorunException):
     pass
 
 
@@ -24,4 +25,8 @@ class TractorunConfigurationError(BaseTractorunException):
 
 
 class TractorunWandbError(BaseTractorunException):
+    pass
+
+
+class DockerAuthDataError(BaseTractorunException):
     pass

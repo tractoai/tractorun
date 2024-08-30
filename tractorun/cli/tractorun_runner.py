@@ -10,6 +10,7 @@ from typing import (
 )
 
 import attrs
+from cattrs import ClassValidationError
 import yaml
 
 from tractorun.bind import BindLocal
@@ -113,7 +114,10 @@ class Config:
         with open(path, "r") as f:
             config = yaml.safe_load(f)
         converter = create_attrs_converter()
-        return converter.structure(config, Config)
+        try:
+            return converter.structure(config, Config)
+        except ClassValidationError as e:
+            raise TractorunConfigError from e
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

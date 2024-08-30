@@ -4,7 +4,6 @@ import os
 import random
 import string
 import subprocess
-import sys
 import tempfile
 from typing import (
     Any,

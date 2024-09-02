@@ -244,6 +244,7 @@ def run_tracto(
 
     yt_client_config_for_job: dict = copy.deepcopy(yt_client_config)
 
+    # for tests only
     yt_config_for_job_patch_yson_string = os.environ.get("TRACTORUN_YT_CONFIG_FOR_JOB_PATCH")
     if yt_config_for_job_patch_yson_string:
         patch = yt.yson.loads(yt_config_for_job_patch_yson_string.encode())

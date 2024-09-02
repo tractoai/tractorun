@@ -22,9 +22,11 @@ from tractorun.docker_auth import (
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.private.docker_auth import DockerAuthInternal
-from tractorun.private.helpers import create_attrs_converter
+from tractorun.private.helpers import (
+    create_attrs_converter,
+    get_default_docker_image,
+)
 from tractorun.private.run import run_script
 from tractorun.resources import Resources
 from tractorun.run_info import RunInfo
@@ -217,7 +219,11 @@ class EffectiveConfig:
 
         new_config = EffectiveConfig(
             yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
-            docker_image=_choose_value(args_value=args["docker_image"], config_value=config.docker_image),
+            docker_image=_choose_value(
+                args_value=args["docker_image"],
+                config_value=config.docker_image,
+                default=get_default_docker_image(),
+            ),
             user_config=_choose_value(args_value=user_config, config_value=config.user_config),
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
@@ -308,7 +314,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--yt-path", help="YT workdir", type=str)
     parser.add_argument("--run-config-path", type=str, help="path to tractorun config")
-    parser.add_argument("--docker-image", type=str, help=f"docker image name. Default: {DEFAULT_DOCKER_IMAGE}")
+    parser.add_argument("--docker-image", type=str, help=f"docker image name. Default: {get_default_docker_image()}")
     parser.add_argument(
         "--docker-auth-secret.cypress-path",
         type=str,

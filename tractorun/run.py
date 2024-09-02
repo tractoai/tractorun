@@ -14,7 +14,7 @@ from tractorun.bind import BindLocal
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE as _DEFAULT_DOCKER_IMAGE
+from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
 from tractorun.private.run_internal import UserFunction as _UserFunction
 from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_and_get_toolbox
 from tractorun.private.run_internal import run_local as _run_local
@@ -40,7 +40,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: dict[Any, Any] | None = ...,
-    docker_image: str = ...,
+    docker_image: str | None = ...,
     resources: Resources | None = ...,
     yt_client: yt.YtClient | None = ...,
     binds_local: list[BindLocal] | None = ...,
@@ -66,7 +66,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: dict[Any, Any] | None = ...,
-    docker_image: str = ...,
+    docker_image: str | None = ...,
     resources: Resources | None = ...,
     yt_client: yt.YtClient | None = ...,
     binds_local: list[BindLocal] | None = ...,
@@ -91,7 +91,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: dict[Any, Any] | None = None,
-    docker_image: str = _DEFAULT_DOCKER_IMAGE,
+    docker_image: str | None = None,
     resources: Resources | None = None,
     yt_client: yt.YtClient | None = None,
     binds_local: list[BindLocal] | None = None,
@@ -107,6 +107,8 @@ def run(
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> YtRunInfo | LocalRunInfo:
+    if docker_image is None:
+        docker_image = _get_default_docker_image()
     if local:
         return _run_local(
             _UserFunction(

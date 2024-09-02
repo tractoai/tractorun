@@ -6,6 +6,8 @@ from typing import (
 )
 import uuid
 
+from _pytest.monkeypatch import MonkeyPatch
+import pytest
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,10 +20,12 @@ from tests.utils import (
     get_data_path,
 )
 from tests.yt_instances import YtInstance
+from tractorun.backend.generic import GenericBackend
 from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -238,3 +242,55 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_
     op_run = tracto_cli.run()
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=2)
+
+
+@pytest.mark.parametrize(
+    "docker_image,expected",
+    [
+        ("", DEFAULT_DOCKER_IMAGE),
+        ("custom_image", "custom_image"),
+    ],
+)
+def test_docker_image_script(yt_path: str, docker_image: str, expected: str, monkeypatch: MonkeyPatch) -> None:
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
+            "--mesh.node-count",
+            "1",
+            "--mesh.process-per-node",
+            "1",
+            "--mesh.gpu-per-process",
+            "0",
+            "--yt-path",
+            yt_path,
+            "--bind-local",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests/torch_run_script.py",
+        ],
+        docker_image=None,
+    )
+    monkeypatch.setenv("YT_BASE_LAYER", docker_image)
+    run_info = tracto_cli.dry_run()
+    assert run_info["configuration"]["effective_config"]["docker_image"] == expected
+    assert run_info["run_info"]["operation_spec"]["tasks"]["task"]["docker_image"] == expected
+
+
+@pytest.mark.parametrize(
+    "docker_image,expected",
+    [
+        ("", DEFAULT_DOCKER_IMAGE),
+        ("custom_image", "custom_image"),
+    ],
+)
+def test_docker_image_pickle(yt_path: str, docker_image: str, expected: str, monkeypatch: MonkeyPatch) -> None:
+    def checker() -> None:
+        pass
+
+    monkeypatch.setenv("YT_BASE_LAYER", docker_image)
+    run_info = run(
+        checker,
+        yt_path=yt_path,
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        backend=GenericBackend(),
+        dry_run=True,
+    )
+    assert run_info.operation_spec["tasks"]["task"]["docker_image"] == expected

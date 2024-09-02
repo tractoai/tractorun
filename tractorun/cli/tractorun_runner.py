@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+import traceback
 from typing import (
     Any,
     Optional,
@@ -414,12 +415,14 @@ class ConfigurationDebug:
 class CliRunInfo:
     configuration: ConfigurationDebug
     run_info: RunInfo | None
+    errors: list[Any]
 
 
 def main() -> None:
     args, file_config_content, effective_config = make_configuration(sys.argv[1:])
 
     run_info = None
+    errors = []
     try:
         run_info = run_script(
             command=effective_config.command,
@@ -441,6 +444,7 @@ def main() -> None:
             dry_run=effective_config.dry_run,
         )
     except Exception:
+        errors.append(traceback.format_exc())
         if not effective_config.dry_run:
             raise
     if effective_config.dry_run:
@@ -451,23 +455,22 @@ def main() -> None:
                 effective_config=effective_config,
             ),
             run_info=run_info,
+            errors=errors,
         )
 
         print(
             json.dumps(
                 attrs.asdict(cli_run_info),  # type: ignore
                 indent=4,
-                cls=_BytesEncoder,
+                default=_json_encoder,
             ),
         )
 
 
-class _BytesEncoder(json.JSONEncoder):
-    def default(self, o: Any) -> Any:
-        if isinstance(o, bytes):
-            return o.decode("utf-8")
-        else:
-            return super().default(o)
+def _json_encoder(value: Any) -> Any:
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    return str(value)
 
 
 if __name__ == "__main__":

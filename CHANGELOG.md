@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.18.0 (2024-09-02)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.17.0...0.18.0)
+
+### Changes
+
+- Fix dry-run serializer, add traceback to the dry run output (#60). [59a1544](https://github.com/tractoai/tractorun/commit/59a154464c4f41ba597b6153502765c7504f1a0c)
+    
+- NYT-652: add 'fail on unknown keys' test (#59). [0509a29](https://github.com/tractoai/tractorun/commit/0509a29a5ffffbc4731a88a0df5b493fdb52439e)
+    
+
 ## 0.17.0 (2024-08-30)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.16.0...0.17.0)

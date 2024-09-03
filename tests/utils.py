@@ -59,7 +59,7 @@ class TractoCliRun:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TractoCli:
     _command: list[str]
-    _docker_image: str = attrs.field(default=DOCKER_IMAGE)
+    _docker_image: str | None = attrs.field(default=DOCKER_IMAGE)
     _args: list[str]
     _task_spec: dict[str, Any] = attrs.field(default={})
     _operation_spec: dict[str, Any] = attrs.field(default={})
@@ -91,10 +91,14 @@ class TractoCli:
         operation_title = f"test operation {uuid.uuid4()}"
         task_title = f"test operation's task {uuid.uuid4()}"
 
+        def _get_docker_image_arg() -> tuple:
+            if self._docker_image is not None:
+                return ("--docker-image", self._docker_image)
+            return tuple()
+
         command = [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
-            "--docker-image",
-            self._docker_image,
+            *_get_docker_image_arg(),
             "--yt-operation-spec",
             json.dumps(
                 {

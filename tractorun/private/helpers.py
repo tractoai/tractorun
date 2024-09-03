@@ -1,4 +1,5 @@
 import json
+import os
 from typing import (
     Generic,
     Type,
@@ -8,6 +9,8 @@ from typing import (
 import attrs
 import cattrs
 import yt.wrapper as yt
+
+from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 
 
 _T = TypeVar("_T")
@@ -43,3 +46,8 @@ def create_prerequisite_client(yt_client: yt.YtClient, prerequisite_transaction_
         except Exception:
             pass
     return yt.create_client_with_command_params(yt_client, prerequisite_transaction_ids=prerequisite_transaction_ids)
+
+
+def get_default_docker_image() -> str:
+    # use the same env var as yt sdk
+    return os.environ.get("YT_BASE_LAYER") or DEFAULT_DOCKER_IMAGE

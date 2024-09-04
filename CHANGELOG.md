@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.19.0 (2024-09-03)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.18.0...0.19.0)
+
+### Changes
+
+- NYT-664: use YT_BASE_LAYER value as a default tractorun docker image (#61). [2ab72f1](https://github.com/tractoai/tractorun/commit/2ab72f16b214d6aa277871bb7e21c4e5d404367f)
+    
+
 ## 0.18.0 (2024-09-02)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.17.0...0.18.0)

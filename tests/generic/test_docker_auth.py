@@ -72,6 +72,7 @@ def create_yt_secret(yt_client: yt.YtClient, secret: dict, yt_path: str) -> str:
 )
 def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
+    print(yt_client)
 
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
 

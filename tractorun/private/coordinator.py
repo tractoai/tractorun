@@ -1,5 +1,6 @@
 import datetime
 import time
+import sys
 
 import attrs
 from yt import wrapper as yt
@@ -40,13 +41,17 @@ class CoordinatorFactory:
             return self._make_subordinate(self_index=self_index)
 
     def _wait_for_gang_barrier(self, incarnation_path) -> None:
+        print("Waiting for all peers to start", file=sys.stderr)
         while True:
             try:
                 topology = self._yt_client.get(incarnation_path + "/@topology")
-                if all(peer["address"] != "" for peer in topology):
+                print(topology, file=sys.stderr)
+                if all(peer["endpoint"] != "" for peer in topology):
+                    print("All peers started", file=sys.stderr)
                     break
             except Exception:
-                time.sleep(1.0)
+                pass
+            time.sleep(1.0)
 
     def _make_primary(self, self_index: int) -> "Coordinator":
         incarnation_transaction_id = self._yt_client.start_transaction()

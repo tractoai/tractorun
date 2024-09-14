@@ -257,6 +257,11 @@ def run_tracto(
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
 
+    # "fail_on_job_restart" is useful for gang operations,
+    # so let's turn it on unless disabled explicitly.
+    if "fail_on_job_restart" not in yt_operation_spec:
+        yt_operation_spec["fail_on_job_restart"] = True
+
     bootstrap_config = BootstrapConfig(
         mesh=mesh,
         sidecars=sidecars,

@@ -1,6 +1,6 @@
 import datetime
-import time
 import sys
+import time
 
 import attrs
 from yt import wrapper as yt
@@ -40,7 +40,7 @@ class CoordinatorFactory:
         else:
             return self._make_subordinate(self_index=self_index)
 
-    def _wait_for_gang_barrier(self, incarnation_path) -> None:
+    def _wait_for_gang_barrier(self, incarnation_path: str) -> None:
         print("Waiting for all peers to start", file=sys.stderr)
         while True:
             try:

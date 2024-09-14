@@ -1,4 +1,5 @@
 import datetime
+import sys
 import time
 
 import attrs
@@ -38,6 +39,19 @@ class CoordinatorFactory:
             return self._make_primary(self_index=self_index)
         else:
             return self._make_subordinate(self_index=self_index)
+
+    def _wait_for_gang_barrier(self, incarnation_path: str) -> None:
+        print("Waiting for all peers to start", file=sys.stderr)
+        while True:
+            try:
+                topology = self._yt_client.get(incarnation_path + "/@topology")
+                print(topology, file=sys.stderr)
+                if all(peer["address"] != "" for peer in topology):
+                    print("All peers started", file=sys.stderr)
+                    break
+            except Exception:
+                pass
+            time.sleep(1.0)
 
     def _make_primary(self, self_index: int) -> "Coordinator":
         incarnation_transaction_id = self._yt_client.start_transaction()
@@ -87,7 +101,7 @@ class CoordinatorFactory:
 
             topology = [
                 {
-                    "endpoint": self._self_endpoint,
+                    "address": self._self_endpoint,
                     "job_id": self._job_id,
                 },
             ] + [
@@ -97,6 +111,8 @@ class CoordinatorFactory:
                 incarnation_path + "/@topology",
                 topology,
             )
+
+        self._wait_for_gang_barrier(incarnation_path)
 
         return Coordinator(
             self_index=self_index,
@@ -142,9 +158,12 @@ class CoordinatorFactory:
                 primary_endpoint = incarnation_yt_client.get(
                     incarnation_path + "/@primary_endpoint",
                 )
+
+                self._wait_for_gang_barrier(incarnation_path)
             except Exception:
                 time.sleep(1.0)
                 continue
+
             return Coordinator(
                 self_index=self_index,
                 incarnation_id=incarnation_id,

@@ -188,7 +188,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, yt_path: str, mnist
                 print("Saved checkpoint after batch with index", batch_idx, file=sys.stderr)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    def _run():
+    def _run() -> None:
         run(
             train,
             backend=Tractorch(),

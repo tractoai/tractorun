@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.20.0 (2024-09-14)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.19.0...0.20.0)
+
+### Changes
+
+- Wait for the gang operation barrier before coordinator creation (#64). [ba46f64](https://github.com/tractoai/tractorun/commit/ba46f6451a5cebf48313ef67b5554fbd191de4e6)
+    
+- Set fail_on_job_restart by default in tractorun (#63). [87d391f](https://github.com/tractoai/tractorun/commit/87d391f5985d26f1ef6fb28d49ca368082a9d6fa)
+    
+
 ## 0.19.0 (2024-09-03)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.18.0...0.19.0)

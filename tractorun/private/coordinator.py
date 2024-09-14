@@ -46,7 +46,7 @@ class CoordinatorFactory:
             try:
                 topology = self._yt_client.get(incarnation_path + "/@topology")
                 print(topology, file=sys.stderr)
-                if all(peer["endpoint"] != "" for peer in topology):
+                if all(peer["address"] != "" for peer in topology):
                     print("All peers started", file=sys.stderr)
                     break
             except Exception:
@@ -101,7 +101,7 @@ class CoordinatorFactory:
 
             topology = [
                 {
-                    "endpoint": self._self_endpoint,
+                    "address": self._self_endpoint,
                     "job_id": self._job_id,
                 },
             ] + [

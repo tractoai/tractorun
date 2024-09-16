@@ -141,14 +141,15 @@ class CoordinatorFactory:
                 ):
                     raise RuntimeError("Operation id mismatch")
 
-                incarnation_transaction_id: str = self._yt_client.get(
-                    incarnation_path + "/@incarnation_transaction_id",
-                )
-                assert incarnation_transaction_id is not None
-                incarnation_yt_client = create_prerequisite_client(
-                    self._yt_client,
-                    [incarnation_transaction_id],
-                )
+                # incarnation_transaction_id: str = self._yt_client.get(
+                #     incarnation_path + "/@incarnation_transaction_id",
+                # )
+                # assert incarnation_transaction_id is not None
+                # incarnation_yt_client = create_prerequisite_client(
+                #     self._yt_client,
+                #     [incarnation_transaction_id],
+                # )
+                incarnation_yt_client = self._yt_client
 
                 incarnation_yt_client.set(
                     incarnation_path + f"/@topology/{self_index}",

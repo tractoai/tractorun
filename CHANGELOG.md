@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.21.0 (2024-09-16)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.20.0...0.21.0)
+
+### Changes
+
+- Add distributed test, add logs to coordinator (#66). [4ee23b7](https://github.com/tractoai/tractorun/commit/4ee23b76f141b03081711e6603c7e5c7e81882c1)
+    
+- Update README.md (#65). [d0df0fa](https://github.com/tractoai/tractorun/commit/d0df0fa95a5f8e3994445321913bd2a160cc5ae9)
+    
+
 ## 0.20.0 (2024-09-14)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.19.0...0.20.0)

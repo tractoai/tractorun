@@ -49,8 +49,8 @@ class CoordinatorFactory:
                 if all(peer["address"] != "" for peer in topology):
                     print("All peers started", file=sys.stderr)
                     break
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"_wait_for_gang_barrier raised exception {e}", file=sys.stderr)
             time.sleep(1.0)
 
     def _make_primary(self, self_index: int) -> "Coordinator":
@@ -160,7 +160,8 @@ class CoordinatorFactory:
                 )
 
                 self._wait_for_gang_barrier(incarnation_path)
-            except Exception:
+            except Exception as e:
+                print(f"_make_subordinate raised exception {e}", file=sys.stderr)
                 time.sleep(1.0)
                 continue
 

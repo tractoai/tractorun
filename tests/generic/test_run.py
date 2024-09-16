@@ -92,6 +92,23 @@ def test_run_torch_simple(yt_instance: YtInstance, yt_path: str, mnist_ds_path: 
     )
 
 
+def test_run_torch_distributed(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    train_func = _get_simple_train(mnist_ds_path)
+
+    mesh = Mesh(node_count=2, process_per_node=1, gpu_per_process=0)
+    # The operation did not fail => success!
+    run(
+        train_func,
+        backend=Tractorch(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+    )
+
+
 def test_run_with_spec(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 

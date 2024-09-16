@@ -42,6 +42,10 @@ YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests generic test_
 Just run `Create release` action.
 
 ### Build and upload a wheel
+Just run `Build and upload to internal pypi` action.
+
+Or you can do it manually, if you are brave enough:
+
 - log in to https://artifactory.nebius.dev/ui/packages
 - go to `Welcome, username` -> `Edit Profile` -> `Generate an Identity Token`
 - make your `~/.pypirc` look this way:

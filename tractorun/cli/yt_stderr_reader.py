@@ -7,7 +7,7 @@ from yt.wrapper.errors import YtResolveError
 
 from tractorun.private.stderr_reader import (
     YtStderrReader,
-    get_job_stderr,
+    get_job_stderr_with_retry,
 )
 from tractorun.private.training_dir import TrainingDir
 
@@ -51,7 +51,7 @@ def main() -> None:
     operation_id = yt_client.get(incarnation_path + "/@incarnation_operation_id")
     job_id = yt_client.get(incarnation_path + f"/@topology/{args.peer_index}/job_id")
 
-    stderr_getter = get_job_stderr(yt_client=yt_client, operation_id=operation_id, job_id=job_id)
+    stderr_getter = get_job_stderr_with_retry(yt_client=yt_client, operation_id=operation_id, job_id=job_id)
 
     if args.follow:
         reader = YtStderrReader(stderr_getter=stderr_getter)

@@ -214,6 +214,7 @@ def run_tracto(
     binds_local: list[BindLocal] | None = None,
     binds_local_lib: list[str] | None = None,
     tensorproxy: TensorproxySidecar | None = None,
+    no_wait: bool = False,
     sidecars: list[Sidecar] | None = None,
     env: list[EnvVariable] | None = None,
     resources: Resources | None = None,
@@ -251,6 +252,9 @@ def run_tracto(
         yt.common.update_inplace(yt_client_config_for_job, patch)
 
     yt_client_config_for_job_pickled = base64.b64encode(pickle.dumps(yt_client_config_for_job)).decode("utf-8")
+
+    # detached mode only applies to the local client
+    yt_client.config["detached"] = True if no_wait else False
 
     tmp_dir = tempfile.TemporaryDirectory()
     training_dir = TrainingDir.create(yt_path)
@@ -341,6 +345,8 @@ def run_tracto(
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
+    operation_id = None
+    is_sync = not no_wait
     if not dry_run:
         prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
         with StderrReaderWorker(
@@ -350,10 +356,13 @@ def run_tracto(
             mode=proxy_stderr_mode,
             mesh=mesh,
         ):
-            yt_client.run_operation(operation_spec, sync=True)
+            operation = yt_client.run_operation(operation_spec, sync=is_sync)
+            assert isinstance(operation, yt.Operation)
+            operation_id = operation.id
 
     run_info = YtRunInfo(
         operation_spec=operation_spec.build(client=yt_client),
+        operation_id=operation_id,
     )
 
     tmp_dir.cleanup()

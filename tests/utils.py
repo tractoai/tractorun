@@ -35,12 +35,17 @@ class TractoCliRun:
     def is_exitcode_valid(self, exit_code: int = 0) -> bool:
         return self._process.returncode == exit_code
 
-    def is_operation_state_valid(self, yt_client: yt.YtClient, job_count: int) -> bool:
+    def get_operation_info(self, yt_client: yt.YtClient) -> dict:
         operations = yt_client.list_operations(filter=self._operation_title)["operations"]
         assert len(operations) == 1
 
         operation_id = operations[0]["id"]
-        operation_spec = yt_client.get_operation(operation_id)["spec"]
+        operation_info = yt_client.get_operation(operation_id)
+        return operation_info
+
+    def is_operation_state_valid(self, yt_client: yt.YtClient, job_count: int) -> bool:
+        operation_info = self.get_operation_info(yt_client)
+        operation_spec = operation_info["spec"]
         return operation_spec["tasks"]["task"]["job_count"] == job_count
 
     @property

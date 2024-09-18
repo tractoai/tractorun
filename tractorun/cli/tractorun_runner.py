@@ -45,6 +45,7 @@ TENSORPROXY_ENABLED_DEFAULT = False
 TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
+NO_WAIT_DEFAULT = False
 PROXY_STDERR_MODE_DEFAULT = StderrMode.disabled
 
 
@@ -100,6 +101,7 @@ class Config:
     yt_operation_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     local: Optional[bool] = attrs.field(default=None)
+    no_wait: Optional[bool] = attrs.field(default=None)
     bind_local: Optional[list[str]] = attrs.field(default=None)
     bind_local_lib: Optional[list[str]] = attrs.field(default=None)
     proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
@@ -131,6 +133,7 @@ class EffectiveConfig:
     yt_operation_spec: Optional[dict[str, Any]]
     yt_task_spec: Optional[dict[str, Any]]
     local: bool
+    no_wait: bool
     bind_local: list[BindLocal]
     bind_local_lib: list[str]
     proxy_stderr_mode: StderrMode
@@ -228,6 +231,7 @@ class EffectiveConfig:
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
+            no_wait=_choose_value(args_value=args["no_wait"], config_value=config.no_wait, default=NO_WAIT_DEFAULT),
             bind_local=effective_binds,
             bind_local_lib=bind_lib,
             proxy_stderr_mode=_choose_value(
@@ -381,6 +385,12 @@ def make_cli_parser() -> argparse.ArgumentParser:
         help="Proxy jobs stderr to terminal. Mode: " + ", ".join(m for m in StderrMode),
     )
     parser.add_argument(
+        "--no-wait",
+        action="store_true",
+        default=None,
+        help=f"Don't create transaction and don't wait for operation to complete. Default {NO_WAIT_DEFAULT}",
+    )
+    parser.add_argument(
         "--env",
         action="append",
         help="set env variable by value or from cypress node. JSON message like {} or {}".format(
@@ -446,6 +456,7 @@ def main() -> None:
             yt_operation_spec=effective_config.yt_operation_spec,
             yt_task_spec=effective_config.yt_task_spec,
             local=effective_config.local,
+            no_wait=effective_config.no_wait,
             docker_auth=effective_config.docker_auth_secret,
             dry_run=effective_config.dry_run,
         )

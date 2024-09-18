@@ -12,6 +12,7 @@ class RunInfo:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class YtRunInfo(RunInfo):
     operation_spec: dict
+    operation_id: str | None
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

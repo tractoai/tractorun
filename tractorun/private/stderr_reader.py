@@ -66,12 +66,23 @@ class YtStderrReader:
 
 
 def get_job_stderr(
+    yt_client: yt.YtClient,
+    operation_id: str,
+    job_id: str,
+) -> Callable[[], bytes]:
+    def _wrapped() -> bytes:
+        return yt_client.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
+
+    return _wrapped
+
+
+def get_job_stderr_with_retry(
     yt_client: yt.YtClient, operation_id: str, job_id: str, retry_interval: float = YT_RETRY_INTERVAL
 ) -> Callable[[], bytes]:
     def _wrapped() -> bytes:
         while True:
             try:
-                data = yt_client.get_job_stderr(operation_id=operation_id, job_id=job_id).read()
+                data = get_job_stderr(yt_client=yt_client, operation_id=operation_id, job_id=job_id)()
                 return data
             except YtError:
                 # TODO: add debug logs
@@ -122,7 +133,9 @@ class StderrReaderWorker:
         output_streams: list[tuple[str, Generator[bytes, None, None]]] = []
         for job_id in job_ids:
             stderr_getter = get_job_stderr(
-                yt_client=yt_client, operation_id=operation_id, job_id=job_id, retry_interval=self._yt_retry_interval
+                yt_client=yt_client,
+                operation_id=operation_id,
+                job_id=job_id,
             )
             output_streams.append(
                 (

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.22.0 (2024-09-18)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.21.0...0.22.0)
+
+### Changes
+
+- NYT-689: add nowait mode and transaction for 'wait' mode (#69). [287c8b5](https://github.com/tractoai/tractorun/commit/287c8b5f16e366eb7d3ee09d6add1aa30333224c)
+    
+- NYT-693: don't retry yt errors in stderr reader (#68). [fab612a](https://github.com/tractoai/tractorun/commit/fab612aa6d23780e708ff68c79b9f8654480d343)
+    
+
 ## 0.21.0 (2024-09-16)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.20.0...0.21.0)

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.23.0 (2024-09-21)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.22.0...0.23.0)
+
+### Changes
+
+- NYT-703: add attach_external_libs (#72). [93ea9b6](https://github.com/tractoai/tractorun/commit/93ea9b61f05f32d9d9fbda9734735b79c418c5bb)
+    
+- Fix getting new operation id in stderr reader (#71). [93fddad](https://github.com/tractoai/tractorun/commit/93fddad65cd2e7009418375ea67fda054751537b)
+    
+
 ## 0.22.0 (2024-09-18)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.21.0...0.22.0)

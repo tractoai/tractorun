@@ -226,3 +226,40 @@ def test_multiple_processes(yt_path: str, yt_instance: YtInstance, capsys: Captu
     )
     captured = capsys.readouterr()
     assert message in captured.out
+
+
+def test_read_two_operations(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    key = "iter_id"
+
+    def checker(toolbox: Toolbox) -> None:
+        user_config = toolbox.get_user_config()
+        id_ = user_config[key]
+        print(f"message {id_}", file=sys.stderr)
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+        user_config={key: "1"},
+    )
+    captured = capsys.readouterr()
+    assert "message 1" in captured.out
+
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+        user_config={key: "2"},
+    )
+    captured = capsys.readouterr()
+    assert "message 2" in captured.out, captured.err

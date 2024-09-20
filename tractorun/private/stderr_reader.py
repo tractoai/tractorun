@@ -108,9 +108,7 @@ class StderrReaderWorker:
         yt_config = pickle.loads(base64.b64decode(self._yt_client_config_pickled))
         yt_client = yt.YtClient(config=yt_config)
 
-        incarnation = self._prev_incarnation_id
-        topology = []
-        operation_id = None
+        incarnation, topology, operation_id = self._prev_incarnation_id, [], None
         while (
             incarnation == self._prev_incarnation_id or operation_id is None or len(topology) != self._mesh.peer_count
         ):
@@ -121,9 +119,14 @@ class StderrReaderWorker:
                 incarnation_path = self._training_dir.get_incarnation_path(incarnation)
                 operation_id = yt_client.get(incarnation_path + "/@incarnation_operation_id")
                 topology = yt_client.get(incarnation_path + "/@topology")
+                # print(f"1 reader has {incarnation} {operation_id} and {topology}", file=sys.stderr)
             except Exception:
                 # TODO: add debug logs
-                pass
+                # it's important to reset all values
+                # because if stderr get new incarnation id
+                # but job doesn't create new incarnation path ->
+                # stderr reader starts read previous job's stderr
+                incarnation, topology, operation_id = self._prev_incarnation_id, [], None
 
         match self._mode:
             case StderrMode.primary:

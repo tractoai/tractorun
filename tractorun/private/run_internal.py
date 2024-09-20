@@ -224,6 +224,7 @@ def run_tracto(
     yt_operation_spec: dict[Any, Any] | None = None,
     yt_task_spec: dict[Any, Any] | None = None,
     docker_auth: DockerAuthData | None = None,
+    attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> YtRunInfo:
     resources = resources if resources is not None else Resources()
@@ -238,7 +239,7 @@ def run_tracto(
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
 
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
-    yt_client.config["pickling"]["ignore_system_modules"] = True
+    yt_client.config["pickling"]["ignore_system_modules"] = False if attach_external_libs else True
 
     yt_client_config = yt.config.get_config(yt_client)
     yt_client_config_pickled = base64.b64encode(pickle.dumps(yt_client_config)).decode("utf-8")

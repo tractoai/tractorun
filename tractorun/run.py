@@ -2,6 +2,7 @@ from typing import (
     Any,
     Callable,
 )
+import warnings
 
 from typing_extensions import (
     Literal,
@@ -55,6 +56,7 @@ def run(
     local: Literal[True],
     proxy_stderr_mode: StderrMode = ...,
     docker_auth: DockerAuthData | None = ...,
+    attach_external_libs: bool = ...,
     dry_run: bool = ...,
 ) -> LocalRunInfo: ...
 
@@ -82,6 +84,7 @@ def run(
     local: Literal[False] = False,
     proxy_stderr_mode: StderrMode = ...,
     docker_auth: DockerAuthData | None = ...,
+    attach_external_libs: bool = ...,
     dry_run: bool = ...,
 ) -> YtRunInfo: ...
 
@@ -108,8 +111,11 @@ def run(
     local: bool = False,
     proxy_stderr_mode: StderrMode = StderrMode.disabled,
     docker_auth: DockerAuthData | None = None,
+    attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> YtRunInfo | LocalRunInfo:
+    if attach_external_libs:
+        warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use in production.")
     if docker_image is None:
         docker_image = _get_default_docker_image()
     if local:
@@ -150,6 +156,7 @@ def run(
             yt_task_spec=yt_task_spec,
             proxy_stderr_mode=proxy_stderr_mode,
             docker_auth=docker_auth,
+            attach_external_libs=attach_external_libs,
             dry_run=dry_run,
         )
 

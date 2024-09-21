@@ -11,7 +11,6 @@ from torch.utils.data.dataset import T_co
 from yt import wrapper as yt
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
-from tractorun.toolbox import Toolbox
 
 
 __all__ = ["YTTensorTransform", "YtTensorDataset", "YtDataset"]
@@ -28,14 +27,14 @@ class YTTensorTransform:
 class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
     def __init__(
         self,
-        toolbox: Toolbox,
+        yt_client: yt.YtClient,
         path: str,
         transform: Callable[[list[str], dict], T_co],
         start: int = 0,
         end: int | None = None,
         columns: list | None = None,
     ) -> None:
-        self._yt_client = toolbox.yt_client
+        self._yt_client = yt_client
 
         row_count = self._yt_client.get(path + "/@row_count")
         if end is None:
@@ -71,14 +70,14 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
 class YtTensorDataset(YtDataset[tuple]):
     def __init__(
         self,
-        toolbox: Toolbox,
+        yt_client: yt.YtClient,
         path: str,
         start: int = 0,
         end: int | None = None,
         columns: list | None = None,
     ) -> None:
         super().__init__(
-            toolbox=toolbox,
+            yt_client=yt_client,
             path=path,
             start=start,
             end=end,

@@ -68,7 +68,7 @@ def train(toolbox: Toolbox) -> None:
         optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
     train_dataset = YtTensorDataset(
-        toolbox,
+        toolbox.yt_client,
         path=dataset_path,
         start=0,
         end=4000,

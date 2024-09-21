@@ -50,7 +50,7 @@ def _get_simple_train(mnist_ds_path: str) -> Callable:
 
         device = torch.device("cpu")
         serializer = TensorSerializer()
-        train_dataset = YtTensorDataset(toolbox, mnist_ds_path)
+        train_dataset = YtTensorDataset(toolbox.yt_client, mnist_ds_path)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
         model = Net().to(device)
         optimizer = optim.Adadelta(model.parameters(), lr=1.0)
@@ -173,7 +173,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, yt_path: str, mnist
             model.load_state_dict(checkpoint_dict["model"])
             optimizer.load_state_dict(checkpoint_dict["optimizer"])
 
-        train_dataset = YtTensorDataset(toolbox, mnist_ds_path)
+        train_dataset = YtTensorDataset(toolbox.yt_client, mnist_ds_path)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=10)
 
         model.train()

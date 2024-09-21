@@ -50,7 +50,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Running on device:", device, file=sys.stderr)
 
 mnist_model = MNISTModel()
-train_dataset = YtTensorDataset(toolbox, "//home/gritukan/mnist/datasets/train")
+train_dataset = YtTensorDataset(toolbox.yt_client, "//home/gritukan/mnist/datasets/train")
 train_loader = DataLoader(train_dataset, batch_size=64)
 
 trainer = Trainer(

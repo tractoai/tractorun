@@ -1,6 +1,8 @@
 import os
+from typing import Optional
 
 from tractorun.checkpoint import CheckpointManager
+from tractorun.exception import TractorunWandbError
 from tractorun.private.closet import Closet
 from tractorun.toolbox import Toolbox
 
@@ -24,9 +26,25 @@ def get_toolbox(closet: Closet) -> Toolbox:
 
 def prepare_environment(closet: Closet) -> None:
     # Runs in a job
+
     ep = closet.coordinator.get_primary_endpoint()
     os.environ["MASTER_ADDR"] = ep.split(":")[0]
     os.environ["MASTER_PORT"] = ep.split(":")[1]
     os.environ["WORLD_SIZE"] = str(closet.coordinator.get_total_peer_count())
     os.environ["NODE_RANK"] = str(closet.coordinator.get_self_index() // closet.mesh.process_per_node)
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
+
+    if os.environ["WANDB_ENABLED"] == "1":
+        _prepare_wandb(key=os.environ.get("YT_SECURE_VAULT_WANDB_API_KEY"))
+
+
+def _prepare_wandb(key: Optional[str]) -> None:
+    if key is None:
+        raise TractorunWandbError(
+            "WandB token is not set. Token can be set by env `YT_SECURE_VAULT_WANDB_API_KEY` or by `wandb_api_key` option",
+        )
+    try:
+        import wandb
+    except ImportError as e:
+        raise TractorunWandbError("WandB is not found in python env") from e
+    wandb.login(key=key)

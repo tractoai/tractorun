@@ -219,6 +219,8 @@ def run_tracto(
     env: list[EnvVariable] | None = None,
     resources: Resources | None = None,
     yt_client: yt.YtClient | None = None,
+    wandb_enabled: bool = False,
+    wandb_api_key: str | None = None,
     yt_operation_spec: dict[Any, Any] | None = None,
     yt_task_spec: dict[Any, Any] | None = None,
     docker_auth: DockerAuthData | None = None,
@@ -315,6 +317,7 @@ def run_tracto(
             {
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
                 const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
+                "WANDB_ENABLED": str(int(wandb_enabled)),
                 # Sometimes we can't read compiled bytecode in forks on yt.
                 "PYTHONDONTWRITEBYTECODE": "1",
                 BIND_PATHS_ENV_VAR: binds_packer.to_env(),
@@ -330,6 +333,8 @@ def run_tracto(
         operation_spec = operation_spec.pool_trees(mesh.pool_trees)
 
     secure_vault: dict[str, Any] = {}
+    if wandb_enabled:
+        secure_vault["WANDB_API_KEY"] = wandb_api_key
     if docker_auth:
         secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(docker_auth).to_spec()
 
@@ -375,6 +380,8 @@ def run_local(
     env: Optional[list[EnvVariable]] = None,
     tensorproxy: Optional[TensorproxySidecar] = None,
     yt_client: Optional[yt.YtClient] = None,
+    wandb_enabled: bool = False,
+    wandb_api_key: Optional[str] = None,
     dry_run: bool = False,
 ) -> LocalRunInfo:
     sidecars = sidecars if sidecars is not None else []
@@ -390,8 +397,12 @@ def run_local(
     os.environ["YT_JOB_ID"] = "a-b-c-d"
     os.environ["YT_JOB_COOKIE"] = "0"
     os.environ["YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB"] = "1"
+    os.environ["WANDB_ENABLED"] = str(int(wandb_enabled))
+    if wandb_api_key:
+        os.environ["YT_SECURE_VAULT_WANDB_API_KEY"] = wandb_api_key
 
     # TODO: look for free ports
+
     start_port = random.randint(10000, 20000)
     for i in range(mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)

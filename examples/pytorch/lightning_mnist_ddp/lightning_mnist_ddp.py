@@ -17,9 +17,11 @@ import torch
 from torch import Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
+import wandb
 
 from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
+from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
@@ -56,6 +58,7 @@ def train(toolbox: Toolbox) -> None:
     dataset_path = user_config["dataset_path"]
     wandb_enabled = user_config["wandb_enabled"]
     if wandb_enabled:
+        wandb.login(key=os.environ["WANDB_TOKEN"])
         wandb_logger = WandbLogger(
             project="tractorun",
             name="lightning_mnist_ddp",
@@ -101,13 +104,17 @@ def main() -> None:
         resources=Resources(
             memory_limit=8076021002,
         ),
+        env=[
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            ),
+        ],
         user_config={
             "dataset_path": args.dataset_path,
             "wandb_run_id": str(uuid.uuid4()),
             "wandb_enabled": args.wandb,
         },
-        wandb_enabled=args.wandb,
-        wandb_api_key=os.environ.get("WANDB_API_KEY"),
     )
 
 

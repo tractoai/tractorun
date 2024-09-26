@@ -15,6 +15,7 @@ import yt.wrapper as yt
 from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
+from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
@@ -38,6 +39,7 @@ def train(toolbox: Toolbox) -> None:
     dataset_path = user_config["dataset_path"]
     wandb_enabled = user_config["wandb_enabled"]
     if wandb_enabled:
+        wandb.login(key=os.environ["WANDB_TOKEN"])
         wandb.init(
             project="tractorun",
             name="torch_mnist_checkpoints",
@@ -160,7 +162,11 @@ if __name__ == "__main__":
             "wandb_run_id": str(uuid.uuid4()),
             "wandb_enabled": args.wandb,
         },
+        env=[
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            ),
+        ],
         resources=Resources(memory_limit=4 * (1024**3)),
-        wandb_enabled=args.wandb,
-        wandb_api_key=os.environ.get("WANDB_API_KEY"),
     )

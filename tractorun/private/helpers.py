@@ -50,4 +50,4 @@ def create_prerequisite_client(yt_client: yt.YtClient, prerequisite_transaction_
 
 def get_default_docker_image() -> str:
     # use the same env var as yt sdk
-    return os.environ.get("YT_BASE_LAYER") or DEFAULT_DOCKER_IMAGE
+    return os.environ.get("YT_BASE_LAYER") or os.environ.get("YT_JOB_DOCKER_IMAGE") or DEFAULT_DOCKER_IMAGE

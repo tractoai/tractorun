@@ -161,8 +161,7 @@ class CoordinatorFactory:
                 )
 
                 self._wait_for_gang_barrier(incarnation_path)
-            except Exception as e:
-                print(f"_make_subordinate raised exception {e}", file=sys.stderr)
+            except Exception:
                 time.sleep(1.0)
                 continue
 

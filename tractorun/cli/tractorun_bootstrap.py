@@ -30,6 +30,7 @@ def main() -> None:
         env=config.env,
         command=sys.argv[1:],
         tensorproxy=config.tensorproxy,
+        lib_versions=config.lib_versions,
     )
 
 

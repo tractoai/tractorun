@@ -18,6 +18,7 @@ import attrs
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
+from tractorun import __version__
 from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.docker_auth import DockerAuthData
@@ -31,6 +32,7 @@ from tractorun.private.bind import (
 )
 from tractorun.private.bootstrapper import (
     BootstrapConfig,
+    LibVersions,
     bootstrap,
 )
 from tractorun.private.closet import get_closet
@@ -89,6 +91,7 @@ class Runnable(abc.ABC):
         training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
+        lib_versions: LibVersions,
     ) -> Callable:
         pass
 
@@ -118,6 +121,7 @@ class Command(Runnable):
         training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
+        lib_versions: LibVersions,
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -128,6 +132,7 @@ class Command(Runnable):
                 sidecars=sidecars,
                 env=env,
                 tensorproxy=tensorproxy,
+                lib_versions=lib_versions,
             )
 
         return wrapped
@@ -171,6 +176,7 @@ class UserFunction(Runnable):
                     sidecars=config.sidecars,
                     env=config.env,
                     tensorproxy=config.tensorproxy,
+                    lib_versions=config.lib_versions,
                 )
 
         return wrapped
@@ -183,6 +189,7 @@ class UserFunction(Runnable):
         training_dir: TrainingDir,
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
+        lib_versions: LibVersions,
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -198,6 +205,7 @@ class UserFunction(Runnable):
                     sidecars=sidecars,
                     env=env,
                     tensorproxy=tensorproxy,
+                    lib_versions=lib_versions,
                 )
 
         return wrapped
@@ -272,6 +280,7 @@ def run_tracto(
         training_dir=training_dir,
         yt_client_config=yt_client_config_for_job_pickled,
         tensorproxy=tp_bootstrap,
+        lib_versions=LibVersions.create(),
     )
 
     bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
@@ -359,6 +368,7 @@ def run_tracto(
     run_info = YtRunInfo(
         operation_spec=operation_spec.build(client=yt_client),
         operation_id=operation_id,
+        operation_attributes=operation.get_attributes(),
     )
 
     tmp_dir.cleanup()
@@ -406,6 +416,10 @@ def run_local(
         training_dir=training_dir,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
+        lib_versions=LibVersions(
+            tractorun=__version__,
+            ytsaurus_client=yt.__version__,
+        ),
     )
     if not dry_run:
         prepare_training_dir(training_dir, yt_client)

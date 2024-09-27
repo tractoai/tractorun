@@ -7,6 +7,7 @@ import socket
 import attrs
 from yt.wrapper import YtClient
 
+from tractorun.checkpoint import CheckpointManager
 from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
 from tractorun.private.bootstrapper import ProcConfig
@@ -28,6 +29,7 @@ class Closet:
     mesh: Mesh
     coordinator: Coordinator
     yt_client: YtClient
+    checkpoint_manager: CheckpointManager
     training_dir: TrainingDir
     training_metadata: TrainingMetadata
 
@@ -59,10 +61,15 @@ def get_closet() -> Closet:
         job_id=training_metadata.job_id,
     ).create()
 
+    checkpoint_manager = CheckpointManager(config.training_dir.checkpoints_path, yt_client)
+    # TODO: make CheckpointFactory instead of the mystical initialize method
+    checkpoint_manager.initialize()
+
     return Closet(
         mesh=config.mesh,
         coordinator=coordinator,
         yt_client=yt_client,
         training_dir=config.training_dir,
         training_metadata=training_metadata,
+        checkpoint_manager=checkpoint_manager,
     )

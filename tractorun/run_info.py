@@ -1,5 +1,6 @@
 __all__ = ["RunInfo", "YtRunInfo", "LocalRunInfo"]
 
+from typing import Any
 
 import attrs
 
@@ -13,6 +14,7 @@ class RunInfo:
 class YtRunInfo(RunInfo):
     operation_spec: dict
     operation_id: str | None
+    operation_attributes: dict[Any, Any]
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

@@ -2,7 +2,10 @@ import pytest
 
 from tests.utils import run_config_file
 from tests.yt_instances import YtInstance
-from tractorun.cli.tractorun_runner import make_configuration, CLUSTER_CONFIG_PATH_DEFAULT
+from tractorun.cli.tractorun_runner import (
+    CLUSTER_CONFIG_PATH_DEFAULT,
+    make_configuration,
+)
 from tractorun.private.cluster_config import TractorunClusterConfig
 
 
@@ -31,9 +34,7 @@ def test_configuration() -> None:
     )
     assert config.cluster_config_path == CLUSTER_CONFIG_PATH_DEFAULT
 
-    _, _, config = make_configuration(
-        ["--yt-path", "foo", "--cluster-config-path", "//cli_path", "command"]
-    )
+    _, _, config = make_configuration(["--yt-path", "foo", "--cluster-config-path", "//cli_path", "command"])
     assert config.cluster_config_path == "//cli_path"
 
     run_config = {
@@ -46,7 +47,5 @@ def test_configuration() -> None:
     assert config.cluster_config_path == "//config_path"
 
     with run_config_file(run_config) as run_config_path:
-        _, _, config = make_configuration(
-            ["--run-config-path", run_config_path, "--cluster-config-path", "//cli_path"]
-        )
+        _, _, config = make_configuration(["--run-config-path", run_config_path, "--cluster-config-path", "//cli_path"])
     assert config.cluster_config_path == "//cli_path"

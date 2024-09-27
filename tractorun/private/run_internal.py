@@ -366,7 +366,7 @@ def run_tracto(
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
-    operation_id = operation = None
+    operation_id = operation_attributes = None
     is_sync = not no_wait
     if not dry_run:
         prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
@@ -380,11 +380,12 @@ def run_tracto(
             operation = yt_client.run_operation(operation_spec, sync=is_sync)
             assert isinstance(operation, yt.Operation)
             operation_id = operation.id
+            operation_attributes = operation.get_attributes()
 
     run_info = YtRunInfo(
         operation_spec=operation_spec.build(client=yt_client),
         operation_id=operation_id,
-        operation_attributes=operation.get_attributes(),
+        operation_attributes=operation_attributes,
     )
 
     tmp_dir.cleanup()

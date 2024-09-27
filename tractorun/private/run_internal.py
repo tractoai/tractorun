@@ -366,7 +366,7 @@ def run_tracto(
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
-    operation_id = None
+    operation_id = operation = None
     is_sync = not no_wait
     if not dry_run:
         prepare_training_dir(yt_client=yt_client, training_dir=training_dir)

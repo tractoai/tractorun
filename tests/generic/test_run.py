@@ -302,17 +302,19 @@ def test_docker_image_script(yt_path: str, env: dict[str, str], expected: str, m
 
 
 @pytest.mark.parametrize(
-    "docker_image,expected",
+    "env,expected",
     [
-        ("", DEFAULT_DOCKER_IMAGE),
-        ("custom_image", "custom_image"),
+        ({}, DEFAULT_DOCKER_IMAGE),
+        ({"YT_BASE_LAYER": "custom_image_1"}, "custom_image_1"),
+        ({"YT_JOB_DOCKER_IMAGE": "custom_image_2"}, "custom_image_2"),
     ],
 )
-def test_docker_image_pickle(yt_path: str, docker_image: str, expected: str, monkeypatch: MonkeyPatch) -> None:
+def test_docker_image_pickle(yt_path: str, env: dict[str, str], expected: str, monkeypatch: MonkeyPatch) -> None:
     def checker() -> None:
         pass
 
-    monkeypatch.setenv("YT_BASE_LAYER", docker_image)
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
     run_info = run(
         checker,
         yt_path=yt_path,

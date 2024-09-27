@@ -11,7 +11,10 @@ from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
 )
-from tractorun.private.helpers import AttrSerializer
+from tractorun.private.helpers import (
+    AttrSerializer,
+    create_attrs_converter,
+)
 
 
 def main() -> None:
@@ -20,7 +23,11 @@ def main() -> None:
     bootstrap_config_path = os.environ[BOOTSTRAP_CONFIG_FILENAME_ENV_VAR]
     with open(bootstrap_config_path, "r") as f:
         content = f.read()
-        deserializer = AttrSerializer(BootstrapConfig)
+        deserializer = AttrSerializer(
+            BootstrapConfig,
+            # forward compatibility
+            converter=create_attrs_converter(forbid_extra_keys=False),
+        )
         config: BootstrapConfig = deserializer.deserialize(data=content)
     bootstrap(
         mesh=config.mesh,

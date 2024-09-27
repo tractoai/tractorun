@@ -44,7 +44,10 @@ from tractorun.private.constants import (
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
 from tractorun.private.environment import get_toolbox
-from tractorun.private.helpers import AttrSerializer
+from tractorun.private.helpers import (
+    AttrSerializer,
+    create_attrs_converter,
+)
 from tractorun.private.stderr_reader import StderrReaderWorker
 from tractorun.private.tensorproxy import (
     TensorproxyBootstrap,
@@ -166,7 +169,11 @@ class UserFunction(Runnable):
                 bootstrap_config_path = os.environ[BOOTSTRAP_CONFIG_FILENAME_ENV_VAR]
                 with open(bootstrap_config_path, "r") as f:
                     content = f.read()
-                    deserializer = AttrSerializer(BootstrapConfig)
+                    deserializer = AttrSerializer(
+                        BootstrapConfig,
+                        # forward compatibility
+                        converter=create_attrs_converter(forbid_extra_keys=False),
+                    )
                     config: BootstrapConfig = deserializer.deserialize(data=content)
                 bootstrap(
                     mesh=config.mesh,

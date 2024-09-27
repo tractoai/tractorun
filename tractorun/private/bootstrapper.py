@@ -7,11 +7,13 @@ import subprocess
 import sys
 import time
 from typing import Optional
+import warnings
 
 import attrs
 from yt.common import update_inplace
 import yt.wrapper as yt
 
+from tractorun import __version__
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
@@ -26,6 +28,19 @@ from tractorun.sidecar import Sidecar
 
 
 TIMEOUT = 10
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class LibVersions:
+    tractorun: str
+    ytsaurus_client: str
+
+    @staticmethod
+    def create() -> "LibVersions":
+        return LibVersions(
+            tractorun=__version__,
+            ytsaurus_client=yt.__version__,
+        )
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -46,6 +61,24 @@ class BootstrapConfig:
     training_dir: TrainingDir
     yt_client_config: str
     tensorproxy: Optional[TensorproxyBootstrap]
+    lib_versions: LibVersions
+
+
+def check_lib_versions(local_lib_versions: LibVersions) -> None:
+    remote_lib_versions = LibVersions.create()
+    diff = {}
+    if local_lib_versions.tractorun != remote_lib_versions.tractorun:
+        diff["tractorun"] = {
+            "local": local_lib_versions.tractorun,
+            "remote": remote_lib_versions.tractorun,
+        }
+    if local_lib_versions.ytsaurus_client != remote_lib_versions.ytsaurus_client:
+        diff["ytsaurus-client"] = {
+            "local": local_lib_versions.ytsaurus_client,
+            "remote": remote_lib_versions.ytsaurus_client,
+        }
+    if diff:
+        warnings.warn(f"Local and remote libraries has different versions: {diff}")
 
 
 def bootstrap(
@@ -56,8 +89,11 @@ def bootstrap(
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
+    lib_versions: LibVersions,
 ) -> None:
     # Runs inside a job
+
+    check_lib_versions(local_lib_versions=lib_versions)
 
     processes = []
     yt_config = pickle.loads(base64.b64decode(yt_client_config))

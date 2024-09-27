@@ -16,11 +16,11 @@ from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 _T = TypeVar("_T")
 
 
-def create_attrs_converter() -> cattrs.Converter:
+def create_attrs_converter(forbid_extra_keys: bool = True) -> cattrs.Converter:
     converter = cattrs.Converter()
     converter.register_structure_hook_factory(
         attrs.has,
-        lambda cl: cattrs.gen.make_dict_structure_fn(cl, converter, _cattrs_forbid_extra_keys=True),
+        lambda cl: cattrs.gen.make_dict_structure_fn(cl, converter, _cattrs_forbid_extra_keys=forbid_extra_keys),
     )
     return converter
 

@@ -20,6 +20,10 @@ class TractorunConfigError(BaseTractorunException):
     pass
 
 
+class TractorunVersionMismatchError(BaseTractorunException):
+    pass
+
+
 class TractorunConfigurationError(BaseTractorunException):
     pass
 

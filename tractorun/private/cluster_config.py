@@ -13,3 +13,6 @@ class TractorunClusterConfig:
         return TractorunClusterConfig(
             cypress_link_template=str(config["cypress_link_template"]),
         )
+
+    def to_dict(self) -> dict:
+        return attrs.asdict(self)  # type: ignore

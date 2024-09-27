@@ -16,6 +16,7 @@ import yt.wrapper as yt
 from tractorun import __version__
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
+from tractorun.private.cluster_config import TractorunClusterConfig
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.sidecar import (
@@ -62,6 +63,7 @@ class BootstrapConfig:
     yt_client_config: str
     tensorproxy: Optional[TensorproxyBootstrap]
     lib_versions: LibVersions
+    cluster_config: TractorunClusterConfig
 
 
 def check_lib_versions(local_lib_versions: LibVersions) -> None:
@@ -90,6 +92,7 @@ def bootstrap(
     env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
     lib_versions: LibVersions,
+    cluster_config: TractorunClusterConfig,
 ) -> None:
     # Runs inside a job
 

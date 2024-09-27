@@ -46,6 +46,7 @@ def main() -> None:
         command=sys.argv[1:],
         tensorproxy=config.tensorproxy,
         lib_versions=config.lib_versions,
+        cluster_config=config.cluster_config,
     )
 
 

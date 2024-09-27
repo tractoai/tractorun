@@ -40,6 +40,7 @@ from tractorun.private.bootstrapper import (
     bootstrap,
 )
 from tractorun.private.closet import get_closet
+from tractorun.private.cluster_config import TractorunClusterConfig
 from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
@@ -99,6 +100,7 @@ class Runnable(abc.ABC):
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
+        cluster_config: TractorunClusterConfig,
     ) -> Callable:
         pass
 
@@ -129,6 +131,7 @@ class Command(Runnable):
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
+        cluster_config: TractorunClusterConfig,
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -140,6 +143,7 @@ class Command(Runnable):
                 env=env,
                 tensorproxy=tensorproxy,
                 lib_versions=lib_versions,
+                cluster_config=cluster_config,
             )
 
         return wrapped
@@ -193,6 +197,7 @@ class UserFunction(Runnable):
                     env=config.env,
                     tensorproxy=config.tensorproxy,
                     lib_versions=config.lib_versions,
+                    cluster_config=config.cluster_config,
                 )
 
         return wrapped
@@ -206,6 +211,7 @@ class UserFunction(Runnable):
         yt_client_config: str,
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
+        cluster_config: TractorunClusterConfig,
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -222,6 +228,7 @@ class UserFunction(Runnable):
                     env=env,
                     tensorproxy=tensorproxy,
                     lib_versions=lib_versions,
+                    cluster_config=cluster_config,
                 )
 
         return wrapped
@@ -234,6 +241,7 @@ def run_tracto(
     yt_path: str,
     mesh: Mesh,
     proxy_stderr_mode: StderrMode,
+    cluster_config_path: str,
     user_config: dict[Any, Any] | None = None,
     binds_local: list[BindLocal] | None = None,
     binds_local_lib: list[str] | None = None,
@@ -284,6 +292,8 @@ def run_tracto(
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
 
+    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=cluster_config_path)
+
     # "fail_on_job_restart" is useful for gang operations,
     # so let's turn it on unless disabled explicitly.
     if "fail_on_job_restart" not in yt_operation_spec:
@@ -297,6 +307,7 @@ def run_tracto(
         yt_client_config=yt_client_config_for_job_pickled,
         tensorproxy=tp_bootstrap,
         lib_versions=LibVersions.create(),
+        cluster_config=cluster_config,
     )
 
     bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
@@ -398,6 +409,7 @@ def run_local(
     *,
     yt_path: str,
     mesh: Mesh,
+    cluster_config_path: str,
     sidecars: Optional[list[Sidecar]] = None,
     env: Optional[list[EnvVariable]] = None,
     tensorproxy: Optional[TensorproxySidecar] = None,
@@ -418,6 +430,8 @@ def run_local(
     os.environ["YT_JOB_COOKIE"] = "0"
     os.environ["YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB"] = "1"
 
+    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=cluster_config_path)
+
     # TODO: look for free ports
     start_port = random.randint(10000, 20000)
     for i in range(mesh.process_per_node):
@@ -437,6 +451,7 @@ def run_local(
             tractorun=__version__,
             ytsaurus_client=yt.__version__,
         ),
+        cluster_config=cluster_config,
     )
     if not dry_run:
         prepare_training_dir(training_dir, yt_client)

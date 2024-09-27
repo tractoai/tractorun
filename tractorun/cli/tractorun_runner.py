@@ -22,6 +22,7 @@ from tractorun.docker_auth import (
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
+from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.docker_auth import DockerAuthInternal
 from tractorun.private.helpers import (
     create_attrs_converter,
@@ -43,6 +44,7 @@ MESH_PROCESS_PER_NODE_DEFAULT = 1
 MESH_GPU_PER_PROCESS_DEFAULT = 0
 TENSORPROXY_ENABLED_DEFAULT = False
 TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
+CLUSTER_CONFIG_PATH_DEFAULT = DEFAULT_CLUSTER_CONFIG_PATH
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
 NO_WAIT_DEFAULT = False
@@ -105,6 +107,7 @@ class Config:
     bind_local: Optional[list[str]] = attrs.field(default=None)
     bind_local_lib: Optional[list[str]] = attrs.field(default=None)
     proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
+    cluster_config_path: Optional[str] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
@@ -137,6 +140,7 @@ class EffectiveConfig:
     bind_local: list[BindLocal]
     bind_local_lib: list[str]
     proxy_stderr_mode: StderrMode
+    cluster_config_path: str
     command: list[str]
 
     mesh: Mesh
@@ -232,6 +236,11 @@ class EffectiveConfig:
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             no_wait=_choose_value(args_value=args["no_wait"], config_value=config.no_wait, default=NO_WAIT_DEFAULT),
+            cluster_config_path=_choose_value(
+                args_value=args["cluster_config_path"],
+                config_value=config.cluster_config_path,
+                default=CLUSTER_CONFIG_PATH_DEFAULT,
+            ),
             bind_local=effective_binds,
             bind_local_lib=bind_lib,
             proxy_stderr_mode=_choose_value(
@@ -340,6 +349,11 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
     parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
     parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
+    parser.add_argument(
+        "--cluster-config-path",
+        type=str,
+        help=f"Path to the global tractorun config on YTSaurus cluster. Default: {CLUSTER_CONFIG_PATH_DEFAULT}",
+    )
     parser.add_argument(
         "--tensorproxy.enabled",
         type=bool,
@@ -453,6 +467,7 @@ def main() -> None:
             sidecars=effective_config.sidecars,
             env=effective_config.env,
             user_config=effective_config.user_config,
+            cluster_config_path=effective_config.cluster_config_path,
             yt_operation_spec=effective_config.yt_operation_spec,
             yt_task_spec=effective_config.yt_task_spec,
             local=effective_config.local,

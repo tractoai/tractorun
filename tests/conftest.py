@@ -13,6 +13,7 @@ from tests.yt_instances import (
     YtInstanceExternal,
     YtInstanceTestContainers,
 )
+from tractorun.private.yt_cluster import TractorunClusterConfig
 
 
 @pytest.fixture(scope="session")
@@ -45,6 +46,21 @@ def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
     path = f"{yt_base_dir}/{get_random_string(13)}"
     yt_client.create("map_node", path)
     return path
+
+
+@pytest.fixture(scope="function")
+def cluster_config() -> TractorunClusterConfig:
+    return TractorunClusterConfig(
+        cypress_link_template="https://yt.tracto.ai/yt/navigation?path={path}",
+    )
+
+
+@pytest.fixture
+def cluster_config_path(cluster_config: TractorunClusterConfig, yt_instance: YtInstance, yt_path: str) -> str:
+    config_path = f"{yt_path}/tractorun_config.yaml"
+    yt_client = yt_instance.get_client()
+    yt_client.set(config_path, cluster_config.to_dict())
+    return config_path
 
 
 @pytest.fixture(scope="session")

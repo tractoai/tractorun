@@ -40,7 +40,6 @@ from tractorun.private.bootstrapper import (
     bootstrap,
 )
 from tractorun.private.closet import get_closet
-from tractorun.private.cluster_config import TractorunClusterConfig
 from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
@@ -62,6 +61,7 @@ from tractorun.private.training_dir import (
     TrainingDir,
     prepare_training_dir,
 )
+from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.resources import Resources
 from tractorun.run_info import (
     LocalRunInfo,

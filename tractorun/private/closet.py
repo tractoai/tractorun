@@ -15,6 +15,7 @@ from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.coordinator import CoordinatorFactory
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
+from tractorun.private.yt_cluster import TractorunClusterConfig
 
 
 @attrs.define
@@ -32,6 +33,7 @@ class Closet:
     checkpoint_manager: CheckpointManager
     training_dir: TrainingDir
     training_metadata: TrainingMetadata
+    cluster_config: TractorunClusterConfig
 
 
 def get_closet() -> Closet:
@@ -72,4 +74,5 @@ def get_closet() -> Closet:
         training_dir=config.training_dir,
         training_metadata=training_metadata,
         checkpoint_manager=checkpoint_manager,
+        cluster_config=config.cluster_config,
     )

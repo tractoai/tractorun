@@ -1,31 +1,18 @@
-import pytest
-
 from tests.utils import run_config_file
 from tests.yt_instances import YtInstance
 from tractorun.cli.tractorun_runner import (
     CLUSTER_CONFIG_PATH_DEFAULT,
     make_configuration,
 )
-from tractorun.private.cluster_config import TractorunClusterConfig
-
-
-CLUSTER_CONFIG = TractorunClusterConfig(
-    cypress_link_template="https://yt.tracto.ai/yt/navigation?path={path}",
+from tractorun.private.yt_cluster import (
+    TractorunClusterConfig,
+    make_cypress_link,
 )
 
 
-@pytest.fixture
-def cluster_config_path(yt_instance: YtInstance, yt_path: str) -> str:
-    config_path = f"{yt_path}/tractorun_config.yaml"
-    yt_client = yt_instance.get_client()
-    config = CLUSTER_CONFIG.to_dict()
-    yt_client.set(config_path, config)
-    return config_path
-
-
-def test_load_config(cluster_config_path: str, yt_instance: YtInstance) -> None:
+def test_load_config(cluster_config_path: str, cluster_config: TractorunClusterConfig, yt_instance: YtInstance) -> None:
     config = TractorunClusterConfig.load_from_yt(yt_client=yt_instance.get_client(), path=cluster_config_path)
-    assert config == CLUSTER_CONFIG
+    assert config == cluster_config
 
 
 def test_configuration() -> None:
@@ -49,3 +36,13 @@ def test_configuration() -> None:
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path, "--cluster-config-path", "//cli_path"])
     assert config.cluster_config_path == "//cli_path"
+
+
+def test_make_cypress_link(
+    cluster_config_path: str, cluster_config: TractorunClusterConfig, yt_instance: YtInstance
+) -> None:
+    config = TractorunClusterConfig.load_from_yt(yt_client=yt_instance.get_client(), path=cluster_config_path)
+    assert (
+        make_cypress_link(path="//some/path", cypress_link_template=config.cypress_link_template)
+        == "https://yt.tracto.ai/yt/navigation?path=//some/path"
+    )

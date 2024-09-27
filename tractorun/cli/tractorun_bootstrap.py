@@ -2,6 +2,9 @@
 import os
 import sys
 
+import cattrs
+
+from tractorun.exception import TractorunVersionMismatchError
 from tractorun.private.bind import BindsPacker
 from tractorun.private.bootstrapper import (
     BootstrapConfig,
@@ -28,7 +31,12 @@ def main() -> None:
             # forward compatibility
             converter=create_attrs_converter(forbid_extra_keys=False),
         )
-        config: BootstrapConfig = deserializer.deserialize(data=content)
+        try:
+            config: BootstrapConfig = deserializer.deserialize(data=content)
+        except cattrs.errors.BaseValidationError as e:
+            raise TractorunVersionMismatchError(
+                "Please check that the tractorun version locally and on YT are the same",
+            ) from e
     bootstrap(
         mesh=config.mesh,
         training_dir=config.training_dir,

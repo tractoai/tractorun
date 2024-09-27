@@ -15,6 +15,7 @@ from typing import (
 )
 
 import attrs
+import cattrs.errors
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
 
@@ -23,7 +24,10 @@ from tractorun.base_backend import BackendBase
 from tractorun.bind import BindLocal
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
-from tractorun.exception import TractorunConfigurationError
+from tractorun.exception import (
+    TractorunConfigurationError,
+    TractorunVersionMismatchError,
+)
 from tractorun.mesh import Mesh
 from tractorun.private import constants as const
 from tractorun.private.bind import (
@@ -174,7 +178,12 @@ class UserFunction(Runnable):
                         # forward compatibility
                         converter=create_attrs_converter(forbid_extra_keys=False),
                     )
-                    config: BootstrapConfig = deserializer.deserialize(data=content)
+                    try:
+                        config: BootstrapConfig = deserializer.deserialize(data=content)
+                    except cattrs.errors.BaseValidationError as e:
+                        raise TractorunVersionMismatchError(
+                            "Please check that the tractorun version locally and on YT are the same",
+                        ) from e
                 bootstrap(
                     mesh=config.mesh,
                     training_dir=config.training_dir,

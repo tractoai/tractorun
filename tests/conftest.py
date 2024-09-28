@@ -52,6 +52,7 @@ def yt_path(yt_instance: YtInstance, yt_base_dir: str) -> str:
 def cluster_config() -> TractorunClusterConfig:
     return TractorunClusterConfig(
         cypress_link_template="https://yt.tracto.ai/yt/navigation?path={path}",
+        job_stderr_link_template="https://yt.tracto.ai/api/yt/yt/api/v3/get_job_stderr?operation_id={operation_id}&job_id={job_id}&dump_error_into_response=true",
     )
 
 

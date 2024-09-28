@@ -1,15 +1,17 @@
 import os
 
 from tractorun.private.closet import Closet
+from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME
 from tractorun.private.description import (
     Link,
     TractorunDescription,
 )
-from tractorun.private.yt_cluster import make_cypress_link
+from tractorun.private.yt_cluster import make_cypress_link, make_job_stderr_link
 from tractorun.toolbox import Toolbox
 
 
 def get_toolbox(closet: Closet) -> Toolbox:
+    user_description_manager = closet.description_manager.get_child("extra")
     toolbox = Toolbox(
         coordinator=closet.coordinator,
         checkpoint_manager=closet.checkpoint_manager,
@@ -17,6 +19,7 @@ def get_toolbox(closet: Closet) -> Toolbox:
         mesh=closet.mesh,
         training_dir=closet.training_dir,
         training_metadata=closet.training_metadata,
+        description_manager=user_description_manager,
     )
 
     return toolbox
@@ -32,10 +35,15 @@ def prepare_environment(closet: Closet) -> None:
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
 
     if closet.coordinator.is_primary():
-        description_manager = closet.description_manager.get_child("tractorun")
+        description_manager = (closet.description_manager.get_child(TRACTORUN_DESCRIPTION_MANAGER_NAME),)
         training_dir = make_cypress_link(
             path=closet.training_dir.base_path,
             cypress_link_template=closet.cluster_config.cypress_link_template,
+        )
+        job_stderr_link = make_job_stderr_link(
+            operation_id=closet.training_metadata.operation_id,
+            job_id=closet.training_metadata.job_id,
+            job_stderr_link_template=closet.cluster_config.job_stderr_link_template,
         )
         description_manager.set(
             TractorunDescription(
@@ -43,6 +51,6 @@ def prepare_environment(closet: Closet) -> None:
                 primary_address=ep,
                 incarnation=closet.coordinator.get_incarnation_id(),
                 mesh=closet.mesh,
-                primary_stderr=Link(value=None),
+                primary_stderr=Link(value=job_stderr_link),
             ).to_dict(),
         )

@@ -10,6 +10,7 @@ from tractorun.coordinator import Coordinator
 from tractorun.mesh import Mesh
 from tractorun.private import constants as _constants
 from tractorun.private.closet import TrainingMetadata as _TrainingMetadata
+from tractorun.private.description import DescriptionManager
 from tractorun.private.training_dir import TrainingDir as _TrainingDir
 
 
@@ -20,6 +21,7 @@ __all__ = ["Toolbox"]
 class Toolbox:
     coordinator: Coordinator
     checkpoint_manager: CheckpointManager
+    description_manager: DescriptionManager
     yt_client: yt.YtClient
     mesh: Mesh
     _training_dir: _TrainingDir

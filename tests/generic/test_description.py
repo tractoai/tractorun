@@ -7,6 +7,7 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
+from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME
 from tractorun.private.description import (
     DescriptionManager,
     Link,
@@ -18,7 +19,7 @@ from tractorun.private.yt_cluster import (
 from tractorun.run import run
 
 
-def test_set_description(
+def test_set_tractorun_description(
     yt_instance: YtInstance, cluster_config: TractorunClusterConfig, cluster_config_path: str, yt_path: str
 ) -> None:
     assert cluster_config.cypress_link_template is not None
@@ -39,15 +40,17 @@ def test_set_description(
     )
     assert operation.operation_attributes is not None
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
-    assert str(description["tractorun"]["training_dir"]) == make_cypress_link(
+    tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
+    assert str(tractorun_description["training_dir"]) == make_cypress_link(
         path=yt_path,
         cypress_link_template=cluster_config.cypress_link_template,
     )
-    assert "primary" in description["tractorun"]
-    assert "job_stderr" in description["tractorun"]["primary"]
-    assert "address" in description["tractorun"]["primary"]
-    assert int(description["tractorun"]["incarnation"]) == 0
-    assert description["tractorun"]["mesh"] == attrs.asdict(mesh)  # type: ignore
+    assert "primary" in tractorun_description
+    assert "job_stderr" in tractorun_description["primary"]
+    assert "address" in tractorun_description["primary"]
+    assert "job_stderr" in tractorun_description["primary"]
+    assert int(tractorun_description["incarnation"]) == 0
+    assert tractorun_description["mesh"] == attrs.asdict(mesh)  # type: ignore
 
 
 def test_make_description() -> None:

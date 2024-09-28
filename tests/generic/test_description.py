@@ -1,10 +1,7 @@
 import attrs
 import pytest
 
-from tests.utils import (
-    DOCKER_IMAGE,
-    TractoCli,
-)
+from tests.utils import DOCKER_IMAGE
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.description import (
@@ -12,7 +9,10 @@ from tractorun.description import (
     Link,
 )
 from tractorun.mesh import Mesh
-from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME, USER_DESCRIPTION_MANAGER_NAME
+from tractorun.private.constants import (
+    TRACTORUN_DESCRIPTION_MANAGER_NAME,
+    USER_DESCRIPTION_MANAGER_NAME,
+)
 from tractorun.private.yt_cluster import (
     TractorunClusterConfig,
     make_cypress_link,

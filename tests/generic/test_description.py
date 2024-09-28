@@ -107,6 +107,7 @@ def test_set_user_description(
                     {"cats": "dogs"},
                 ],
                 "custom_info": "foo",
+                "cypress_link": toolbox.description_manager.make_cypress_link("//some/path 1"),
             }
         )
 
@@ -131,6 +132,7 @@ def test_set_user_description(
             {"cats": "dogs"},
         ],
         "custom_info": "foo",
+        "cypress_link": "https://yt.tracto.ai/yt/navigation?path=//some/path%201",
     }
 
 
@@ -181,3 +183,12 @@ def test_convert_yson() -> None:
         "links": [Link(value="link1").to_yson(), Link(value="link2").to_yson()],
         "types": [True, 1, 0.5, b"value"],
     }
+
+
+def test_make_cypress_link(yt_instance: YtInstance) -> None:
+    link = DescriptionManager(
+        operation_id="123-123",
+        cypress_link_template="https://fake.cluster?path={path}",
+        yt_client=yt_instance.get_client(),
+    ).make_cypress_link("//tmp/some/path")
+    assert link == Link(value="https://fake.cluster?path=//tmp/some/path").to_yson()

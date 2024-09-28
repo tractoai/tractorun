@@ -44,8 +44,8 @@ def test_make_cypress_link(
 ) -> None:
     config = TractorunClusterConfig.load_from_yt(yt_client=yt_instance.get_client(), path=cluster_config_path)
     assert (
-        make_cypress_link(path="//some/path", cypress_link_template=config.cypress_link_template)
-        == "https://yt.tracto.ai/yt/navigation?path=//some/path"
+        make_cypress_link(path="//some/path 1/2", cypress_link_template=config.cypress_link_template)
+        == "https://yt.tracto.ai/yt/navigation?path=//some/path%201/2"
     )
     assert make_cypress_link(path="//some/path", cypress_link_template=None) is None
 

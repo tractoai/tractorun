@@ -1,4 +1,5 @@
 from typing import Any
+from urllib.parse import quote
 import warnings
 
 import attrs
@@ -14,13 +15,16 @@ def _to_str(value: Any) -> str | None:
 def make_cypress_link(cypress_link_template: str | None, path: str) -> str | None:
     if cypress_link_template is None:
         return None
-    return cypress_link_template.format(path=path)
+    return cypress_link_template.format(path=quote(path))
 
 
 def make_job_stderr_link(job_stderr_link_template: str | None, operation_id: str, job_id: str) -> str | None:
     if job_stderr_link_template is None:
         return None
-    return job_stderr_link_template.format(job_id=job_id, operation_id=operation_id)
+    return job_stderr_link_template.format(
+        job_id=quote(job_id),
+        operation_id=quote(operation_id),
+    )
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

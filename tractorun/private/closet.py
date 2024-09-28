@@ -57,6 +57,7 @@ def get_closet() -> Closet:
     description_manager = DescriptionManager(
         operation_id=training_metadata.operation_id,
         yt_client=yt_client,
+        cypress_link_template=config.cluster_config.cypress_link_template,
     )
     coordinator = CoordinatorFactory(
         yt_client=yt_client,

@@ -6,6 +6,8 @@ from yt import wrapper as yt
 
 __all__ = ["Link", "DescriptionManager", "Description"]
 
+from tractorun.private.yt_cluster import make_cypress_link as _make_cypress_link
+
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True, frozen=True)
 class Link:
@@ -32,6 +34,7 @@ Description = dict[str, _DESCRIPTION]
 class DescriptionManager:
     _operation_id: str
     _yt_client: yt.YtClient
+    _cypress_link_template: str | None
     _key: list[str] = attrs.field(default=[])
 
     def get_child(self, key: str) -> "DescriptionManager":
@@ -39,7 +42,17 @@ class DescriptionManager:
             operation_id=self._operation_id,
             yt_client=self._yt_client,
             key=self._key + [key],
+            cypress_link_template=self._cypress_link_template,
         )
+
+    def make_cypress_link(self, value: str) -> Link | None:
+        raw_link = _make_cypress_link(
+            cypress_link_template=self._cypress_link_template,
+            path=value,
+        )
+        if raw_link is None:
+            return None
+        return Link(value=raw_link)
 
     @classmethod
     def _convert_yson(cls, description: _DESCRIPTION) -> _DESCRIPTION:

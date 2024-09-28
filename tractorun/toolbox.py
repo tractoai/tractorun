@@ -7,6 +7,7 @@ import yt.wrapper as yt
 
 from tractorun.checkpoint import CheckpointManager
 from tractorun.coordinator import Coordinator
+from tractorun.description import DescriptionManager
 from tractorun.mesh import Mesh
 from tractorun.private import constants as _constants
 from tractorun.private.closet import TrainingMetadata as _TrainingMetadata
@@ -20,6 +21,7 @@ __all__ = ["Toolbox"]
 class Toolbox:
     coordinator: Coordinator
     checkpoint_manager: CheckpointManager
+    description_manager: DescriptionManager
     yt_client: yt.YtClient
     mesh: Mesh
     _training_dir: _TrainingDir

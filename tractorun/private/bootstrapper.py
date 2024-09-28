@@ -24,6 +24,7 @@ from tractorun.private.sidecar import (
 )
 from tractorun.private.tensorproxy import TensorproxyBootstrap
 from tractorun.private.training_dir import TrainingDir
+from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.sidecar import Sidecar
 
 
@@ -51,6 +52,7 @@ class ProcConfig:
     port: int
     training_dir: TrainingDir
     yt_client_config: str
+    cluster_config: TractorunClusterConfig
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -62,6 +64,7 @@ class BootstrapConfig:
     yt_client_config: str
     tensorproxy: Optional[TensorproxyBootstrap]
     lib_versions: LibVersions
+    cluster_config: TractorunClusterConfig
 
 
 def check_lib_versions(local_lib_versions: LibVersions) -> None:
@@ -90,6 +93,7 @@ def bootstrap(
     env: list[EnvVariable],
     tensorproxy: Optional[TensorproxyBootstrap],
     lib_versions: LibVersions,
+    cluster_config: TractorunClusterConfig,
 ) -> None:
     # Runs inside a job
 
@@ -137,6 +141,7 @@ def bootstrap(
             port=int(os.environ[f"YT_PORT_{i}"]),
             training_dir=training_dir,
             yt_client_config=base64.b64encode(pickle.dumps(yt_config)).decode("utf-8"),
+            cluster_config=cluster_config,
         )
         config_name = f"config_{i}.json"
         with open(config_name, "w") as f:

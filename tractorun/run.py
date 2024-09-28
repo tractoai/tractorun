@@ -15,6 +15,7 @@ from tractorun.bind import BindLocal
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
+from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
 from tractorun.private.run_internal import UserFunction as _UserFunction
 from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_and_get_toolbox
@@ -40,6 +41,7 @@ def run(
     backend: BackendBase,
     yt_path: str,
     mesh: Mesh,
+    cluster_config_path: str = ...,
     user_config: dict[Any, Any] | None = ...,
     docker_image: str | None = ...,
     resources: Resources | None = ...,
@@ -66,6 +68,7 @@ def run(
     backend: BackendBase,
     yt_path: str,
     mesh: Mesh,
+    cluster_config_path: str = ...,
     user_config: dict[Any, Any] | None = ...,
     docker_image: str | None = ...,
     resources: Resources | None = ...,
@@ -92,6 +95,7 @@ def run(
     yt_path: str,
     mesh: Mesh,
     user_config: dict[Any, Any] | None = None,
+    cluster_config_path: str = _DEFAULT_CLUSTER_CONFIG_PATH,
     docker_image: str | None = None,
     resources: Resources | None = None,
     yt_client: yt.YtClient | None = None,
@@ -123,6 +127,7 @@ def run(
             sidecars=sidecars,
             env=env,
             yt_client=yt_client,
+            cluster_config_path=cluster_config_path,
             dry_run=dry_run,
         )
     else:
@@ -139,6 +144,7 @@ def run(
             env=env,
             no_wait=no_wait,
             user_config=user_config,
+            cluster_config_path=cluster_config_path,
             resources=resources,
             yt_client=yt_client,
             docker_image=docker_image,

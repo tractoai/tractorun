@@ -1,3 +1,5 @@
+import attrs
+
 from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
@@ -5,6 +7,10 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
+from tractorun.private.description import (
+    DescriptionManager,
+    Link,
+)
 from tractorun.private.yt_cluster import (
     TractorunClusterConfig,
     make_cypress_link,
@@ -12,7 +18,7 @@ from tractorun.private.yt_cluster import (
 from tractorun.run import run
 
 
-def test_description(
+def test_set_description(
     yt_instance: YtInstance, cluster_config: TractorunClusterConfig, cluster_config_path: str, yt_path: str
 ) -> None:
     assert cluster_config.cypress_link_template is not None
@@ -21,20 +27,71 @@ def test_description(
     def checker(toolbox: TractoCli) -> None:
         pass
 
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
     operation = run(
         checker,
         backend=GenericBackend(),
         yt_path=yt_path,
-        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        mesh=mesh,
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
     assert operation.operation_attributes is not None
-    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"][0]
+    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     assert str(description["tractorun"]["training_dir"]) == make_cypress_link(
         path=yt_path,
         cypress_link_template=cluster_config.cypress_link_template,
     )
-    assert "primary_address" in description["tractorun"]
+    assert "primary" in description["tractorun"]
+    assert "job_stderr" in description["tractorun"]["primary"]
+    assert "address" in description["tractorun"]["primary"]
     assert int(description["tractorun"]["incarnation"]) == 0
+    assert description["tractorun"]["mesh"] == attrs.asdict(mesh)  # type: ignore
+
+
+def test_make_description() -> None:
+    description = DescriptionManager._make_description(
+        key=["1", "2"],
+        description={
+            "foo": 123,
+            "bar": [1, 2, {"1": True}],
+            "far": None,
+            "link": Link(value=None),
+            "bla": Link(value="//foo"),
+            "links": [Link(value="link1"), Link(value="link2")],
+        },
+    )
+    assert description == {
+        "1": {
+            "2": {
+                "foo": 123,
+                "bar": [1, 2, {"1": True}],
+                "far": None,
+                "link": Link(value=None).to_yson(),
+                "bla": Link(value="//foo").to_yson(),
+                "links": [Link(value="link1").to_yson(), Link(value="link2").to_yson()],
+            },
+        },
+    }
+
+
+def test_convert_yson() -> None:
+    converted = DescriptionManager._convert_yson(
+        {
+            "foo": 123,
+            "bar": [1, 2, {"1": True}],
+            "far": None,
+            "link": Link(value=None),
+            "bla": Link(value="//foo"),
+            "links": [Link(value="link1"), Link(value="link2")],
+        }
+    )
+    assert converted == {
+        "foo": 123,
+        "bar": [1, 2, {"1": True}],
+        "far": None,
+        "link": Link(value=None).to_yson(),
+        "bla": Link(value="//foo").to_yson(),
+        "links": [Link(value="link1").to_yson(), Link(value="link2").to_yson()],
+    }

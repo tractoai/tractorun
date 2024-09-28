@@ -6,7 +6,7 @@ from yt import wrapper as yt
 
 __all__ = ["Link", "DescriptionManager", "Description"]
 
-from tractorun.private.yt_cluster import make_cypress_link
+from tractorun.private.yt_cluster import make_cypress_link as _make_cypress_link
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True, frozen=True)
@@ -46,7 +46,7 @@ class DescriptionManager:
         )
 
     def make_cypress_link(self, value: str) -> Link | None:
-        raw_link = make_cypress_link(
+        raw_link = _make_cypress_link(
             cypress_link_template=self._cypress_link_template,
             path=value,
         )

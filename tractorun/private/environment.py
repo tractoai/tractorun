@@ -1,11 +1,9 @@
 import os
 
+from tractorun.description import Link
 from tractorun.private.closet import Closet
 from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME
-from tractorun.private.description import (
-    Link,
-    TractorunDescription,
-)
+from tractorun.private.description import TractorunDescription
 from tractorun.private.yt_cluster import (
     make_cypress_link,
     make_job_stderr_link,

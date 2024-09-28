@@ -7,17 +7,18 @@ from tests.utils import (
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
-from tractorun.mesh import Mesh
-from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME
-from tractorun.private.description import (
+from tractorun.description import (
     DescriptionManager,
     Link,
 )
+from tractorun.mesh import Mesh
+from tractorun.private.constants import TRACTORUN_DESCRIPTION_MANAGER_NAME, USER_DESCRIPTION_MANAGER_NAME
 from tractorun.private.yt_cluster import (
     TractorunClusterConfig,
     make_cypress_link,
 )
 from tractorun.run import run
+from tractorun.toolbox import Toolbox
 
 
 @pytest.mark.parametrize(
@@ -28,7 +29,7 @@ def test_description_empty_config(config_exists: dict | None, yt_path: str, yt_i
     # checking that the basic logic works without config or with an empty config
     yt_client = yt_instance.get_client()
 
-    def checker(toolbox: TractoCli) -> None:
+    def checker(toolbox: Toolbox) -> None:
         pass
 
     config_path = f"{yt_path}/empty_config"
@@ -62,7 +63,7 @@ def test_set_tractorun_description(
     assert cluster_config.cypress_link_template is not None
     yt_client = yt_instance.get_client()
 
-    def checker(toolbox: TractoCli) -> None:
+    def checker(toolbox: Toolbox) -> None:
         pass
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
@@ -88,6 +89,49 @@ def test_set_tractorun_description(
     assert "job_stderr" in tractorun_description["primary"]
     assert int(tractorun_description["incarnation"]) == 0
     assert tractorun_description["mesh"] == attrs.asdict(mesh)  # type: ignore
+
+
+def test_set_user_description(
+    yt_instance: YtInstance, cluster_config: TractorunClusterConfig, cluster_config_path: str, yt_path: str
+) -> None:
+    assert cluster_config.cypress_link_template is not None
+    yt_client = yt_instance.get_client()
+
+    def checker(toolbox: Toolbox) -> None:
+        toolbox.description_manager.set(
+            {
+                "wandb": Link(value="https://fake.wandb.url/some/page"),
+                "complex_structure": [
+                    Link(value="https://another.com"),
+                    [True, 1, 0.5, b"value"],
+                    {"cats": "dogs"},
+                ],
+                "custom_info": "foo",
+            }
+        )
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    operation = run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        cluster_config_path=cluster_config_path,
+    )
+    assert operation.operation_attributes is not None
+    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
+    user_description = description[USER_DESCRIPTION_MANAGER_NAME]
+    assert user_description == {
+        "wandb": Link(value="https://fake.wandb.url/some/page").to_yson(),
+        "complex_structure": [
+            Link(value="https://another.com").to_yson(),
+            [True, 1, 0.5, "value"],
+            {"cats": "dogs"},
+        ],
+        "custom_info": "foo",
+    }
 
 
 def test_make_description() -> None:
@@ -125,6 +169,7 @@ def test_convert_yson() -> None:
             "link": Link(value=None),
             "bla": Link(value="//foo"),
             "links": [Link(value="link1"), Link(value="link2")],
+            "types": [True, 1, 0.5, b"value"],
         }
     )
     assert converted == {
@@ -134,4 +179,5 @@ def test_convert_yson() -> None:
         "link": Link(value=None).to_yson(),
         "bla": Link(value="//foo").to_yson(),
         "links": [Link(value="link1").to_yson(), Link(value="link2").to_yson()],
+        "types": [True, 1, 0.5, b"value"],
     }

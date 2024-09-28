@@ -9,11 +9,11 @@ from yt.wrapper import YtClient
 
 from tractorun.checkpoint import CheckpointManager
 from tractorun.coordinator import Coordinator
+from tractorun.description import DescriptionManager
 from tractorun.mesh import Mesh
 from tractorun.private.bootstrapper import ProcConfig
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.coordinator import CoordinatorFactory
-from tractorun.private.description import DescriptionManager
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
 from tractorun.private.yt_cluster import TractorunClusterConfig

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.25.0 (2024-09-29)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.24.0...0.25.0)
+
+### Changes
+
+- NYT-708: add make cypress link to descriptions and add quoting (#79). [49bb2ec](https://github.com/tractoai/tractorun/commit/49bb2ece49d577279516168a3593aa42e8a1f16d)
+    
+
 ## 0.24.0 (2024-09-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.23.0...0.24.0)

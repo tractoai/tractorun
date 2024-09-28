@@ -1,4 +1,5 @@
 import attrs
+import pytest
 
 from tests.utils import (
     DOCKER_IMAGE,
@@ -17,6 +18,36 @@ from tractorun.private.yt_cluster import (
     make_cypress_link,
 )
 from tractorun.run import run
+
+
+@pytest.mark.parametrize(
+    "config",
+    [{}, None],
+)
+def test_description_empty_config(config: dict | None, yt_path: str, yt_instance: YtInstance) -> None:
+    # checking that the basic logic works
+    yt_client = yt_instance.get_client()
+
+    def checker(toolbox: TractoCli) -> None:
+        pass
+
+    if config is not None:
+        yt_client.create(f"{yt_path}/empty_config", config)
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    operation = run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        cluster_config_path="//non-existed-path-123",
+    )
+    assert operation.operation_attributes is not None
+    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
+    tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
+    assert tractorun_description is not None
 
 
 def test_set_tractorun_description(

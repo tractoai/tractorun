@@ -6,7 +6,10 @@ from tractorun.private.description import (
     Link,
     TractorunDescription,
 )
-from tractorun.private.yt_cluster import make_cypress_link, make_job_stderr_link
+from tractorun.private.yt_cluster import (
+    make_cypress_link,
+    make_job_stderr_link,
+)
 from tractorun.toolbox import Toolbox
 
 
@@ -35,7 +38,7 @@ def prepare_environment(closet: Closet) -> None:
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
 
     if closet.coordinator.is_primary():
-        description_manager = (closet.description_manager.get_child(TRACTORUN_DESCRIPTION_MANAGER_NAME),)
+        description_manager = closet.description_manager.get_child(TRACTORUN_DESCRIPTION_MANAGER_NAME)
         training_dir = make_cypress_link(
             path=closet.training_dir.base_path,
             cypress_link_template=closet.cluster_config.cypress_link_template,

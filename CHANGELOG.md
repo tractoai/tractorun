@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.24.0 (2024-09-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.23.0...0.24.0)
+
+### Changes
+
+- NYT-708: add operation's description and cluster config (#78). [cb732c6](https://github.com/tractoai/tractorun/commit/cb732c615b4d2e86e2a49752f732432d68df3831)
+    
+- NYT-690: check tractorun version in operations, move checkpoint manager to closet (#77). [4ce8a30](https://github.com/tractoai/tractorun/commit/4ce8a3029de0ee713c81b7c99e694b19fefe88dd)
+    
+- Fix test_docker_image_pickle (#76). [d2c569f](https://github.com/tractoai/tractorun/commit/d2c569f33dcdd95d43830c2a04220f10df1d7937)
+    
+- Use YT_JOB_DOCKER_IMAGE for getting docker image (#75). [49e6d45](https://github.com/tractoai/tractorun/commit/49e6d459c5ee8564844afe8d0be9f9ba7395c181)
+    
+- NYT-715: remove wandb helpers (#74). [c8a50e7](https://github.com/tractoai/tractorun/commit/c8a50e711fa11e4a1b079af8ddfd89d2a6aae9ef)
+    
+- Revert "NYT-715: remove wandb helpers". [d82d031](https://github.com/tractoai/tractorun/commit/d82d031ff031178f0849025e71afc210eae8aae5)
+    
+  This reverts commit 1bc8d57b4a34410437a2dd49fae10e91e4c39eaa.
+- NYT-715: remove wandb helpers. [1bc8d57](https://github.com/tractoai/tractorun/commit/1bc8d57b4a34410437a2dd49fae10e91e4c39eaa)
+    
+
 ## 0.23.0 (2024-09-21)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.22.0...0.23.0)

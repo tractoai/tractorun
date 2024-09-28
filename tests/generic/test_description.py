@@ -21,29 +21,35 @@ from tractorun.run import run
 
 
 @pytest.mark.parametrize(
-    "config",
+    "config_exists",
     [{}, None],
 )
-def test_description_empty_config(config: dict | None, yt_path: str, yt_instance: YtInstance) -> None:
-    # checking that the basic logic works
+def test_description_empty_config(config_exists: dict | None, yt_path: str, yt_instance: YtInstance) -> None:
+    # checking that the basic logic works without config or with an empty config
     yt_client = yt_instance.get_client()
 
     def checker(toolbox: TractoCli) -> None:
         pass
 
-    if config is not None:
-        yt_client.create(f"{yt_path}/empty_config", config)
+    config_path = f"{yt_path}/empty_config"
+
+    if config_exists:
+        yt_client.create("document", path=config_path)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    operation = run(
-        checker,
-        backend=GenericBackend(),
-        yt_path=yt_path,
-        mesh=mesh,
-        yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
-        cluster_config_path="//non-existed-path-123",
-    )
+    with pytest.warns(
+        UserWarning,
+        match=f"Cluster config {config_path} does not exist. Some functions are not available. Please specify config's path by tractorun params.",
+    ):
+        operation = run(
+            checker,
+            backend=GenericBackend(),
+            yt_path=yt_path,
+            mesh=mesh,
+            yt_client=yt_client,
+            docker_image=DOCKER_IMAGE,
+            cluster_config_path=config_path,
+        )
     assert operation.operation_attributes is not None
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]

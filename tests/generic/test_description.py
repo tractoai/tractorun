@@ -91,10 +91,7 @@ def test_set_tractorun_description(
     assert tractorun_description["mesh"] == attrs.asdict(mesh)  # type: ignore
 
 
-def test_set_user_description(
-    yt_instance: YtInstance, cluster_config: TractorunClusterConfig, cluster_config_path: str, yt_path: str
-) -> None:
-    assert cluster_config.cypress_link_template is not None
+def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     def checker(toolbox: Toolbox) -> None:
@@ -132,7 +129,7 @@ def test_set_user_description(
             {"cats": "dogs"},
         ],
         "custom_info": "foo",
-        "cypress_link": "https://yt.tracto.ai/yt/navigation?path=//some/path%201",
+        "cypress_link": Link(value="https://yt.tracto.ai/yt/navigation?path=//some/path%201").to_yson(),
     }
 
 
@@ -191,4 +188,4 @@ def test_make_cypress_link(yt_instance: YtInstance) -> None:
         cypress_link_template="https://fake.cluster?path={path}",
         yt_client=yt_instance.get_client(),
     ).make_cypress_link("//tmp/some/path")
-    assert link == Link(value="https://fake.cluster?path=//tmp/some/path").to_yson()
+    assert link == Link(value="https://fake.cluster?path=//tmp/some/path")

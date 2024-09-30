@@ -45,7 +45,6 @@ class CoordinatorFactory:
         while True:
             try:
                 topology = self._yt_client.get(incarnation_path + "/@topology")
-                print(topology, file=sys.stderr)
                 if all(peer["address"] != "" for peer in topology):
                     print("All peers started", file=sys.stderr)
                     break

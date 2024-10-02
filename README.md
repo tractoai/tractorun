@@ -23,19 +23,19 @@ and update image in `run_tests`
 
 ### Run tests
 ```shell
-YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests . -s
+YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests all . -s
 ```
 
 It is possible to run separate test suites or individual tests:
 ```shell
-YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests general . -s
-YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests tensorproxy . -s
+YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests general . -s
+YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests tensorproxy . -s
 ```
 
 To run an individual test:
 ```shell
-YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests generic test_sidecars.py
-YT_PROXY=dirac.yt.nemax.nebiuscloud.net YT_TOKEN=<...> ./run_tests generic test_sidecars.py::test_sidecar_run
+YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests generic test_sidecars.py
+YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests generic test_sidecars.py::test_sidecar_run
 ```
 
 ### Bump library version

@@ -117,8 +117,10 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
+        title="test",
     )
     assert operation.operation_attributes is not None
+    assert operation.operation_attributes["brief_spec"]["title"] == "test"
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     user_description = description[USER_DESCRIPTION_MANAGER_NAME]
     assert user_description == {

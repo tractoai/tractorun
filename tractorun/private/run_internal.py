@@ -242,6 +242,7 @@ def run_tracto(
     mesh: Mesh,
     proxy_stderr_mode: StderrMode,
     cluster_config_path: str,
+    title: str | None = None,
     user_config: dict[Any, Any] | None = None,
     binds_local: list[BindLocal] | None = None,
     binds_local_lib: list[str] | None = None,
@@ -361,6 +362,8 @@ def run_tracto(
     )
 
     operation_spec = task_spec.end_task()
+
+    operation_spec = operation_spec.title(title)
 
     if mesh.pool_trees is not None:
         operation_spec = operation_spec.pool_trees(mesh.pool_trees)

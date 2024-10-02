@@ -99,6 +99,7 @@ class Config:
 
     yt_path: Optional[str] = attrs.field(default=None)
     docker_image: Optional[str] = attrs.field(default=None)
+    title: Optional[str] = attrs.field(default=None)
     user_config: Optional[dict[str, Any]] = attrs.field(default=None)
     yt_operation_spec: Optional[dict[str, Any]] = attrs.field(default=None)
     yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
@@ -132,6 +133,7 @@ class Config:
 class EffectiveConfig:
     yt_path: str
     docker_image: str
+    title: str
     user_config: Optional[dict[str, Any]]
     yt_operation_spec: Optional[dict[str, Any]]
     yt_task_spec: Optional[dict[str, Any]]
@@ -231,6 +233,7 @@ class EffectiveConfig:
                 config_value=config.docker_image,
                 default=get_default_docker_image(),
             ),
+            title=_choose_value(args_value=args["title"], config_value=config.title),
             user_config=_choose_value(args_value=user_config, config_value=config.user_config),
             yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
             yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
@@ -338,6 +341,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         ),
         default=None,
     )
+    parser.add_argument("--title", type=str, help="title of the operation")
     parser.add_argument("--mesh.node-count", type=int, help=f"mesh node count. Default: {MESH_NODE_COUNT_DEFAULT}")
     parser.add_argument(
         "--mesh.process-per-node", type=int, help=f"mesh process per node. Default: {MESH_PROCESS_PER_NODE_DEFAULT}"
@@ -457,6 +461,7 @@ def main() -> None:
         run_info = run_script(
             command=effective_config.command,
             mesh=effective_config.mesh,
+            title=effective_config.title,
             resources=effective_config.resources,
             yt_path=effective_config.yt_path,
             docker_image=effective_config.docker_image,

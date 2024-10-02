@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.26.0 (2024-10-02)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.26.0...HEAD)
+
+## 0.26.0 (2024-10-02)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.25.0...0.26.0)
+
+### Changes
+
+- Set title for tractorun operations (#81). [d999c49](https://github.com/tractoai/tractorun/commit/d999c4969b7695ce3d76f8206956439fb71615ba)
+    
+- Disable backoff retries for yt in test container (#70). [e9d0c88](https://github.com/tractoai/tractorun/commit/e9d0c881be221da04bffe2541c8ae8e48bf7ff74)
+    
+- Remove debug output producing tons of garbage (#80). [16d2a67](https://github.com/tractoai/tractorun/commit/16d2a67cd2f7f2902af6ef5297817212ff0ab73d)
+    
+
 ## 0.25.0 (2024-09-29)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.24.0...0.25.0)

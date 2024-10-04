@@ -1,15 +1,20 @@
 import base64
 import enum
 import json
+import multiprocessing
 import os
 import pickle
 import subprocess
 import sys
 import time
-from typing import Optional
+from typing import (
+    Literal,
+    Optional,
+)
 import warnings
 
 import attrs
+from yt import type_info
 from yt.common import update_inplace
 import yt.wrapper as yt
 
@@ -28,7 +33,9 @@ from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.sidecar import Sidecar
 
 
-TIMEOUT = 10
+PROCESSES_POLL_TIMEOUT = 10
+WAIT_LOG_RECORDS_TIMEOUT = 5
+BULK_TABLE_WRITE_SIZE = 1000
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -65,6 +72,59 @@ class BootstrapConfig:
     tensorproxy: Optional[TensorproxyBootstrap]
     lib_versions: LibVersions
     cluster_config: TractorunClusterConfig
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class LogRecord:
+    _self_index: int
+    _message: str
+    _source: str
+    _fd: Literal["stdout"] | Literal["stderr"]
+
+    @staticmethod
+    def get_yt_schema() -> yt.schema.TableSchema:
+        # I don't trust the implementation of yt_dataclass
+        # so let's define transformations explicitly
+
+        schema = yt.schema.TableSchema()
+        schema.add_column("self_index", type_info.Int16)
+        schema.add_column("message", type_info.String)
+        schema.add_column("source", type_info.String)
+        schema.add_column("fd", type_info.String)
+        return schema
+
+    def to_dict(self) -> dict:
+        return {
+            "self_index": self._self_index,
+            "message": self._message,
+            "source": self._source,
+            "fd": self._fd,
+        }
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class YtLogWriter:
+    _yt_client_config: str
+    _queue: multiprocessing.Queue[LogRecord]
+    _log_path: str
+
+    def write_log(self) -> None:
+        yt_config = pickle.loads(base64.b64decode(self._yt_client_config))
+        yt_client = yt.YtClient(config=yt_config)
+        yt_client.create("table", self._log_path, attributes={"schema": LogRecord.get_yt_schema().to_yson_type()})
+        while True:
+            messages: list[dict[str, str | int]] = []
+            while not self._queue.empty():
+                message = self._queue.get(block=True, timeout=None)
+                messages.append(message.to_dict())
+                if len(messages) >= BULK_TABLE_WRITE_SIZE:
+                    break
+            if not messages:
+                time.sleep(WAIT_LOG_RECORDS_TIMEOUT)
+            yt_client.write_table(
+                yt.TablePath(self._log_path, append=True),
+                messages,
+            )
 
 
 def check_lib_versions(local_lib_versions: LibVersions) -> None:
@@ -182,7 +242,7 @@ def bootstrap(
         sidecar_runs.append(sidecar_run)
 
     while True:
-        time.sleep(TIMEOUT)
+        time.sleep(PROCESSES_POLL_TIMEOUT)
         exit_codes = [process.poll() for process in processes]
         match check_status(exit_codes):
             case PoolStatus.failed:

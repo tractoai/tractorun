@@ -9,6 +9,8 @@ class TrainingDir:
     models_path: str
     checkpoints_path: str
     primary_lock_path: str
+    logs_path: str
+    raw_logs_path: str
 
     @classmethod
     def create(cls, path: str) -> "TrainingDir":
@@ -18,6 +20,8 @@ class TrainingDir:
             incarnations_path=path + "/incarnations",
             models_path=path + "/models",
             checkpoints_path=path + "/checkpoints",
+            logs_path=path + "/logs",
+            raw_logs_path=path + "/_raw_logs",
         )
 
     def get_incarnation_path(self, incarnation_id: int) -> str:
@@ -32,3 +36,5 @@ def prepare_training_dir(training_dir: TrainingDir, yt_client: yt.YtClient) -> N
     yt_client.create("map_node", training_dir.incarnations_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.models_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.checkpoints_path, ignore_existing=True)
+    yt_client.create("map_node", training_dir.logs_path, ignore_existing=True)
+    yt_client.create("map_node", training_dir.raw_logs_path, ignore_existing=True)

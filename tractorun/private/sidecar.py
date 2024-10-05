@@ -1,7 +1,10 @@
 import enum
+import io
 import subprocess
-import sys
-from typing import Optional
+from typing import (
+    TYPE_CHECKING,
+    Optional,
+)
 
 import attrs
 
@@ -32,8 +35,8 @@ class SidecarRun:
     def _run_process(cls, sidecar: Sidecar, env: dict[str, str]) -> subprocess.Popen:
         return subprocess.Popen(
             sidecar.command,
-            stdout=sys.stderr,
-            stderr=sys.stderr,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             bufsize=1,
             universal_newlines=True,
             env=env,
@@ -56,6 +59,16 @@ class SidecarRun:
 
     def terminate(self) -> None:
         self._process.terminate()
+
+    def stdout(self) -> io.TextIOWrapper:
+        if TYPE_CHECKING:
+            assert isinstance(self._process.stdout, io.TextIOWrapper)
+        return self._process.stdout
+
+    def stderr(self) -> io.TextIOWrapper:
+        if TYPE_CHECKING:
+            assert isinstance(self._process.stderr, io.TextIOWrapper)
+        return self._process.stderr
 
     def need_restart(self) -> RestartVerdict:
         exit_code = self._process.poll()

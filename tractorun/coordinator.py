@@ -10,7 +10,6 @@ __all__ = ["Coordinator"]
 class Coordinator:
     _mesh: Mesh
     _self_index: int
-    _node_index: int
     _process_index: int
     _self_endpoint: str
     _incarnation_id: int

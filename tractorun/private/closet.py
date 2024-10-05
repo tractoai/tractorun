@@ -64,8 +64,9 @@ def get_closet() -> Closet:
         training_dir=config.training_dir,
         self_endpoint=self_endpoint,
         mesh=config.mesh,
-        node_index=config.node_index,
         process_index=config.proc_index,
+        node_index=config.node_index,
+        self_index=config.self_index,
         operation_id=training_metadata.operation_id,
         job_id=training_metadata.job_id,
     ).create()

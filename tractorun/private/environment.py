@@ -36,6 +36,20 @@ def prepare_environment(closet: Closet) -> None:
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
 
     if closet.coordinator.is_primary():
+        yt_client = closet.yt_client
+        logs_dir = f"{closet.training_dir.logs_path}/{closet.coordinator.get_incarnation_id()}"
+        worker_logs_dir = f"{logs_dir}/workers"
+        sidecar_logs_dir = f"{logs_dir}/sidecars"
+        yt_client.link(
+            closet.training_dir.worker_logs_path,
+            worker_logs_dir,
+            recursive=True,
+        )
+        yt_client.link(
+            closet.training_dir.worker_logs_path,
+            sidecar_logs_dir,
+            recursive=True,
+        )
         description_manager = closet.description_manager.get_child(TRACTORUN_DESCRIPTION_MANAGER_NAME)
         training_dir = make_cypress_link(
             path=closet.training_dir.base_path,
@@ -46,10 +60,15 @@ def prepare_environment(closet: Closet) -> None:
             job_id=closet.training_metadata.job_id,
             job_stderr_link_template=closet.cluster_config.job_stderr_link_template,
         )
+        primary_log_table = make_cypress_link(
+            path=f"{worker_logs_dir}/0",
+            cypress_link_template=closet.cluster_config.cypress_link_template,
+        )
         description_manager.set(
             TractorunDescription(
                 training_dir=Link(value=training_dir),
                 primary_address=ep,
+                primary_log_table=Link(value=primary_log_table),
                 incarnation=closet.coordinator.get_incarnation_id(),
                 mesh=closet.mesh,
                 primary_stderr=Link(value=job_stderr_link),

@@ -80,7 +80,6 @@ def bootstrap(
     cluster_config: TractorunClusterConfig,
 ) -> None:
     # Runs inside a job
-    print("hello bootstrap", file=sys.stderr)
 
     check_lib_versions(local_lib_versions=lib_versions)
 
@@ -108,6 +107,7 @@ def bootstrap(
 
     sidecars = sidecars + tp_sidecars
 
+    status = ProcessManagerPollStatus.running
     with ProcessManager.start(
         command=command,
         sidecars=sidecars,
@@ -120,15 +120,13 @@ def bootstrap(
         tp_env=tp_env,
         spec_env=spec_env,
     ) as process_manager:
-        while True:
-            status = process_manager.poll()
-            match status:
-                case ProcessManagerPollStatus.fail:
-                    exit(1)
-                case ProcessManagerPollStatus.success:
-                    return
-                case ProcessManagerPollStatus.running:
-                    pass
-                case _:
-                    raise TractorunBootstrapError(f"Unknown poll status {status}")
+        while status == ProcessManagerPollStatus.running:
             time.sleep(PROCESSES_POLL_TIMEOUT)
+            status = process_manager.poll()
+    match status:
+        case ProcessManagerPollStatus.success:
+            return
+        case ProcessManagerPollStatus.fail:
+            sys.exit(1)
+        case _:
+            raise TractorunBootstrapError(f"Unknown poll status {status}")

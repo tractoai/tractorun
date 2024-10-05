@@ -1,6 +1,9 @@
+import json
 import sys
 
-from tests.utils import DOCKER_IMAGE
+import yt.wrapper as yt
+
+from tests.utils import DOCKER_IMAGE, TractoCli, get_data_path
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
@@ -10,7 +13,31 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
+
+
+def validate_logs(yt_client: yt.YtClient, incarnation: int, yt_path: str):
+    for index in range(4):
+        messages: list[tuple[str, str]] = []
+        for raw in yt_client.read_table(f"{yt_path}/logs/{incarnation}/workers/{index}"):
+            assert raw["datetime"] is not None
+            messages.append(
+                (raw["message"], raw["fd"]),
+            )
+        assert (f"first stdout line {index} {incarnation}", OutputType.stdout) in messages
+        assert (f"first stderr line {index} {incarnation}", OutputType.stderr) in messages
+        assert (f"second stdout line {index} {incarnation}", OutputType.stdout) in messages
+        assert (f"second stderr line {index} {incarnation}", OutputType.stderr) in messages
+
+    for index in range(4):
+        raws = [raw for raw in yt_client.read_table(f"{yt_path}/logs/{incarnation}/sidecars/{index}")]
+        assert len(raws) == 1
+        raw = raws[0]
+        assert raw["datetime"] is not None
+        output_type = OutputType.stdout if index % 2 == 0 else OutputType.stderr
+        assert raw["fd"] == output_type
+        assert raw["message"] == f"sidecar_writes_something_{incarnation}_{output_type}"
 
 
 def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
@@ -47,23 +74,44 @@ def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
             docker_image=DOCKER_IMAGE,
         )
 
-        for index in range(4):
-            messages: list[tuple[str, str]] = []
-            for raw in yt_client.read_table(f"{yt_path}/logs/{incarnation}/workers/{index}"):
-                assert raw["datetime"] is not None
-                messages.append(
-                    (raw["message"], raw["fd"]),
-                )
-            assert (f"first stdout line {index} {incarnation}", OutputType.stdout) in messages
-            assert (f"first stderr line {index} {incarnation}", OutputType.stderr) in messages
-            assert (f"second stdout line {index} {incarnation}", OutputType.stdout) in messages
-            assert (f"second stderr line {index} {incarnation}", OutputType.stderr) in messages
+        validate_logs(yt_client=yt_client, incarnation=incarnation, yt_path=yt_path)
 
-        for index in range(4):
-            raws = [raw for raw in yt_client.read_table(f"{yt_path}/logs/{incarnation}/sidecars/{index}")]
-            assert len(raws) == 1
-            raw = raws[0]
-            assert raw["datetime"] is not None
-            output_type = OutputType.stdout if index % 2 == 0 else OutputType.stderr
-            assert raw["fd"] == output_type
-            assert raw["message"] == f"sidecar_writes_something_{incarnation}_{output_type}"
+
+def test_cli(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    for incarnation in range(2):
+        sidecar_stdout_message = f"sidecar_writes_something_{incarnation}_{OutputType.stdout}"
+        sidecar_stderr_message = f"sidecar_writes_something_{incarnation}_{OutputType.stderr}"
+        tracto_cli = TractoCli(
+            command=["python3", "/tractorun_tests/log_table_script.py"],
+            args=[
+                "--yt-path",
+                yt_path,
+                "--mesh.node-count", "2",
+                "--mesh.process-per-node", "2",
+                "--sidecar",
+                json.dumps(
+                    {
+                        "command": ["python3", "-c", f'import sys; print("{sidecar_stdout_message}", file=sys.stdout)'],
+                        "restart_policy": RestartPolicy.ON_FAILURE,
+                    },
+                ),
+                "--sidecar",
+                json.dumps(
+                    {
+                        "command": ["python3", "-c", f'import sys; print("{sidecar_stderr_message}", file=sys.stderr)'],
+                        "restart_policy": RestartPolicy.ON_FAILURE,
+                    },
+                ),
+                "--bind-local",
+                f"{get_data_path('../data/log_table_script.py')}:/tractorun_tests/log_table_script.py",
+                "--proxy-stderr-mode",
+                StderrMode.primary,
+            ],
+        )
+        op_run = tracto_cli.run()
+        assert op_run.is_exitcode_valid()
+        assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=2)
+
+        validate_logs(yt_client=yt_client, incarnation=incarnation, yt_path=yt_path)

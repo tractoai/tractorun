@@ -1,7 +1,5 @@
 import sys
 
-import pytest
-
 from tests.utils import DOCKER_IMAGE
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -20,11 +18,11 @@ def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
 
     def checker(toolbox: Toolbox) -> None:
         self_index = toolbox.coordinator.get_self_index()
-        incarnation = toolbox.coordinator.get_incarnation_id()
-        print(f"first stdout line {self_index} {incarnation}", file=sys.stdout)
-        print(f"first stderr line {self_index} {incarnation}", file=sys.stderr)
-        print(f"second stdout line {self_index} {incarnation}", file=sys.stdout)
-        print(f"second stderr line {self_index} {incarnation}", file=sys.stderr)
+        inc = toolbox.coordinator.get_incarnation_id()
+        print(f"first stdout line {self_index} {inc}", file=sys.stdout)
+        print(f"first stderr line {self_index} {inc}", file=sys.stderr)
+        print(f"second stdout line {self_index} {inc}", file=sys.stdout)
+        print(f"second stderr line {self_index} {inc}", file=sys.stderr)
 
     mesh = Mesh(node_count=2, process_per_node=2, gpu_per_process=0)
     for incarnation in range(2):

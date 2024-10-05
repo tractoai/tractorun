@@ -1,10 +1,8 @@
 import enum
 import io
+import os
 import subprocess
-from typing import (
-    TYPE_CHECKING,
-    Optional,
-)
+from typing import TYPE_CHECKING
 
 import attrs
 
@@ -33,7 +31,7 @@ class SidecarRun:
 
     @classmethod
     def _run_process(cls, sidecar: Sidecar, env: dict[str, str]) -> subprocess.Popen:
-        return subprocess.Popen(
+        process = subprocess.Popen(
             sidecar.command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -41,21 +39,27 @@ class SidecarRun:
             universal_newlines=True,
             env=env,
         )
+        if TYPE_CHECKING:
+            assert isinstance(process.stdout, io.TextIOWrapper)
+            assert isinstance(process.stderr, io.TextIOWrapper)
+        os.set_blocking(process.stdout.fileno(), False)
+        os.set_blocking(process.stderr.fileno(), False)
+        return process
 
     @classmethod
     def run(cls, sidecar: Sidecar, env: dict[str, str]) -> "SidecarRun":
         process = cls._run_process(sidecar=sidecar, env=env)
         return SidecarRun(sidecar=sidecar, process=process, env=env)
 
-    def poll(self) -> Optional[int]:
+    def poll(self) -> int | None:
         return self._process.poll()
 
     def wait(self) -> None:
         self._process.wait()
 
-    def restart(self) -> None:
+    def restart(self) -> "SidecarRun":
         self.terminate()
-        self._process = self._run_process(sidecar=self._sidecar, env=self._env)
+        return self.run(sidecar=self._sidecar, env=self._env)
 
     def terminate(self) -> None:
         self._process.terminate()

@@ -11,11 +11,11 @@ from tractorun.checkpoint import CheckpointManager
 from tractorun.coordinator import Coordinator
 from tractorun.description import DescriptionManager
 from tractorun.mesh import Mesh
-from tractorun.private.bootstrapper import ProcConfig
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.coordinator import CoordinatorFactory
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
+from tractorun.private.worker import WorkerConfig
 from tractorun.private.yt_cluster import TractorunClusterConfig
 
 
@@ -41,8 +41,8 @@ class Closet:
 def get_closet() -> Closet:
     config_path = os.environ[TRACTO_CONFIG_ENV_VAR]
     with open(config_path, "r") as ff:
-        deserializer = AttrSerializer(ProcConfig)
-        config: ProcConfig = deserializer.deserialize(json.load(ff))
+        deserializer = AttrSerializer(WorkerConfig)
+        config: WorkerConfig = deserializer.deserialize(json.load(ff))
 
     self_endpoint = socket.gethostname() + ":" + str(config.port)
     yt_client = YtClient(

@@ -46,7 +46,7 @@ def prepare_environment(closet: Closet) -> None:
             recursive=True,
         )
         yt_client.link(
-            closet.training_dir.worker_logs_path,
+            closet.training_dir.sidecar_logs_path,
             sidecar_logs_dir,
             recursive=True,
         )

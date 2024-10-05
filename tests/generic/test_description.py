@@ -87,6 +87,7 @@ def test_set_tractorun_description(
     assert "job_stderr" in tractorun_description["primary"]
     assert "address" in tractorun_description["primary"]
     assert "job_stderr" in tractorun_description["primary"]
+    assert "log_table" in tractorun_description["primary"]
     assert int(tractorun_description["incarnation"]) == 0
     assert tractorun_description["mesh"] == attrs.asdict(mesh)  # type: ignore
 

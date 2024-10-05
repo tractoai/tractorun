@@ -23,7 +23,7 @@ from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.sidecar import Sidecar
 
 
-PROCESSES_POLL_TIMEOUT = 10
+PROCESSES_POLL_TIMEOUT = 5
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

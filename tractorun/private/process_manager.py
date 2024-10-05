@@ -1,5 +1,6 @@
 import base64
 import contextlib
+import datetime
 import enum
 from multiprocessing import (
     Process,
@@ -43,9 +44,10 @@ class OutputType(str, enum.Enum):
 
 
 BULK_TABLE_WRITE_SIZE = 1000
-WAIT_LOG_RECORDS_TIMEOUT = 10
+WAIT_LOG_RECORDS_TIMEOUT = 5
 IO_QUEUE_MAXSIZE = 10000
-YT_LOG_WRITER_JOIN_TIMEOUT = 30
+YT_LOG_WRITER_JOIN_TIMEOUT = 10
+QUEUE_TIMEOUT = 0.01
 
 
 STOP_LOG_WRITER = object()
@@ -61,9 +63,13 @@ class _LastMessage:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class LogRecord:
-    _self_index: int
     _message: str
+    _datetime: datetime.datetime
     _fd: OutputType
+
+    def _datetime_to_unixtime(self, datetime_obj: datetime.datetime) -> int:
+        # workaround for https://github.com/ytsaurus/ytsaurus/issues/309
+        return int(time.mktime(datetime_obj.timetuple()))
 
     @staticmethod
     def get_yt_schema() -> yt.schema.TableSchema:
@@ -71,6 +77,7 @@ class LogRecord:
         # so let's define transformations explicitly
 
         schema = yt.schema.TableSchema()
+        schema.add_column("datetime", type_info.Datetime)
         schema.add_column("message", type_info.String)
         schema.add_column("fd", type_info.String)
         return schema
@@ -79,6 +86,7 @@ class LogRecord:
         return {
             "message": self._message,
             "fd": self._fd.value,
+            "datetime": self._datetime_to_unixtime(self._datetime),
         }
 
 
@@ -90,7 +98,7 @@ class YtLogWriter:
 
     def _get_next_message(self) -> LogRecord | _NoMessages:
         try:
-            return self._queue.get(timeout=0.01)
+            return self._queue.get(timeout=QUEUE_TIMEOUT)
         except queue.Empty:
             return _NoMessages()
 
@@ -102,10 +110,10 @@ class YtLogWriter:
             self._log_path,
             attributes={"schema": LogRecord.get_yt_schema().to_yson_type()},
         )
-        while True:
+        got_last_message = False
+        while not got_last_message:
             messages: list[dict[str, str | int]] = []
-            got_last_message = False
-            while not got_last_message:
+            while True:
                 message = self._get_next_message()
                 match message:
                     case _NoMessages():
@@ -366,17 +374,17 @@ class ProcessManager:
             io_queue = meta.queue
             lines = key.fileobj.readlines()  # type: ignore
             if not lines:
-                break
+                continue
             for line in lines:
                 line = line.rstrip()
                 print(line, file=sys.stderr)
                 record = LogRecord(
                     message=line,
-                    self_index=0,
                     fd=meta.output_type,
+                    datetime=datetime.datetime.now(),
                 )
                 try:
-                    io_queue.put(record, timeout=0.01)
+                    io_queue.put(record, timeout=QUEUE_TIMEOUT)
                 except queue.Full:
                     print("io queue is full, can't write data to the table", file=sys.stderr)
 

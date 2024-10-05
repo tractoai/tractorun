@@ -45,9 +45,41 @@ class OutputType(str, enum.Enum):
 BULK_TABLE_WRITE_SIZE = 1000
 WAIT_LOG_RECORDS_TIMEOUT = 5
 IO_QUEUE_MAXSIZE = 10000
+YT_LOG_WRITER_JOIN_TIMEOUT = 30
 
 
 STOP_LOG_WRITER = object()
+
+
+class _NoMessages:
+    pass
+
+
+class _LastMessage:
+    pass
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class LogRecord:
+    _self_index: int
+    _message: str
+    _fd: OutputType
+
+    @staticmethod
+    def get_yt_schema() -> yt.schema.TableSchema:
+        # I don't trust the implementation of yt_dataclass
+        # so let's define transformations explicitly
+
+        schema = yt.schema.TableSchema()
+        schema.add_column("message", type_info.String)
+        schema.add_column("fd", type_info.String)
+        return schema
+
+    def to_dict(self) -> dict:
+        return {
+            "message": self._message,
+            "fd": self._fd.value,
+        }
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -55,6 +87,12 @@ class YtLogWriter:
     _yt_client_config: str
     _queue: Queue
     _log_path: str
+
+    def _get_next_message(self) -> LogRecord | _NoMessages:
+        try:
+            return self._queue.get(timeout=0.01)
+        except queue.Empty:
+            return _NoMessages()
 
     def write_log(self) -> None:
         yt_config = pickle.loads(base64.b64decode(self._yt_client_config))
@@ -66,13 +104,22 @@ class YtLogWriter:
         )
         while True:
             messages: list[dict[str, str | int]] = []
-            while not self._queue.empty():
-                message: LogRecord = self._queue.get(block=True, timeout=None)
-                messages.append(message.to_dict())
-                if len(messages) >= BULK_TABLE_WRITE_SIZE:
-                    break
-            if not messages:
+            got_last_message = False
+            while not got_last_message:
+                message = self._get_next_message()
+                match message:
+                    case _NoMessages():
+                        break
+                    case _LastMessage():
+                        got_last_message = True
+                        break
+                    case LogRecord():
+                        messages.append(message.to_dict())
+                        if len(messages) >= BULK_TABLE_WRITE_SIZE:
+                            break
+            if not messages and not got_last_message:
                 time.sleep(WAIT_LOG_RECORDS_TIMEOUT)
+                continue
             yt_client.write_table(
                 yt.TablePath(self._log_path, append=True),
                 messages,
@@ -327,51 +374,35 @@ class ProcessManager:
                     message=line,
                     self_index=0,
                     fd=meta.output_type,
-                    source="foo",
                 )
                 try:
-                    io_queue.put_nowait(record)
+                    io_queue.put(record, timeout=0.01)
                 except queue.Full:
                     print("io queue is full, can't write data to the table", file=sys.stderr)
 
     def stop(self) -> None:
+        for io_queue in self._io_queues:
+            try:
+                io_queue.put_nowait(_LastMessage())
+            except queue.Full:
+                pass
         for worker_run in self._worker_runs:
             worker_run.terminate()
         for sidecar_run_meta in self._sidecar_runs.values():
             sidecar_run_meta.sidecar_run.terminate()
         self._io_selector.close()
         for yt_log_writer in self._log_writers:
-            yt_log_writer.terminate()
-            yt_log_writer.join()
+            yt_log_writer.join(timeout=YT_LOG_WRITER_JOIN_TIMEOUT)
+            if yt_log_writer.is_alive():
+                yt_log_writer.kill()
+                yt_log_writer.join()
             yt_log_writer.close()
         for io_queue in self._io_queues:
+            try:
+                io_queue.put_nowait(_LastMessage())
+            except queue.Full:
+                pass
             io_queue.close()
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class LogRecord:
-    _self_index: int
-    _message: str
-    _source: str
-    _fd: OutputType
-
-    @staticmethod
-    def get_yt_schema() -> yt.schema.TableSchema:
-        # I don't trust the implementation of yt_dataclass
-        # so let's define transformations explicitly
-
-        schema = yt.schema.TableSchema()
-        schema.add_column("message", type_info.String)
-        schema.add_column("source", type_info.String)
-        schema.add_column("fd", type_info.String)
-        return schema
-
-    def to_dict(self) -> dict:
-        return {
-            "message": self._message,
-            "source": self._source,
-            "fd": self._fd.value,
-        }
 
 
 def has_failed(exit_codes: list[Optional[int]]) -> bool:

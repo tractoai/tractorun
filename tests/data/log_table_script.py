@@ -1,4 +1,5 @@
 import sys
+
 from tractorun.backend.generic import GenericBackend
 from tractorun.run import prepare_and_get_toolbox
 
@@ -11,7 +12,6 @@ def main() -> None:
     print(f"first stderr line {self_index} {inc}", file=sys.stderr)
     print(f"second stdout line {self_index} {inc}", file=sys.stdout)
     print(f"second stderr line {self_index} {inc}", file=sys.stderr)
-
 
 
 if __name__ == "__main__":

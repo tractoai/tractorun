@@ -3,7 +3,11 @@ import sys
 
 import yt.wrapper as yt
 
-from tests.utils import DOCKER_IMAGE, TractoCli, get_data_path
+from tests.utils import (
+    DOCKER_IMAGE,
+    TractoCli,
+    get_data_path,
+)
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.mesh import Mesh
@@ -17,7 +21,7 @@ from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
 
-def validate_logs(yt_client: yt.YtClient, incarnation: int, yt_path: str):
+def validate_logs(yt_client: yt.YtClient, incarnation: int, yt_path: str) -> None:
     for index in range(4):
         messages: list[tuple[str, str]] = []
         for raw in yt_client.read_table(f"{yt_path}/logs/{incarnation}/workers/{index}"):
@@ -88,8 +92,10 @@ def test_cli(yt_instance: YtInstance, yt_path: str) -> None:
             args=[
                 "--yt-path",
                 yt_path,
-                "--mesh.node-count", "2",
-                "--mesh.process-per-node", "2",
+                "--mesh.node-count",
+                "2",
+                "--mesh.process-per-node",
+                "2",
                 "--sidecar",
                 json.dumps(
                     {

@@ -116,6 +116,8 @@ class YtLogWriter:
             while True:
                 message = self._get_next_message()
                 match message:
+                    case _NoMessages():
+                        time.sleep(WAIT_LOG_RECORDS_TIMEOUT)
                     case _LastMessage():
                         got_last_message = True
                         break

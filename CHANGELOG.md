@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.28.0 (2024-10-06)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.27.0...0.28.0)
+
+### Changes
+
+- NYT-709: training logs on YT (#83). [b70ab96](https://github.com/tractoai/tractorun/commit/b70ab966397d724f58fe3a7ffa7dd49476e981dd)
+    
+- Update how to build instruction (#82). [aaa27bf](https://github.com/tractoai/tractorun/commit/aaa27bf003370a1b9b43be85e339e61bbc16c492)
+    
+
 ## 0.27.0 (2024-10-02)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.25.0...HEAD)

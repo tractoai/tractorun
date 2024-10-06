@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.29.0 (2024-10-06)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.28.0...0.29.0)
+
+### Changes
+
+- NYT-721: write by chunks (#84). [82b8748](https://github.com/tractoai/tractorun/commit/82b8748cbe73a1e99bac4acc07b1ab7038a23d6b)
+    
+
 ## 0.28.0 (2024-10-06)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.27.0...0.28.0)

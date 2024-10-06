@@ -43,7 +43,7 @@ class OutputType(str, enum.Enum):
     stderr: str = "stderr"
 
 
-BULK_TABLE_WRITE_SIZE = 1000
+BULK_TABLE_WRITE_SIZE = 100
 WAIT_LOG_RECORDS_TIMEOUT = 5
 IO_QUEUE_MAXSIZE = 10000
 YT_LOG_WRITER_JOIN_TIMEOUT = 10
@@ -116,8 +116,6 @@ class YtLogWriter:
             while True:
                 message = self._get_next_message()
                 match message:
-                    case _NoMessages():
-                        break
                     case _LastMessage():
                         got_last_message = True
                         break

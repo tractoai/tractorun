@@ -64,6 +64,10 @@ def prepare_environment(closet: Closet) -> None:
             path=f"{worker_logs_dir}/0",
             cypress_link_template=closet.cluster_config.cypress_link_template,
         )
+        logs_path = make_cypress_link(
+            path=f"{logs_dir}",
+            cypress_link_template=closet.cluster_config.cypress_link_template,
+        )
         description_manager.set(
             TractorunDescription(
                 training_dir=Link(value=training_dir),
@@ -72,5 +76,6 @@ def prepare_environment(closet: Closet) -> None:
                 incarnation=closet.coordinator.get_incarnation_id(),
                 mesh=closet.mesh,
                 primary_stderr=Link(value=job_stderr_link),
+                logs=Link(value=logs_path),
             ).to_dict(),
         )

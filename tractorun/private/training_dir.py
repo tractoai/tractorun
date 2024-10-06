@@ -1,5 +1,3 @@
-import uuid
-
 import attrs
 import yt.wrapper as yt
 
@@ -11,9 +9,6 @@ class TrainingDir:
     models_path: str
     checkpoints_path: str
     primary_lock_path: str
-    logs_path: str
-    worker_logs_path: str
-    sidecar_logs_path: str
 
     @classmethod
     def create(cls, path: str) -> "TrainingDir":
@@ -23,9 +18,6 @@ class TrainingDir:
             incarnations_path=path + "/incarnations",
             models_path=path + "/models",
             checkpoints_path=path + "/checkpoints",
-            logs_path=path + "/logs",
-            worker_logs_path=path + f"/_raw_logs/{uuid.uuid4()}",
-            sidecar_logs_path=path + f"/_raw_logs/{uuid.uuid4()}",
         )
 
     def get_incarnation_path(self, incarnation_id: int) -> str:
@@ -40,6 +32,3 @@ def prepare_training_dir(training_dir: TrainingDir, yt_client: yt.YtClient) -> N
     yt_client.create("map_node", training_dir.incarnations_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.models_path, ignore_existing=True)
     yt_client.create("map_node", training_dir.checkpoints_path, ignore_existing=True)
-    yt_client.create("map_node", training_dir.logs_path, ignore_existing=True)
-    yt_client.create("map_node", training_dir.worker_logs_path, recursive=True, ignore_existing=True)
-    yt_client.create("map_node", training_dir.sidecar_logs_path, recursive=True, ignore_existing=True)

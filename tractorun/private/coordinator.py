@@ -25,20 +25,20 @@ def get_incarnation_id(yt_client: yt.YtClient, training_dir: TrainingDir, raise_
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class CoordinatorFactory:
     _self_endpoint: str
-    _self_index: int
-    _process_index: int
     _node_index: int
     _mesh: Mesh
+    _process_index: int
     _yt_client: yt.YtClient
     _training_dir: _TrainingDir
     _operation_id: str
     _job_id: str
 
     def create(self) -> Coordinator:
-        if self._self_index == 0:
-            return self._make_primary(self_index=self._self_index)
+        self_index = self._node_index * self._mesh.process_per_node + self._process_index
+        if self_index == 0:
+            return self._make_primary(self_index=self_index)
         else:
-            return self._make_subordinate(self_index=self._self_index)
+            return self._make_subordinate(self_index=self_index)
 
     def _wait_for_gang_barrier(self, incarnation_path: str) -> None:
         print("Waiting for all peers to start", file=sys.stderr)
@@ -117,6 +117,7 @@ class CoordinatorFactory:
             self_index=self_index,
             incarnation_id=incarnation_id,
             mesh=self._mesh,
+            node_index=self._node_index,
             process_index=self._process_index,
             self_endpoint=self._self_endpoint,
             primary_endpoint=self._self_endpoint,
@@ -167,6 +168,7 @@ class CoordinatorFactory:
                 self_index=self_index,
                 incarnation_id=incarnation_id,
                 mesh=self._mesh,
+                node_index=self._node_index,
                 process_index=self._process_index,
                 self_endpoint=self._self_endpoint,
                 primary_endpoint=primary_endpoint,

@@ -204,12 +204,12 @@ def test_need_restart(command: list[str], policy: RestartPolicy, verdict: Restar
 def test_sidecar_run() -> None:
     sidecar = Sidecar(command=["sleep", "infinity"], restart_policy=RestartPolicy.NEVER)
     sidecar_run = SidecarRun.run(sidecar=sidecar, env={})
-    sidecar_run = sidecar_run.restart()
+    sidecar_run.restart()
     assert sidecar_run.poll() is None
     sidecar_run.terminate()
 
     sidecar = Sidecar(command=["echo", "1"], restart_policy=RestartPolicy.NEVER)
     sidecar_run = SidecarRun.run(sidecar=sidecar, env={})
     sidecar_run.wait()
-    sidecar_run = sidecar_run.restart()
+    sidecar_run.restart()
     sidecar_run.terminate()

@@ -158,7 +158,7 @@ def bootstrap(
                 "YT_TOKEN": yt_config["token"],
                 **tp_env,
                 **spec_env,
-            })
+            }, file=sys.stderr)
         process = subprocess.Popen(
             command,
             stdout=sys.stderr,

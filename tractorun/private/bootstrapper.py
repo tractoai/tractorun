@@ -151,6 +151,14 @@ def bootstrap(
         # TODO: torch multiprocessing is better (or another backend-specific tool),
         # but pickling does not work in this case.
         # torch.multiprocessing.spawn(wrapped_run_mp, nprocs=mesh.process_per_node, args=(f, c, path,), join=True)
+        print("DEBUG", {
+                **os.environ,
+                TRACTO_CONFIG_ENV_VAR: config_name,
+                "YT_PROXY": yt_config["proxy"]["url"],
+                "YT_TOKEN": yt_config["token"],
+                **tp_env,
+                **spec_env,
+            })
         process = subprocess.Popen(
             command,
             stdout=sys.stderr,

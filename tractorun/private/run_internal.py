@@ -278,6 +278,7 @@ def run_tracto(
     yt_client_config_for_job: dict = copy.deepcopy(yt_client_config)
     # we store it explicitly to prevent failing attempts to load it from local file (~/.yt/token) in the jobs
     yt_client_config_for_job["token"] = yt.http_helpers.get_token(client=yt_client)
+    yt_client_config_for_job["token_path"] = None
 
     # for tests only
     yt_config_for_job_patch_yson_string = os.environ.get("TRACTORUN_YT_CONFIG_FOR_JOB_PATCH")

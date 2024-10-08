@@ -269,7 +269,7 @@ def run_tracto(
     # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
 
-    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
+    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_default_config())
     yt_client.config["pickling"]["ignore_system_modules"] = False if attach_external_libs else True
 
     yt_client_config = yt.config.get_config(yt_client)

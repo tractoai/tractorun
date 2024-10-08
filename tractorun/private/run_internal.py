@@ -272,7 +272,7 @@ def run_tracto(
     yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = False if attach_external_libs else True
 
-    # we store it explicitly since locally it could be read from ~/.yt/token
+    # we store it explicitly since locally it could have been read from ~/.yt/token
     yt_client.config["token"] = yt.http_helpers.get_token(client=yt_client)
 
     yt_client_config = yt.config.get_config(yt_client)

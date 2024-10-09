@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.30.0 (2024-10-09)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.29.0...0.30.0)
+
+### Changes
+
+- NYT-728: fix loading yt token from file (#87). [a10f888](https://github.com/tractoai/tractorun/commit/a10f888e91f192150ec9476451a9098f34177b0b)
+    
+- NYT-709: revert "write logs to YT" (#85). [aa958a3](https://github.com/tractoai/tractorun/commit/aa958a3738be8e4d2904e7f45d7a3efe14375d24)
+    
+
 ## 0.29.0 (2024-10-06)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.28.0...0.29.0)

@@ -16,3 +16,9 @@ class BindLocal:
     # TODO: just use pathlib
     source: str = attrs.field(converter=_to_abs_path)
     destination: str = attrs.field(converter=_to_abs_path)
+
+
+@attrs.define(kw_only=True, slots=True)
+class BindCypress:
+    source: str = attrs.field()
+    destination: str = attrs.field()

@@ -18,10 +18,11 @@ import attrs
 import cattrs.errors
 from yt import wrapper as yt
 from yt.wrapper import TaskSpecBuilder
+import yt.yson as yson
 
 from tractorun import __version__
 from tractorun.base_backend import BackendBase
-from tractorun.bind import BindLocal
+from tractorun.bind import BindLocal, BindCypress
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.exception import (
@@ -246,6 +247,7 @@ def run_tracto(
     user_config: dict[Any, Any] | None = None,
     binds_local: list[BindLocal] | None = None,
     binds_local_lib: list[str] | None = None,
+    binds_cypress: list[BindCypress] | None = None,
     tensorproxy: TensorproxySidecar | None = None,
     no_wait: bool = False,
     sidecars: list[Sidecar] | None = None,
@@ -332,6 +334,12 @@ def run_tracto(
     yt_file_bindings.extend(
         [yt.LocalFile(packed_bind.local_path, packed_bind.yt_path) for packed_bind in packed_binds],
     )
+
+    binds_cypress = binds_cypress or []
+    yt_file_bindings.extend(
+        [yson.to_yson_type(cb.source, attributes={"file_name": cb.destination}) for cb in binds_cypress]
+    )
+
     yt_file_bindings.extend([yt.LocalFile(packed_lib.path, packed_lib.archive_name) for packed_lib in packed_libs])
     yt_file_bindings.append(
         yt.LocalFile(bootstrap_config_path, BOOTSTRAP_CONFIG_NAME),

@@ -199,6 +199,8 @@ class EffectiveConfig:
 
         binds_cypress = _choose_value(args_value=args["bind_cypress"], config_value=config.bind_cypress)
         effective_cypress_binds: list[BindCypress] = []
+        if binds_cypress is None:
+            binds_cypress = []
         for bind in binds_cypress:
             source, destination = bind.split(":")
             effective_cypress_binds.append(

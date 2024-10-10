@@ -6,8 +6,8 @@ from typing import (
 from typing_extensions import overload
 
 from tractorun.bind import (
-    BindLocal,
     BindCypress,
+    BindLocal,
 )
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable

@@ -15,8 +15,8 @@ from cattrs import ClassValidationError
 import yaml
 
 from tractorun.bind import (
-    BindLocal,
     BindCypress,
+    BindLocal,
 )
 from tractorun.docker_auth import (
     DockerAuthData,

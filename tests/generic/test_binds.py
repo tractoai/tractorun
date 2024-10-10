@@ -4,8 +4,8 @@ import typing as t
 
 from tests.utils import (
     DOCKER_IMAGE,
-    get_data_path,
     TractoCli,
+    get_data_path,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend

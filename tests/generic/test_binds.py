@@ -134,6 +134,6 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> 
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 
-def test_cypress_binds_config_from_cli():
+def test_cypress_binds_config_from_cli() -> None:
     _, _, config = make_configuration(["--yt-path", "foo", "--bind-cypress", "//tmp/foo:bar", "command"])
     assert config.bind_cypress == [BindCypress(source="//tmp/foo", destination="bar")]

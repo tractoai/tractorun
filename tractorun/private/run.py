@@ -5,7 +5,10 @@ from typing import (
 
 from typing_extensions import overload
 
-from tractorun.bind import BindLocal
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
@@ -39,6 +42,7 @@ def run_script(
     cluster_config_path: str,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
+    binds_cypress: list[BindCypress],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: Literal[True],
@@ -65,6 +69,7 @@ def run_script(
     cluster_config_path: str,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
+    binds_cypress: list[BindCypress],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: Literal[False],
@@ -91,6 +96,7 @@ def run_script(
     cluster_config_path: str,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
+    binds_cypress: list[BindCypress],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: bool,
@@ -116,6 +122,7 @@ def run_script(
     cluster_config_path: str,
     binds_local: list[BindLocal],
     binds_local_lib: list[str],
+    binds_cypress: list[BindCypress],
     sidecars: list[Sidecar],
     env: list[EnvVariable],
     local: bool,
@@ -153,6 +160,7 @@ def run_script(
             docker_image=docker_image,
             binds_local=binds_local,
             binds_local_lib=binds_local_lib,
+            binds_cypress=binds_cypress,
             tensorproxy=tensorproxy,
             sidecars=sidecars,
             env=env,

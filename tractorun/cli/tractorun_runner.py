@@ -14,7 +14,10 @@ import attrs
 from cattrs import ClassValidationError
 import yaml
 
-from tractorun.bind import BindLocal
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.docker_auth import (
     DockerAuthData,
     DockerAuthSecret,
@@ -107,6 +110,7 @@ class Config:
     no_wait: Optional[bool] = attrs.field(default=None)
     bind_local: Optional[list[str]] = attrs.field(default=None)
     bind_local_lib: Optional[list[str]] = attrs.field(default=None)
+    bind_cypress: Optional[list[str]] = attrs.field(default=None)
     proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
     cluster_config_path: Optional[str] = attrs.field(default=None)
     command: Optional[list[str]] = attrs.field(default=None)
@@ -141,6 +145,7 @@ class EffectiveConfig:
     no_wait: bool
     bind_local: list[BindLocal]
     bind_local_lib: list[str]
+    bind_cypress: list[BindCypress]
     proxy_stderr_mode: StderrMode
     cluster_config_path: str
     command: list[str]
@@ -174,6 +179,7 @@ class EffectiveConfig:
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
+
         binds = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
         if binds is None:
             binds = []
@@ -190,6 +196,19 @@ class EffectiveConfig:
         bind_lib = _choose_value(args_value=args["bind_local_lib"], config_value=config.bind_local_lib)
         if bind_lib is None:
             bind_lib = []
+
+        binds_cypress = _choose_value(args_value=args["bind_cypress"], config_value=config.bind_cypress)
+        effective_cypress_binds: list[BindCypress] = []
+        if binds_cypress is None:
+            binds_cypress = []
+        for bind in binds_cypress:
+            source, destination = bind.split(":")
+            effective_cypress_binds.append(
+                BindCypress(
+                    source=source,
+                    destination=destination,
+                ),
+            )
 
         sidecars = config.sidecars
         if args["sidecar"] is not None:
@@ -246,6 +265,7 @@ class EffectiveConfig:
             ),
             bind_local=effective_binds,
             bind_local_lib=bind_lib,
+            bind_cypress=effective_cypress_binds,
             proxy_stderr_mode=_choose_value(
                 args_value=args["proxy_stderr_mode"],
                 config_value=config.proxy_stderr_mode,
@@ -392,6 +412,13 @@ def make_cli_parser() -> argparse.ArgumentParser:
         help="bind local python libraries to the docker container and remote PYTHONPATH",
     )
     parser.add_argument(
+        "--bind-cypress",
+        type=str,
+        action="append",
+        default=None,
+        help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path`",
+    )
+    parser.add_argument(
         "--sidecar",
         action="append",
         help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
@@ -467,6 +494,7 @@ def main() -> None:
             docker_image=effective_config.docker_image,
             binds_local=effective_config.bind_local,
             binds_local_lib=effective_config.bind_local_lib,
+            binds_cypress=effective_config.bind_cypress,
             tensorproxy=effective_config.tensorproxy,
             proxy_stderr_mode=effective_config.proxy_stderr_mode,
             sidecars=effective_config.sidecars,

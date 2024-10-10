@@ -1,8 +1,10 @@
+import json
 import pathlib
 import typing as t
 
 from tests.utils import (
     DOCKER_IMAGE,
+    TractoCli,
     get_data_path,
 )
 from tests.yt_instances import YtInstance
@@ -91,3 +93,27 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
     )
+
+
+def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    cypress_file_to_check = "//tmp/foo"
+    yt_client.write_file(cypress_file_to_check, b"hello")
+
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/check_cypress_bind.py"],
+        args=[
+            "--run-config-path",
+            get_data_path("../data/run_config_with_cypress_bind.yaml"),
+            "--yt-path",
+            yt_path,
+            "--bind-local",
+            f"{get_data_path('../data/check_cypress_bind.py')}:/tractorun_tests/check_cypress_bind.py",
+            "--user-config",
+            json.dumps({"CYPRESS_FILE_TO_CHECK": "./bar"}),
+        ],
+    )
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)

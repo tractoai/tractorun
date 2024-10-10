@@ -11,7 +11,10 @@ from typing_extensions import (
 import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
-from tractorun.bind import BindLocal
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
@@ -49,6 +52,7 @@ def run(
     yt_client: yt.YtClient | None = ...,
     binds_local: list[BindLocal] | None = ...,
     binds_local_lib: list[str] | None = ...,
+    binds_cypress: list[BindCypress] | None = None,
     sidecars: list[Sidecar] | None = ...,
     env: list[EnvVariable] | None = ...,
     no_wait: bool = False,
@@ -77,6 +81,7 @@ def run(
     yt_client: yt.YtClient | None = ...,
     binds_local: list[BindLocal] | None = ...,
     binds_local_lib: list[str] | None = ...,
+    binds_cypress: list[BindCypress] | None = None,
     sidecars: list[Sidecar] | None = ...,
     env: list[EnvVariable] | None = ...,
     no_wait: bool = False,
@@ -104,6 +109,7 @@ def run(
     yt_client: yt.YtClient | None = None,
     binds_local: list[BindLocal] | None = None,
     binds_local_lib: list[str] | None = None,
+    binds_cypress: list[BindCypress] | None = None,
     sidecars: list[Sidecar] | None = None,
     env: list[EnvVariable] | None = None,
     no_wait: bool = False,
@@ -144,6 +150,7 @@ def run(
             title=title,
             binds_local=binds_local,
             binds_local_lib=binds_local_lib,
+            binds_cypress=binds_cypress,
             sidecars=sidecars,
             env=env,
             no_wait=no_wait,

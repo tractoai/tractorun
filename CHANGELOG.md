@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.32.0 (2024-10-10)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.31.0...0.32.0)
+
+### Changes
+
+- Support cypress binds in yaml config (#89). [c78d60b](https://github.com/tractoai/tractorun/commit/c78d60beeef85f4dbc70d16c55a35522010d2e37)
+    
+
 ## 0.31.0 (2024-10-10)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.30.0...0.31.0)

@@ -6,6 +6,7 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -13,6 +14,7 @@ from tractorun.bind import (
     BindCypress,
     BindLocal,
 )
+from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
@@ -101,19 +103,37 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> 
     cypress_file_to_check = "//tmp/foo"
     yt_client.write_file(cypress_file_to_check, b"hello")
 
-    tracto_cli = TractoCli(
-        command=["python3", "/tractorun_tests/check_cypress_bind.py"],
-        args=[
-            "--run-config-path",
-            get_data_path("../data/run_config_with_cypress_bind.yaml"),
-            "--yt-path",
-            yt_path,
-            "--bind-local",
-            f"{get_data_path('../data/check_cypress_bind.py')}:/tractorun_tests/check_cypress_bind.py",
-            "--user-config",
-            json.dumps({"CYPRESS_FILE_TO_CHECK": "./bar"}),
+    run_config = {
+        "mesh": {
+            "node_count": 1,
+            "process_per_node": 1,
+            "gpu_per_process": 0,
+        },
+        "bind_cypress": [
+            "//tmp/foo:bar",
         ],
-    )
-    op_run = tracto_cli.run()
+    }
+
+    with run_config_file(run_config) as run_config_path:
+        tracto_cli = TractoCli(
+            command=["python3", "/tractorun_tests/check_cypress_bind.py"],
+            args=[
+                "--run-config-path",
+                run_config_path,
+                "--yt-path",
+                yt_path,
+                "--bind-local",
+                f"{get_data_path('../data/check_cypress_bind.py')}:/tractorun_tests/check_cypress_bind.py",
+                "--user-config",
+                json.dumps({"CYPRESS_FILE_TO_CHECK": "./bar"}),
+            ],
+        )
+        op_run = tracto_cli.run()
+
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
+
+def test_cypress_binds_config_from_cli() -> None:
+    _, _, config = make_configuration(["--yt-path", "foo", "--bind-cypress", "//tmp/foo:bar", "command"])
+    assert config.bind_cypress == [BindCypress(source="//tmp/foo", destination="bar")]

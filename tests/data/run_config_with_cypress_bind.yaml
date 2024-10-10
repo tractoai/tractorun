@@ -1,8 +1,0 @@
-mesh:
-  node_count: 1
-  process_per_node: 1
-  gpu_per_process: 0
-user_config:
-  foo: bar
-bind_cypress:
-  - "//tmp/foo:bar"

@@ -1,4 +1,5 @@
 import json
+import os
 import pathlib
 import typing as t
 
@@ -29,9 +30,11 @@ def checker_dir(toolbox: Toolbox) -> None:
     assert (pathlib.Path(DIR_PATH) / "some_file").is_file()
 
 
-def get_file_checker(file_path: str = FILE_PATH) -> t.Callable[[Toolbox], None]:
+def get_file_checker(file_path: str = FILE_PATH, check_executable: bool = False) -> t.Callable[[Toolbox], None]:
     def checker_file(toolbox: Toolbox) -> None:
         assert pathlib.Path(file_path).is_file()
+        if check_executable:
+            assert os.access(file_path, os.X_OK)
 
     return checker_file
 
@@ -80,9 +83,10 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
     cypress_file_path = "//tmp/foo"
     destination_path = "bar"
     yt_client.write_file(cypress_file_path, b"hello")
+    yt_client.set_attribute(cypress_file_path, "executable", True)
 
     run(
-        get_file_checker(destination_path),
+        get_file_checker(destination_path, check_executable=True),
         backend=GenericBackend(),
         yt_path=yt_path,
         binds_cypress=[

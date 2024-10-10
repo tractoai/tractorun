@@ -75,7 +75,7 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
 
     cypress_file_path = "//tmp/foo"
     destination_path = "bar"
-    yt_client.write_file(cypress_file_path, "hello")
+    yt_client.write_file(cypress_file_path, b"hello")
 
     run(
         get_file_checker(destination_path),

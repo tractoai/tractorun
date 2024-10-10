@@ -22,7 +22,10 @@ import yt.yson as yson
 
 from tractorun import __version__
 from tractorun.base_backend import BackendBase
-from tractorun.bind import BindLocal, BindCypress
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.exception import (

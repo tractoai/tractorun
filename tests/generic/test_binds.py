@@ -7,7 +7,10 @@ from tests.utils import (
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
-from tractorun.bind import BindLocal, BindCypress
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.toolbox import Toolbox

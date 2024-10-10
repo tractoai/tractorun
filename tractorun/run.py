@@ -11,7 +11,10 @@ from typing_extensions import (
 import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
-from tractorun.bind import BindLocal, BindCypress
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
 from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh

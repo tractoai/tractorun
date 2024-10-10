@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.31.0 (2024-10-10)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.30.0...0.31.0)
+
+### Changes
+
+- Cypress binds (#88). [c20b09b](https://github.com/tractoai/tractorun/commit/c20b09bcc9544f650deb3585f8aec1867c09de2a)
+    
+
 ## 0.30.0 (2024-10-09)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.29.0...0.30.0)

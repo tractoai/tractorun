@@ -25,6 +25,46 @@ FILE_PATH = "/bind/file"
 DIR_PATH = "/bind/dir"
 
 
+def test_configuration_cypress() -> None:
+    _, _, config = make_configuration(["--yt-path", "foo", "--bind-cypress", "//tmp/cli:cli", "command"])
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+
+    run_config = {
+        "command": ["foo"],
+        "yt_path": "foo",
+        "bind_cypress": ["//tmp/config:config"],
+    }
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.bind_cypress == [BindCypress(source="//tmp/config", destination="config")]
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--bind-cypress", "//tmp/cli:cli"],
+        )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+
+
+def test_configuration_local() -> None:
+    _, _, config = make_configuration(["--yt-path", "foo", "--bind-local", "//tmp/cli:/tmp/cli", "command"])
+    assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
+
+    run_config = {
+        "command": ["foo"],
+        "yt_path": "foo",
+        "bind_local": ["//tmp/config:/tmp/config"],
+    }
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.bind_local == [BindLocal(source="//tmp/config", destination="/tmp/config")]
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--bind-local", "//tmp/cli:/tmp/cli"],
+        )
+    assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
+
+
 def checker_dir(toolbox: Toolbox) -> None:
     assert pathlib.Path(DIR_PATH).is_dir()
     assert (pathlib.Path(DIR_PATH) / "some_file").is_file()
@@ -136,8 +176,3 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> 
 
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
-
-
-def test_cypress_binds_config_from_cli() -> None:
-    _, _, config = make_configuration(["--yt-path", "foo", "--bind-cypress", "//tmp/foo:bar", "command"])
-    assert config.bind_cypress == [BindCypress(source="//tmp/foo", destination="bar")]

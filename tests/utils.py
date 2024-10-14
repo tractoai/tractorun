@@ -113,10 +113,11 @@ class TractoCli:
         command = [
             get_data_path("../../tractorun/cli/tractorun_runner.py"),
             *_get_docker_image_arg(),
+            "--title",
+            operation_title,
             "--yt-operation-spec",
             json.dumps(
                 {
-                    "title": operation_title,
                     **self._operation_spec,
                 },
             ),

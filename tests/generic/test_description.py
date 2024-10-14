@@ -23,9 +23,9 @@ from tractorun.toolbox import Toolbox
 
 @pytest.mark.parametrize(
     "config_exists",
-    [{}, None],
+    [True, False],
 )
-def test_description_empty_config(config_exists: dict | None, yt_path: str, yt_instance: YtInstance) -> None:
+def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance: YtInstance) -> None:
     # checking that the basic logic works without config or with an empty config
     yt_client = yt_instance.get_client()
 

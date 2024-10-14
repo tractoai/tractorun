@@ -5,6 +5,7 @@ import random
 import string
 import subprocess
 import tempfile
+import time
 from typing import (
     Any,
     Generator,
@@ -17,6 +18,8 @@ from yt import wrapper as yt
 
 
 DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-14-14-51-57"
+OPERATION_INFO_RETRIES = 5
+OPERATION_INFO_TIMEOUT = 2
 
 
 def get_data_path(filename: str) -> str:
@@ -36,7 +39,13 @@ class TractoCliRun:
         return self._process.returncode == exit_code
 
     def get_operation_info(self, yt_client: yt.YtClient) -> dict:
-        operations = yt_client.list_operations(filter=self._operation_title)["operations"]
+        operations = []
+        for _ in range(OPERATION_INFO_RETRIES):
+            operations = yt_client.list_operations(filter=self._operation_title)["operations"]
+            if operations:
+                break
+            time.sleep(OPERATION_INFO_TIMEOUT)
+
         assert len(operations) == 1
 
         operation_id = operations[0]["id"]

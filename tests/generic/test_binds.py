@@ -3,6 +3,8 @@ import os
 import pathlib
 import typing as t
 
+import pytest
+
 from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
@@ -23,6 +25,15 @@ from tractorun.toolbox import Toolbox
 
 FILE_PATH = "/bind/file"
 DIR_PATH = "/bind/dir"
+
+
+@pytest.fixture
+def cypress_file(yt_instance: YtInstance, yt_path: str) -> str:
+    yt_client = yt_instance.get_client()
+    file_path = f"{yt_path}/cypress_file"
+    yt_client.write_file(file_path, b"hello")
+    yt_client.set_attribute(file_path, "executable", True)
+    return file_path
 
 
 def test_configuration_cypress() -> None:
@@ -117,13 +128,11 @@ def test_local_bind_dir_pickle(yt_instance: YtInstance, yt_path: str) -> None:
     )
 
 
-def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
+
+def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
 
-    cypress_file_path = "//tmp/foo"
     destination_path = "bar"
-    yt_client.write_file(cypress_file_path, b"hello")
-    yt_client.set_attribute(cypress_file_path, "executable", True)
 
     run(
         get_file_checker(destination_path, check_executable=True),
@@ -131,7 +140,7 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
         yt_path=yt_path,
         binds_cypress=[
             BindCypress(
-                source=cypress_file_path,
+                source=cypress_file,
                 destination=destination_path,
             ),
         ],
@@ -141,11 +150,8 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str) -> None:
     )
 
 
-def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> None:
+def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
-
-    cypress_file_to_check = "//tmp/foo"
-    yt_client.write_file(cypress_file_to_check, b"hello")
 
     run_config = {
         "mesh": {
@@ -154,7 +160,7 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str) -> 
             "gpu_per_process": 0,
         },
         "bind_cypress": [
-            "//tmp/foo:bar",
+            f"{cypress_file}:bar",
         ],
     }
 

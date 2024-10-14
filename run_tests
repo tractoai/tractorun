@@ -2,8 +2,8 @@
 
 set -x
 
-IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-08-21-17-20-17"
-IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
+IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-14-14-51-57"
+IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
 
 PATH_GENERIC="/src/tests/generic"
 PATH_TENSORPROXY="/src/tests/tensorproxy"
@@ -48,5 +48,12 @@ run_tests() {
 }
 
 for i in "${!IMAGES[@]}"; do
-  run_tests "${IMAGES[$i]}" "${TEST_PATHS[$i]}/${@:2}"
+  if [[ "$2" == -* ]]; then
+    TEST_NAME=""
+    TEST_ARGS=${@:2}
+  else
+    TEST_NAME=$2
+    TEST_ARGS=${@:3}
+  fi
+  run_tests "${IMAGES[$i]}" "${TEST_PATHS[$i]}/$TEST_NAME" $TEST_ARGS
 done

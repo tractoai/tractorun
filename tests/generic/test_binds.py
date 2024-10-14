@@ -128,7 +128,6 @@ def test_local_bind_dir_pickle(yt_instance: YtInstance, yt_path: str) -> None:
     )
 
 
-
 def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
 

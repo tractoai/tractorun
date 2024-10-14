@@ -16,7 +16,7 @@ import yaml
 from yt import wrapper as yt
 
 
-DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-08-21-17-20-17"
+DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-14-14-51-57"
 
 
 def get_data_path(filename: str) -> str:

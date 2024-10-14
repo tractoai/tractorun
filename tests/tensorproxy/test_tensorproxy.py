@@ -8,7 +8,7 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 
 
-DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-08-06-22-05-28"
+DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
 
 
 def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:

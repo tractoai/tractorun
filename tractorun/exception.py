@@ -17,6 +17,10 @@ class StderrReaderError(BaseTractorunException):
     pass
 
 
+class TractorunBootstrapError(BaseTractorunException):
+    pass
+
+
 class TractorunConfigError(BaseTractorunException):
     pass
 

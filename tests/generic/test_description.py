@@ -1,3 +1,9 @@
+import contextlib
+from typing import (
+    ContextManager,
+    Generator,
+)
+
 import attrs
 import pytest
 
@@ -21,9 +27,14 @@ from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
+@contextlib.contextmanager
+def _dummy_context_manager() -> Generator[None, None, None]:
+    yield
+
+
 @pytest.mark.parametrize(
     "config_exists",
-    [True, False],
+    [False, True],
 )
 def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance: YtInstance) -> None:
     # checking that the basic logic works without config or with an empty config
@@ -38,10 +49,16 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
         yt_client.create("document", path=config_path)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    with pytest.warns(
-        UserWarning,
-        match=f"Cluster config {config_path} does not exist. Some functions are not available. Please specify config's path by tractorun params.",
-    ):
+    ctx_manager = (
+        pytest.warns(
+            UserWarning,
+            match=f"Cluster config {config_path} does not exist. Some functions are not available. Please specify config's path by tractorun params.",
+        )
+        if not config_exists
+        else _dummy_context_manager()
+    )
+    assert isinstance(ctx_manager, ContextManager)
+    with ctx_manager:
         operation = run(
             checker,
             backend=GenericBackend(),

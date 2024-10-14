@@ -44,6 +44,8 @@ class TractorunClusterConfig:
             )
 
         config = yt_client.get(path)
+        if not config:
+            config = {}
 
         return TractorunClusterConfig(
             cypress_link_template=_to_str(config.get("cypress_link_template")),

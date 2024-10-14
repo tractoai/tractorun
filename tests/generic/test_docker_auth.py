@@ -79,7 +79,6 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
         pass
 
     operation_title = f"test operation {uuid.uuid4()}"
-    task_title = f"test operation's task {uuid.uuid4()}"
 
     run_info = run(
         checker,
@@ -88,8 +87,7 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
-        yt_task_spec={"title": task_title},
-        yt_operation_spec={"title": operation_title},
+        title=operation_title,
         local=False,
         dry_run=True,
         docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
@@ -147,7 +145,6 @@ def test_invalid_format(secret: dict, yt_instance: YtInstance, yt_path: str) -> 
         pass
 
     operation_title = f"test operation {uuid.uuid4()}"
-    task_title = f"test operation's task {uuid.uuid4()}"
 
     with pytest.raises(DockerAuthDataError):
         _ = run(
@@ -157,8 +154,7 @@ def test_invalid_format(secret: dict, yt_instance: YtInstance, yt_path: str) -> 
             mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
             yt_client=yt_client,
             docker_image=DOCKER_IMAGE,
-            yt_task_spec={"title": task_title},
-            yt_operation_spec={"title": operation_title},
+            title=operation_title,
             local=False,
             dry_run=True,
             docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),

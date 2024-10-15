@@ -154,6 +154,19 @@ class ProcessManagerPollStatus(enum.IntEnum):
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class YTLogHandler:
+    _queue: Queue
+
+    @classmethod
+    def create(cls) -> "YTLogHandler":
+        io_queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
+        return YTLogHandler(queue=io_queue)
+
+    def stop(self):
+        self._queue.put(STOP_LOG_WRITER)
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcessManager:
     _sidecar_runs: dict[SidecarIndex, SidecarRunMeta]
     _worker_runs: dict[WorkerIndex, WorkerRun]

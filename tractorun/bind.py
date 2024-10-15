@@ -3,7 +3,7 @@ import os
 import attrs
 
 
-__all__ = ["BindLocal"]
+__all__ = ["BindLocal", "BindCypress"]
 
 
 def _to_abs_path(path: str) -> str:

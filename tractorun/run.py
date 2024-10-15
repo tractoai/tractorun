@@ -4,10 +4,6 @@ from typing import (
 )
 import warnings
 
-from typing_extensions import (
-    Literal,
-    overload,
-)
 import yt.wrapper as yt
 
 from tractorun.base_backend import BackendBase
@@ -25,74 +21,13 @@ from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_a
 from tractorun.private.run_internal import run_local as _run_local
 from tractorun.private.run_internal import run_tracto as _run_tracto
 from tractorun.resources import Resources
-from tractorun.run_info import (
-    LocalRunInfo,
-    YtRunInfo,
-)
+from tractorun.run_info import RunInfo
 from tractorun.sidecar import Sidecar
 from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
 
 __all__ = ["run", "prepare_and_get_toolbox"]
-
-
-@overload
-def run(
-    user_function: Callable,
-    *,
-    backend: BackendBase,
-    yt_path: str,
-    mesh: Mesh,
-    title: str = ...,
-    cluster_config_path: str = ...,
-    user_config: dict[Any, Any] | None = ...,
-    docker_image: str | None = ...,
-    resources: Resources | None = ...,
-    yt_client: yt.YtClient | None = ...,
-    binds_local: list[BindLocal] | None = ...,
-    binds_local_lib: list[str] | None = ...,
-    binds_cypress: list[BindCypress] | None = None,
-    sidecars: list[Sidecar] | None = ...,
-    env: list[EnvVariable] | None = ...,
-    no_wait: bool = False,
-    yt_operation_spec: dict[Any, Any] | None = ...,
-    yt_task_spec: dict[Any, Any] | None = ...,
-    local: Literal[True],
-    proxy_stderr_mode: StderrMode = ...,
-    docker_auth: DockerAuthData | None = ...,
-    attach_external_libs: bool = ...,
-    dry_run: bool = ...,
-) -> LocalRunInfo: ...
-
-
-@overload
-def run(
-    user_function: Callable,
-    *,
-    backend: BackendBase,
-    yt_path: str,
-    mesh: Mesh,
-    title: str = ...,
-    cluster_config_path: str = ...,
-    user_config: dict[Any, Any] | None = ...,
-    docker_image: str | None = ...,
-    resources: Resources | None = ...,
-    yt_client: yt.YtClient | None = ...,
-    binds_local: list[BindLocal] | None = ...,
-    binds_local_lib: list[str] | None = ...,
-    binds_cypress: list[BindCypress] | None = None,
-    sidecars: list[Sidecar] | None = ...,
-    env: list[EnvVariable] | None = ...,
-    no_wait: bool = False,
-    yt_operation_spec: dict[Any, Any] | None = ...,
-    yt_task_spec: dict[Any, Any] | None = ...,
-    local: Literal[False] = False,
-    proxy_stderr_mode: StderrMode = ...,
-    docker_auth: DockerAuthData | None = ...,
-    attach_external_libs: bool = ...,
-    dry_run: bool = ...,
-) -> YtRunInfo: ...
 
 
 def run(
@@ -120,7 +55,7 @@ def run(
     docker_auth: DockerAuthData | None = None,
     attach_external_libs: bool = False,
     dry_run: bool = False,
-) -> YtRunInfo | LocalRunInfo:
+) -> RunInfo:
     if attach_external_libs:
         warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use in production.")
     if docker_image is None:

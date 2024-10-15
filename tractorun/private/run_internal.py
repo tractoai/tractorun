@@ -67,10 +67,7 @@ from tractorun.private.training_dir import (
 )
 from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.resources import Resources
-from tractorun.run_info import (
-    LocalRunInfo,
-    YtRunInfo,
-)
+from tractorun.run_info import RunInfo
 from tractorun.sidecar import Sidecar
 from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
@@ -262,7 +259,7 @@ def run_tracto(
     docker_auth: DockerAuthData | None = None,
     attach_external_libs: bool = False,
     dry_run: bool = False,
-) -> YtRunInfo:
+) -> RunInfo:
     resources = resources if resources is not None else Resources()
     binds_local = binds_local if binds_local is not None else []
     binds_local_lib = binds_local_lib if binds_local_lib is not None else []
@@ -410,7 +407,7 @@ def run_tracto(
             operation_id = operation.id
             operation_attributes = operation.get_attributes()
 
-    run_info = YtRunInfo(
+    run_info = RunInfo(
         operation_spec=operation_spec.build(client=yt_client),
         operation_id=operation_id,
         operation_attributes=operation_attributes,
@@ -432,7 +429,7 @@ def run_local(
     tensorproxy: Optional[TensorproxySidecar] = None,
     yt_client: Optional[yt.YtClient] = None,
     dry_run: bool = False,
-) -> LocalRunInfo:
+) -> RunInfo:
     sidecars = sidecars if sidecars is not None else []
 
     if mesh.node_count != 1:
@@ -473,7 +470,7 @@ def run_local(
     if not dry_run:
         prepare_training_dir(training_dir, yt_client)
         wrapped()
-    return LocalRunInfo()
+    return RunInfo(operation_spec={}, operation_id=None, operation_attributes=None)
 
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:

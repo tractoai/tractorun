@@ -1,9 +1,4 @@
-from typing import (
-    Any,
-    Literal,
-)
-
-from typing_extensions import overload
+from typing import Any
 
 from tractorun.bind import (
     BindCypress,
@@ -18,95 +13,10 @@ from tractorun.private.run_internal import (
     run_tracto,
 )
 from tractorun.resources import Resources
-from tractorun.run_info import (
-    LocalRunInfo,
-    RunInfo,
-    YtRunInfo,
-)
+from tractorun.run_info import RunInfo
 from tractorun.sidecar import Sidecar
 from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
-
-
-@overload
-def run_script(
-    command: list[str],
-    *,
-    yt_path: str,
-    mesh: Mesh,
-    docker_image: str,
-    resources: Resources,
-    tensorproxy: TensorproxySidecar,
-    title: str | None,
-    user_config: dict[Any, Any] | None,
-    cluster_config_path: str,
-    binds_local: list[BindLocal],
-    binds_local_lib: list[str],
-    binds_cypress: list[BindCypress],
-    sidecars: list[Sidecar],
-    env: list[EnvVariable],
-    local: Literal[True],
-    no_wait: bool,
-    yt_operation_spec: dict[Any, Any] | None,
-    yt_task_spec: dict[Any, Any] | None,
-    proxy_stderr_mode: StderrMode,
-    docker_auth: DockerAuthData | None,
-    dry_run: bool = False,
-) -> LocalRunInfo: ...
-
-
-@overload
-def run_script(
-    command: list[str],
-    *,
-    yt_path: str,
-    mesh: Mesh,
-    docker_image: str,
-    resources: Resources,
-    tensorproxy: TensorproxySidecar,
-    title: str | None,
-    user_config: dict[Any, Any] | None,
-    cluster_config_path: str,
-    binds_local: list[BindLocal],
-    binds_local_lib: list[str],
-    binds_cypress: list[BindCypress],
-    sidecars: list[Sidecar],
-    env: list[EnvVariable],
-    local: Literal[False],
-    no_wait: bool,
-    yt_operation_spec: dict[Any, Any] | None,
-    yt_task_spec: dict[Any, Any] | None,
-    proxy_stderr_mode: StderrMode,
-    docker_auth: DockerAuthData | None,
-    dry_run: bool = False,
-) -> YtRunInfo: ...
-
-
-@overload
-def run_script(
-    command: list[str],
-    *,
-    yt_path: str,
-    mesh: Mesh,
-    docker_image: str,
-    resources: Resources,
-    tensorproxy: TensorproxySidecar,
-    title: str | None,
-    user_config: dict[Any, Any] | None,
-    cluster_config_path: str,
-    binds_local: list[BindLocal],
-    binds_local_lib: list[str],
-    binds_cypress: list[BindCypress],
-    sidecars: list[Sidecar],
-    env: list[EnvVariable],
-    local: bool,
-    no_wait: bool,
-    yt_operation_spec: dict[Any, Any] | None,
-    yt_task_spec: dict[Any, Any] | None,
-    proxy_stderr_mode: StderrMode,
-    docker_auth: DockerAuthData | None,
-    dry_run: bool = False,
-) -> RunInfo: ...
 
 
 def run_script(

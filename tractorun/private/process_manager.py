@@ -35,6 +35,7 @@ from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.sidecar import Sidecar
 
 
+WorkerIndex = NewType("WorkerIndex", int)
 SidecarIndex = NewType("SidecarIndex", int)
 
 
@@ -73,9 +74,6 @@ class LogRecord:
 
     @staticmethod
     def get_yt_schema() -> yt.schema.TableSchema:
-        # I don't trust the implementation of yt_dataclass
-        # so let's define transformations explicitly
-
         schema = yt.schema.TableSchema()
         schema.add_column("datetime", type_info.Datetime)
         schema.add_column("message", type_info.String)
@@ -101,6 +99,9 @@ class YtLogWriter:
             return self._queue.get(timeout=QUEUE_TIMEOUT)
         except queue.Empty:
             return _NoMessages()
+
+    def __call__(self) -> None:
+        return self.write_log()
 
     def write_log(self) -> None:
         yt_config = pickle.loads(base64.b64decode(self._yt_client_config))
@@ -140,6 +141,12 @@ class SelectorMeta:
     output_type: OutputType
 
 
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class SidecarRunMeta:
+    sidecar_run: SidecarRun
+    queue: Queue
+
+
 class ProcessManagerPollStatus(enum.IntEnum):
     success: int = 0
     fail: int = 1
@@ -147,15 +154,9 @@ class ProcessManagerPollStatus(enum.IntEnum):
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SidecarRunMeta:
-    sidecar_run: SidecarRun
-    queue: Queue
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcessManager:
     _sidecar_runs: dict[SidecarIndex, SidecarRunMeta]
-    _worker_runs: list[WorkerRun]
+    _worker_runs: dict[WorkerIndex, WorkerRun]
     _io_queues: list[Queue]
     _log_writers: list[Process]
     _io_selector: selectors.DefaultSelector
@@ -188,7 +189,7 @@ class ProcessManager:
             spec_env=spec_env,
         )
         yield pm
-        pm.stop()
+        pm._stop()
 
     @classmethod
     def _start(
@@ -204,7 +205,7 @@ class ProcessManager:
         tp_env: dict,
         spec_env: dict,
     ) -> "ProcessManager":
-        worker_runs = []
+        worker_runs: dict[WorkerIndex, WorkerRun] = {}
         sidecar_runs: dict[SidecarIndex, SidecarRun] = {}
         selector = selectors.DefaultSelector()
 
@@ -237,7 +238,8 @@ class ProcessManager:
                     **spec_env,
                 },
             )
-            worker_runs.append(worker_run)
+            worker_index = WorkerIndex(self_index)
+            worker_runs[worker_index] = worker_run
 
         for local_index, sidecar in enumerate(sidecars):
             sidecar_index = SidecarIndex(node_index * len(sidecars) + local_index)
@@ -254,7 +256,7 @@ class ProcessManager:
 
         yt_log_writers: list[Process] = []
         io_queues: list[Queue] = []
-        for worker_run in worker_runs:
+        for worker_run in worker_runs.values():
             io_queue: Queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
             selector.register(
                 worker_run.stdout(),
@@ -272,7 +274,7 @@ class ProcessManager:
                     yt_client_config=yt_client_config,
                     queue=io_queue,
                     log_path=f"{training_dir.worker_logs_path}/{worker_run.worker_config.self_index}",
-                ).write_log
+                )
             )
             yt_log_writer.start()
             yt_log_writers.append(yt_log_writer)
@@ -296,7 +298,7 @@ class ProcessManager:
                     yt_client_config=yt_client_config,
                     queue=io_queue,
                     log_path=f"{training_dir.sidecar_logs_path}/{sidecar_index}",
-                ).write_log
+                )
             )
             yt_log_writer.start()
             yt_log_writers.append(yt_log_writer)
@@ -342,7 +344,7 @@ class ProcessManager:
         return status
 
     def _poll_processes(self) -> ProcessManagerPollStatus:
-        exit_codes = [worker_run.poll() for worker_run in self._worker_runs]
+        exit_codes = [worker_run.poll() for worker_run in self._worker_runs.values()]
         match check_status(exit_codes):
             case PoolStatus.failed:
                 return ProcessManagerPollStatus.fail
@@ -388,13 +390,13 @@ class ProcessManager:
                 except queue.Full:
                     print("io queue is full, can't write data to the table", file=sys.stderr)
 
-    def stop(self) -> None:
+    def _stop(self) -> None:
         for io_queue in self._io_queues:
             try:
                 io_queue.put_nowait(_LastMessage())
             except queue.Full:
                 pass
-        for worker_run in self._worker_runs:
+        for worker_run in self._worker_runs.values():
             worker_run.terminate()
         for sidecar_run_meta in self._sidecar_runs.values():
             sidecar_run_meta.sidecar_run.terminate()

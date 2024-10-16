@@ -32,9 +32,11 @@ from tractorun.private.helpers import (
     get_default_docker_image,
 )
 from tractorun.private.run import run_script
-from tractorun.private.run_internal import CliCommand
+from tractorun.private.run_internal import (
+    CliCommand,
+    TractorunParams,
+)
 from tractorun.resources import Resources
-from tractorun.run import TractorunParams
 from tractorun.run_info import RunInfo
 from tractorun.sidecar import (
     RestartPolicy,

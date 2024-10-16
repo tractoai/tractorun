@@ -22,6 +22,11 @@ import yt.yson as yson
 
 from tractorun import __version__
 from tractorun.base_backend import BackendBase
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
+from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.exception import (
     TractorunConfigurationError,
@@ -61,9 +66,11 @@ from tractorun.private.training_dir import (
     prepare_training_dir,
 )
 from tractorun.private.yt_cluster import TractorunClusterConfig
-from tractorun.run import TractorunParams
+from tractorun.resources import Resources
 from tractorun.run_info import RunInfo
 from tractorun.sidecar import Sidecar
+from tractorun.stderr_reader import StderrMode
+from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 
 
@@ -226,6 +233,32 @@ class UserFunction(Runnable):
                 )
 
         return wrapped
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class TractorunParams:
+    runnable: Runnable
+    docker_image: str
+    yt_path: str
+    mesh: Mesh
+    proxy_stderr_mode: StderrMode
+    cluster_config_path: str
+    title: str | None = None
+    user_config: dict[Any, Any]
+    binds_local: list[BindLocal]
+    binds_local_lib: list[str]
+    binds_cypress: list[BindCypress]
+    tensorproxy: TensorproxySidecar | None
+    no_wait: bool
+    sidecars: list[Sidecar]
+    env: list[EnvVariable]
+    resources: Resources
+    yt_client: yt.YtClient | None
+    yt_operation_spec: dict[Any, Any]
+    yt_task_spec: dict[Any, Any]
+    docker_auth: DockerAuthData | None
+    attach_external_libs: bool
+    dry_run: bool
 
 
 def run_tracto(params: TractorunParams) -> RunInfo:

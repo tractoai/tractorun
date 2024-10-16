@@ -1,8 +1,8 @@
 from tractorun.private.run_internal import (
+    TractorunParams,
     run_local,
     run_tracto,
 )
-from tractorun.run import TractorunParams
 from tractorun.run_info import RunInfo
 
 

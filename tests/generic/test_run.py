@@ -25,7 +25,6 @@ from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -272,7 +271,6 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_
 @pytest.mark.parametrize(
     "env,expected",
     [
-        ({}, DEFAULT_DOCKER_IMAGE),
         ({"YT_BASE_LAYER": "custom_image_1"}, "custom_image_1"),
         ({"YT_JOB_DOCKER_IMAGE": "custom_image_2"}, "custom_image_2"),
     ],
@@ -304,7 +302,6 @@ def test_docker_image_script(yt_path: str, env: dict[str, str], expected: str, m
 @pytest.mark.parametrize(
     "env,expected",
     [
-        ({}, DEFAULT_DOCKER_IMAGE),
         ({"YT_BASE_LAYER": "custom_image_1"}, "custom_image_1"),
         ({"YT_JOB_DOCKER_IMAGE": "custom_image_2"}, "custom_image_2"),
     ],

@@ -7,6 +7,8 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
@@ -29,17 +31,20 @@ TEST_SECRET_AUTH = {
 
 def test_configuration() -> None:
     _, _, config = make_configuration(
-        ["--yt-path", "foo", "--docker-auth-secret.cypress-path", "//tmp/some_secret_cli", "command"]
+        make_cli_args(
+            "--docker-auth-secret.cypress-path",
+            "//tmp/some_secret_cli",
+        )
     )
     assert config.docker_auth_secret == DockerAuthSecret(cypress_path="//tmp/some_secret_cli")
 
-    run_config = {
-        "command": ["foo"],
-        "yt_path": "foo",
-        "docker_auth_secret": {
-            "cypress_path": "//tmp/some_secret_config",
-        },
-    }
+    run_config = make_run_config(
+        {
+            "docker_auth_secret": {
+                "cypress_path": "//tmp/some_secret_config",
+            },
+        }
+    )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.docker_auth_secret == DockerAuthSecret(cypress_path="//tmp/some_secret_config")

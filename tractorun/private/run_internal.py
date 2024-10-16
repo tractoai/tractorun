@@ -107,7 +107,7 @@ class Runnable(abc.ABC):
 
 
 @attrs.define
-class Command(Runnable):
+class CliCommand(Runnable):
     command: list[str]
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
@@ -235,44 +235,38 @@ class UserFunction(Runnable):
         return wrapped
 
 
-def run_tracto(
-    runnable: Runnable,
-    *,
-    docker_image: str,
-    yt_path: str,
-    mesh: Mesh,
-    proxy_stderr_mode: StderrMode,
-    cluster_config_path: str,
-    title: str | None = None,
-    user_config: dict[Any, Any] | None = None,
-    binds_local: list[BindLocal] | None = None,
-    binds_local_lib: list[str] | None = None,
-    binds_cypress: list[BindCypress] | None = None,
-    tensorproxy: TensorproxySidecar | None = None,
-    no_wait: bool = False,
-    sidecars: list[Sidecar] | None = None,
-    env: list[EnvVariable] | None = None,
-    resources: Resources | None = None,
-    yt_client: yt.YtClient | None = None,
-    yt_operation_spec: dict[Any, Any] | None = None,
-    yt_task_spec: dict[Any, Any] | None = None,
-    docker_auth: DockerAuthData | None = None,
-    attach_external_libs: bool = False,
-    dry_run: bool = False,
-) -> RunInfo:
-    resources = resources if resources is not None else Resources()
-    binds_local = binds_local if binds_local is not None else []
-    binds_local_lib = binds_local_lib if binds_local_lib is not None else []
-    sidecars = sidecars if sidecars is not None else []
-    env = env if env is not None else []
-    yt_operation_spec = yt_operation_spec if yt_operation_spec is not None else {}
-    yt_task_spec = yt_task_spec if yt_task_spec is not None else {}
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class TractorunParams:
+    runnable: Runnable
+    docker_image: str
+    yt_path: str
+    mesh: Mesh
+    proxy_stderr_mode: StderrMode
+    cluster_config_path: str
+    title: str | None = None
+    user_config: dict[Any, Any]
+    binds_local: list[BindLocal]
+    binds_local_lib: list[str]
+    binds_cypress: list[BindCypress]
+    tensorproxy: TensorproxySidecar | None
+    no_wait: bool
+    sidecars: list[Sidecar]
+    env: list[EnvVariable]
+    resources: Resources
+    yt_client: yt.YtClient | None
+    yt_operation_spec: dict[Any, Any]
+    yt_task_spec: dict[Any, Any]
+    docker_auth: DockerAuthData | None
+    attach_external_libs: bool
+    dry_run: bool
 
+
+def run_tracto(params: TractorunParams) -> RunInfo:
     # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
     #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
 
-    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
-    yt_client.config["pickling"]["ignore_system_modules"] = False if attach_external_libs else True
+    yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
+    yt_client.config["pickling"]["ignore_system_modules"] = False if params.attach_external_libs else True
 
     # we store it explicitly since locally it could have been read from ~/.yt/token
     yt_client.config["token"] = yt.http_helpers.get_token(client=yt_client) or ""
@@ -291,24 +285,26 @@ def run_tracto(
     yt_client_config_for_job_pickled = base64.b64encode(pickle.dumps(yt_client_config_for_job)).decode("utf-8")
 
     # detached mode only applies to the local client
-    yt_client.config["detached"] = True if no_wait else False
+    yt_client.config["detached"] = True if params.no_wait else False
 
     tmp_dir = tempfile.TemporaryDirectory()
-    training_dir = TrainingDir.create(yt_path)
+    training_dir = TrainingDir.create(params.yt_path)
 
-    tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
+    tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(
+        tensorproxy=params.tensorproxy
+    ).generate_configuration()
 
-    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=cluster_config_path)
+    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=params.cluster_config_path)
 
     # "fail_on_job_restart" is useful for gang operations,
     # so let's turn it on unless disabled explicitly.
-    if "fail_on_job_restart" not in yt_operation_spec:
-        yt_operation_spec["fail_on_job_restart"] = True
+    if "fail_on_job_restart" not in params.yt_operation_spec:
+        params.yt_operation_spec["fail_on_job_restart"] = True
 
     bootstrap_config = BootstrapConfig(
-        mesh=mesh,
-        sidecars=sidecars,
-        env=env,
+        mesh=params.mesh,
+        sidecars=params.sidecars,
+        env=params.env,
         training_dir=training_dir,
         yt_client_config=yt_client_config_for_job_pickled,
         tensorproxy=tp_bootstrap,
@@ -321,11 +317,11 @@ def run_tracto(
         f.write(AttrSerializer(BootstrapConfig).serialize(bootstrap_config))
 
     binds_packer = BindsPacker.from_binds(
-        binds=binds_local,
+        binds=params.binds_local,
     )
     packed_binds = binds_packer.pack(tmp_dir.name)
     bind_libs_packer = BindsLibPacker(
-        paths=binds_local_lib,
+        paths=params.binds_local_lib,
     )
     packed_libs = bind_libs_packer.pack(tmp_dir.name)
     new_pythonpath = ":".join(["./" + packed_lib.archive_name for packed_lib in packed_libs])
@@ -335,9 +331,8 @@ def run_tracto(
         [yt.LocalFile(packed_bind.local_path, packed_bind.yt_path) for packed_bind in packed_binds],
     )
 
-    binds_cypress = binds_cypress or []
     yt_file_bindings.extend(
-        [yson.to_yson_type(cb.source, attributes={"file_name": cb.destination}) for cb in binds_cypress]
+        [yson.to_yson_type(cb.source, attributes={"file_name": cb.destination}) for cb in params.binds_cypress]
     )
 
     yt_file_bindings.extend([yt.LocalFile(packed_lib.path, packed_lib.archive_name) for packed_lib in packed_libs])
@@ -345,24 +340,24 @@ def run_tracto(
         yt.LocalFile(bootstrap_config_path, BOOTSTRAP_CONFIG_NAME),
     )
 
-    yt_command = runnable.make_yt_command()
+    yt_command = params.runnable.make_yt_command()
     task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
 
     task_spec = task_spec.file_paths(yt_file_bindings + tp_yt_files)
 
-    task_spec = runnable.modify_task(
+    task_spec = params.runnable.modify_task(
         task_spec.command(yt_command)
-        .job_count(mesh.node_count)
-        .gpu_limit(mesh.gpu_per_process * mesh.process_per_node)
-        .port_count(mesh.process_per_node + tp_ports)
-        .cpu_limit(resources.cpu_limit)
-        .memory_limit(resources.memory_limit)
-        .docker_image(docker_image)
-        .spec(yt_task_spec)
+        .job_count(params.mesh.node_count)
+        .gpu_limit(params.mesh.gpu_per_process * params.mesh.process_per_node)
+        .port_count(params.mesh.process_per_node + tp_ports)
+        .cpu_limit(params.resources.cpu_limit)
+        .memory_limit(params.resources.memory_limit)
+        .docker_image(params.docker_image)
+        .spec(params.yt_task_spec)
         .environment(
             {
                 "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
-                const.YT_USER_CONFIG_ENV_VAR: json.dumps(user_config),
+                const.YT_USER_CONFIG_ENV_VAR: json.dumps(params.user_config),
                 # Sometimes we can't read compiled bytecode in forks on yt.
                 "PYTHONDONTWRITEBYTECODE": "1",
                 BIND_PATHS_ENV_VAR: binds_packer.to_env(),
@@ -374,33 +369,33 @@ def run_tracto(
 
     operation_spec = task_spec.end_task()
 
-    operation_spec = operation_spec.title(title)
+    operation_spec = operation_spec.title(params.title)
 
-    if mesh.pool_trees is not None:
-        operation_spec = operation_spec.pool_trees(mesh.pool_trees)
+    if params.mesh.pool_trees is not None:
+        operation_spec = operation_spec.pool_trees(params.mesh.pool_trees)
 
     secure_vault: dict[str, Any] = {}
-    if docker_auth:
-        secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(docker_auth).to_spec()
+    if params.docker_auth:
+        secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(params.docker_auth).to_spec()
 
     if secure_vault:
         operation_spec.secure_vault(secure_vault)
 
-    operation_spec = operation_spec.spec(yt_operation_spec)
-    operation_spec = runnable.modify_operation(operation_spec)
+    operation_spec = operation_spec.spec(params.yt_operation_spec)
+    operation_spec = params.runnable.modify_operation(operation_spec)
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
     operation_id = operation_attributes = None
-    is_sync = not no_wait
-    if not dry_run:
+    is_sync = not params.no_wait
+    if not params.dry_run:
         prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
         with StderrReaderWorker(
             prev_incarnation_id=prev_incarnation_id,
             training_dir=training_dir,
             yt_client_config_pickled=yt_client_config_pickled,
-            mode=proxy_stderr_mode,
-            mesh=mesh,
+            mode=params.proxy_stderr_mode,
+            mesh=params.mesh,
         ):
             operation = yt_client.run_operation(operation_spec, sync=is_sync)
             assert isinstance(operation, yt.Operation)
@@ -419,23 +414,12 @@ def run_tracto(
 
 
 def run_local(
-    runnable: Runnable,
-    *,
-    yt_path: str,
-    mesh: Mesh,
-    cluster_config_path: str,
-    sidecars: Optional[list[Sidecar]] = None,
-    env: Optional[list[EnvVariable]] = None,
-    tensorproxy: Optional[TensorproxySidecar] = None,
-    yt_client: Optional[yt.YtClient] = None,
-    dry_run: bool = False,
+    params: TractorunParams,
 ) -> RunInfo:
-    sidecars = sidecars if sidecars is not None else []
-
-    if mesh.node_count != 1:
+    if params.mesh.node_count != 1:
         raise TractorunConfigurationError("local mode only supports 1 node")
 
-    yt_client = yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
+    yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
     # TODO: respawn in docker
     # Fake YT job environment.
@@ -444,20 +428,20 @@ def run_local(
     os.environ["YT_JOB_COOKIE"] = "0"
     os.environ["YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB"] = "1"
 
-    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=cluster_config_path)
+    cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=params.cluster_config_path)
 
     # TODO: look for free ports
     start_port = random.randint(10000, 20000)
-    for i in range(mesh.process_per_node):
+    for i in range(params.mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
-    training_dir = TrainingDir.create(yt_path)
-    tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=tensorproxy).generate_configuration()
+    training_dir = TrainingDir.create(params.yt_path)
+    tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=params.tensorproxy).generate_configuration()
 
-    wrapped = runnable.make_local_command(
-        mesh=mesh,
-        sidecars=sidecars,
-        env=env or [],
+    wrapped = params.runnable.make_local_command(
+        mesh=params.mesh,
+        sidecars=params.sidecars,
+        env=params.env or [],
         training_dir=training_dir,
         yt_client_config=base64.b64encode(pickle.dumps(yt_client.config)).decode("utf-8"),
         tensorproxy=tp_bootstrap,
@@ -467,7 +451,7 @@ def run_local(
         ),
         cluster_config=cluster_config,
     )
-    if not dry_run:
+    if not params.dry_run:
         prepare_training_dir(training_dir, yt_client)
         wrapped()
     return RunInfo(operation_spec={}, operation_id=None, operation_attributes=None)

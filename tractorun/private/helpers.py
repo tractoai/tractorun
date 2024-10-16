@@ -10,8 +10,6 @@ import attrs
 import cattrs
 import yt.wrapper as yt
 
-from tractorun.private.constants import DEFAULT_DOCKER_IMAGE
-
 
 _T = TypeVar("_T")
 
@@ -48,6 +46,6 @@ def create_prerequisite_client(yt_client: yt.YtClient, prerequisite_transaction_
     return yt.create_client_with_command_params(yt_client, prerequisite_transaction_ids=prerequisite_transaction_ids)
 
 
-def get_default_docker_image() -> str:
+def get_default_docker_image() -> str | None:
     # use the same env var as yt sdk
-    return os.environ.get("YT_BASE_LAYER") or os.environ.get("YT_JOB_DOCKER_IMAGE") or DEFAULT_DOCKER_IMAGE
+    return os.environ.get("YT_BASE_LAYER") or os.environ.get("YT_JOB_DOCKER_IMAGE") or None

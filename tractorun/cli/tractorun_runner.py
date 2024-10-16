@@ -6,8 +6,8 @@ import sys
 import traceback
 from typing import (
     Any,
-    Optional,
     TypeVar,
+    overload,
 )
 
 import attrs
@@ -32,7 +32,9 @@ from tractorun.private.helpers import (
     get_default_docker_image,
 )
 from tractorun.private.run import run_script
+from tractorun.private.run_internal import CliCommand
 from tractorun.resources import Resources
+from tractorun.run import TractorunParams
 from tractorun.run_info import RunInfo
 from tractorun.sidecar import (
     RestartPolicy,
@@ -56,16 +58,16 @@ PROXY_STDERR_MODE_DEFAULT = StderrMode.disabled
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class MeshConfig:
-    node_count: Optional[int] = attrs.field(default=None)
-    process_per_node: Optional[int] = attrs.field(default=None)
-    gpu_per_process: Optional[int] = attrs.field(default=None)
-    pool_trees: Optional[list[str]] = attrs.field(default=None)
+    node_count: int | None = attrs.field(default=None)
+    process_per_node: int | None = attrs.field(default=None)
+    gpu_per_process: int | None = attrs.field(default=None)
+    pool_trees: list[str] = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ResourcesConfig:
-    cpu_limit: Optional[float] = attrs.field(default=None)
-    memory_limit: Optional[int] = attrs.field(default=None)
+    cpu_limit: float | None = attrs.field(default=None)
+    memory_limit: int | None = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -76,16 +78,16 @@ class SidecarConfig:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TensorproxyConfig:
-    enabled: Optional[bool] = attrs.field(default=None)
-    restart_policy: Optional[RestartPolicy] = attrs.field(default=None)
-    yt_path: Optional[str] = attrs.field(default=None)
+    enabled: bool | None = attrs.field(default=None)
+    restart_policy: RestartPolicy | None = attrs.field(default=None)
+    yt_path: str | None = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EnvVariableConfig:
     name: str
-    value: Optional[str] = None
-    cypress_path: Optional[str] = None
+    value: str | None = None
+    cypress_path: str | None = None
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -100,27 +102,27 @@ _T = TypeVar("_T")
 class Config:
     """yaml config representation"""
 
-    yt_path: Optional[str] = attrs.field(default=None)
-    docker_image: Optional[str] = attrs.field(default=None)
-    title: Optional[str] = attrs.field(default=None)
-    user_config: Optional[dict[str, Any]] = attrs.field(default=None)
-    yt_operation_spec: Optional[dict[str, Any]] = attrs.field(default=None)
-    yt_task_spec: Optional[dict[str, Any]] = attrs.field(default=None)
-    local: Optional[bool] = attrs.field(default=None)
-    no_wait: Optional[bool] = attrs.field(default=None)
-    bind_local: Optional[list[str]] = attrs.field(default=None)
-    bind_local_lib: Optional[list[str]] = attrs.field(default=None)
-    bind_cypress: Optional[list[str]] = attrs.field(default=None)
-    proxy_stderr_mode: Optional[StderrMode] = attrs.field(default=None)
-    cluster_config_path: Optional[str] = attrs.field(default=None)
-    command: Optional[list[str]] = attrs.field(default=None)
+    yt_path: str | None = attrs.field(default=None)
+    docker_image: str | None = attrs.field(default=None)
+    title: str | None = attrs.field(default=None)
+    user_config: dict[str, Any] | None = attrs.field(default=None)
+    yt_operation_spec: dict[str, Any] | None = attrs.field(default=None)
+    yt_task_spec: dict[str, Any] | None = attrs.field(default=None)
+    local: bool | None = attrs.field(default=None)
+    no_wait: bool | None = attrs.field(default=None)
+    bind_local: list[str] | None = attrs.field(default=None)
+    bind_local_lib: list[str] | None = attrs.field(default=None)
+    bind_cypress: list[str] | None = attrs.field(default=None)
+    proxy_stderr_mode: StderrMode | None = attrs.field(default=None)
+    cluster_config_path: str | None = attrs.field(default=None)
+    command: list[str] | None = attrs.field(default=None)
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
-    sidecars: Optional[list[SidecarConfig]] = attrs.field(default=None)
-    env: Optional[list[EnvVariableConfig]] = attrs.field(default=None)
+    sidecars: list[SidecarConfig] | None = attrs.field(default=None)
+    env: list[EnvVariableConfig] | None = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
-    docker_auth_secret: Optional[DockerAuthSecretConfig] = attrs.field(default=None)
+    docker_auth_secret: DockerAuthSecretConfig | None = attrs.field(default=None)
 
     @classmethod
     def load_yaml(cls, path: str) -> "Config":
@@ -137,10 +139,10 @@ class Config:
 class EffectiveConfig:
     yt_path: str
     docker_image: str
-    title: str
-    user_config: Optional[dict[str, Any]]
-    yt_operation_spec: Optional[dict[str, Any]]
-    yt_task_spec: Optional[dict[str, Any]]
+    title: str | None
+    user_config: dict[str, Any]
+    yt_operation_spec: dict[str, Any]
+    yt_task_spec: dict[str, Any]
     local: bool
     no_wait: bool
     bind_local: list[BindLocal]
@@ -160,8 +162,13 @@ class EffectiveConfig:
 
     @classmethod
     def configure(cls, args: dict[str, Any], config: Config) -> "EffectiveConfig":
-        # TODO: transform args into some special canonized object
-        def _choose_value(args_value: _T, config_value: _T, default: Optional[_T] = None) -> _T:
+        @overload
+        def _choose_value(args_value: _T | None, config_value: _T | None, default: None = None) -> _T | None: ...
+
+        @overload
+        def _choose_value(args_value: _T | None, config_value: _T | None, default: _T) -> _T: ...
+
+        def _choose_value(args_value: _T | None, config_value: _T | None, default: _T | None = None) -> _T | None:
             result = args_value if args_value is not None else config_value
             if result is None and default is not None:
                 return default
@@ -244,18 +251,25 @@ class EffectiveConfig:
             docker_auth_secret = DockerAuthSecret(
                 cypress_path=args["docker_auth_secret.cypress_path"],
             )
+        docker_image = _choose_value(
+            args_value=args["docker_image"],
+            config_value=config.docker_image,
+            default=get_default_docker_image(),
+        )
+        if docker_image is None:
+            raise TractorunConfigError("docker_image should be set in config or by cli param")
 
         new_config = EffectiveConfig(
-            yt_path=_choose_value(args_value=args["yt_path"], config_value=config.yt_path),
-            docker_image=_choose_value(
-                args_value=args["docker_image"],
-                config_value=config.docker_image,
-                default=get_default_docker_image(),
-            ),
+            yt_path=yt_path,
+            docker_image=docker_image,
             title=_choose_value(args_value=args["title"], config_value=config.title),
-            user_config=_choose_value(args_value=user_config, config_value=config.user_config),
-            yt_operation_spec=_choose_value(args_value=yt_operation_spec, config_value=config.yt_operation_spec),
-            yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec),
+            user_config=_choose_value(args_value=user_config, config_value=config.user_config, default={}),
+            yt_operation_spec=_choose_value(
+                args_value=yt_operation_spec,
+                config_value=config.yt_operation_spec,
+                default={},
+            ),
+            yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec, default={}),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             no_wait=_choose_value(args_value=args["no_wait"], config_value=config.no_wait, default=NO_WAIT_DEFAULT),
             cluster_config_path=_choose_value(
@@ -486,27 +500,31 @@ def main() -> None:
     errors = []
     try:
         run_info = run_script(
-            command=effective_config.command,
-            mesh=effective_config.mesh,
-            title=effective_config.title,
-            resources=effective_config.resources,
-            yt_path=effective_config.yt_path,
-            docker_image=effective_config.docker_image,
-            binds_local=effective_config.bind_local,
-            binds_local_lib=effective_config.bind_local_lib,
-            binds_cypress=effective_config.bind_cypress,
-            tensorproxy=effective_config.tensorproxy,
-            proxy_stderr_mode=effective_config.proxy_stderr_mode,
-            sidecars=effective_config.sidecars,
-            env=effective_config.env,
-            user_config=effective_config.user_config,
-            cluster_config_path=effective_config.cluster_config_path,
-            yt_operation_spec=effective_config.yt_operation_spec,
-            yt_task_spec=effective_config.yt_task_spec,
+            params=TractorunParams(
+                runnable=CliCommand(command=effective_config.command),
+                mesh=effective_config.mesh,
+                title=effective_config.title,
+                resources=effective_config.resources,
+                yt_path=effective_config.yt_path,
+                docker_image=effective_config.docker_image,
+                binds_local=effective_config.bind_local,
+                binds_local_lib=effective_config.bind_local_lib,
+                binds_cypress=effective_config.bind_cypress,
+                tensorproxy=effective_config.tensorproxy,
+                proxy_stderr_mode=effective_config.proxy_stderr_mode,
+                sidecars=effective_config.sidecars,
+                env=effective_config.env,
+                user_config=effective_config.user_config,
+                cluster_config_path=effective_config.cluster_config_path,
+                yt_operation_spec=effective_config.yt_operation_spec,
+                yt_task_spec=effective_config.yt_task_spec,
+                no_wait=effective_config.no_wait,
+                docker_auth=effective_config.docker_auth_secret,
+                dry_run=effective_config.dry_run,
+                yt_client=None,
+                attach_external_libs=False,
+            ),
             local=effective_config.local,
-            no_wait=effective_config.no_wait,
-            docker_auth=effective_config.docker_auth_secret,
-            dry_run=effective_config.dry_run,
         )
     except Exception:
         errors.append(traceback.format_exc())

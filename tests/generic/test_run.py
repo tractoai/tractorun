@@ -24,6 +24,7 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
+from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
@@ -320,3 +321,38 @@ def test_docker_image_pickle(yt_path: str, env: dict[str, str], expected: str, m
         dry_run=True,
     )
     assert run_info.operation_spec["tasks"]["task"]["docker_image"] == expected
+
+
+def test_without_docker_image_script(yt_path: str) -> None:
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
+            "--mesh.node-count",
+            "1",
+            "--mesh.process-per-node",
+            "1",
+            "--mesh.gpu-per-process",
+            "0",
+            "--yt-path",
+            yt_path,
+            "--bind-local",
+            f"{get_data_path('../data/torch_run_script.py')}:/tractorun_tests/torch_run_script.py",
+        ],
+        docker_image=None,
+    )
+    with pytest.raises(AssertionError):
+        tracto_cli.dry_run()
+
+
+def test_without_docker_image_pickle(yt_path: str) -> None:
+    def checker() -> None:
+        pass
+
+    with pytest.raises(TractorunConfigurationError):
+        run(
+            checker,
+            yt_path=yt_path,
+            mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+            backend=GenericBackend(),
+            dry_run=True,
+        )

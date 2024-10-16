@@ -17,6 +17,7 @@ from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
+from tractorun.private.run_internal import CliCommand as _CliCommand
 from tractorun.private.run_internal import TractorunParams as _TractorunParams
 from tractorun.private.run_internal import UserFunction as _UserFunction
 from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_and_get_toolbox
@@ -34,7 +35,7 @@ __all__ = ["run", "prepare_and_get_toolbox"]
 
 
 def run(
-    user_function: Callable,
+    user_command: Callable | list[str],
     *,
     backend: BackendBase,
     yt_path: str,
@@ -60,6 +61,13 @@ def run(
     attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> RunInfo:
+    if attach_external_libs:
+        warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use in production.")
+    if docker_image is None:
+        docker_image = _get_default_docker_image()
+        if docker_image is None:
+            raise TractorunConfigurationError("docker_image should be specified")
+
     sidecars = sidecars or []
     binds_local = binds_local or []
     binds_local_lib = binds_local_lib or []
@@ -70,17 +78,17 @@ def run(
     yt_operation_spec = yt_operation_spec or {}
     yt_task_spec = yt_task_spec or {}
 
-    if attach_external_libs:
-        warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use in production.")
-    if docker_image is None:
-        docker_image = _get_default_docker_image()
-        if docker_image is None:
-            raise TractorunConfigurationError("docker_image should be specified")
+    runnable = None
+    match user_command:
+        case user_function if callable(user_function):
+            runnable = _UserFunction(function=user_function, backend=backend)
+        case command if all([isinstance(x, str) for x in command]):
+            runnable = _CliCommand(command=command)
+        case _:
+            raise TractorunConfigurationError("user command should be callable or list[str]")
+
     params = _TractorunParams(
-        runnable=_UserFunction(
-            function=user_function,
-            backend=backend,
-        ),
+        runnable=runnable,
         yt_path=yt_path,
         mesh=mesh,
         title=title,

@@ -2,6 +2,8 @@ import uuid
 
 from tests.utils import (
     DOCKER_IMAGE,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tractorun.backend.generic import GenericBackend
@@ -12,10 +14,10 @@ from tractorun.toolbox import Toolbox
 
 
 def test_configuration() -> None:
-    _, _, config = make_configuration(["--yt-path", "foo", "--title", "cli title", "command"])
+    _, _, config = make_configuration(make_cli_args("--title", "cli title"))
     assert config.title == "cli title"
 
-    run_config = {"command": ["foo"], "yt_path": "foo", "title": "config title"}
+    run_config = make_run_config({"title": "config title"})
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.title == "config title"

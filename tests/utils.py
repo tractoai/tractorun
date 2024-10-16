@@ -141,3 +141,16 @@ def run_config_file(config: dict[str, Any]) -> Generator[str, None, None]:
     with tempfile.NamedTemporaryFile(mode="w") as f:
         yaml.safe_dump(config, f)
         yield f.name
+
+
+def make_cli_args(*cli_args: str) -> list:
+    return ["--yt-path", "foo", "--docker-image", DOCKER_IMAGE, *cli_args, "command"]
+
+
+def make_run_config(config: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "command": ["foo"],
+        "yt_path": "foo",
+        "docker_image": DOCKER_IMAGE,
+        **config,
+    }

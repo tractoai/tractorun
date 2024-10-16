@@ -9,6 +9,8 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
@@ -37,42 +39,42 @@ def cypress_file(yt_instance: YtInstance, yt_path: str) -> str:
 
 
 def test_configuration_cypress() -> None:
-    _, _, config = make_configuration(["--yt-path", "foo", "--bind-cypress", "//tmp/cli:cli", "command"])
+    _, _, config = make_configuration(
+        make_cli_args("--bind-cypress", "//tmp/cli:cli", "command"),
+    )
     assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
 
-    run_config = {
-        "command": ["foo"],
-        "yt_path": "foo",
-        "bind_cypress": ["//tmp/config:config"],
-    }
+    run_config = make_run_config(
+        {
+            "bind_cypress": ["//tmp/config:config"],
+        }
+    )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.bind_cypress == [BindCypress(source="//tmp/config", destination="config")]
 
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(
-            ["--run-config-path", run_config_path, "--bind-cypress", "//tmp/cli:cli"],
+            make_cli_args("--run-config-path", run_config_path, "--bind-cypress", "//tmp/cli:cli"),
         )
     assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
 
 
 def test_configuration_local() -> None:
-    _, _, config = make_configuration(["--yt-path", "foo", "--bind-local", "//tmp/cli:/tmp/cli", "command"])
+    _, _, config = make_configuration(make_cli_args("--bind-local", "//tmp/cli:/tmp/cli"))
     assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
 
-    run_config = {
-        "command": ["foo"],
-        "yt_path": "foo",
-        "bind_local": ["//tmp/config:/tmp/config"],
-    }
+    run_config = make_run_config(
+        {
+            "bind_local": ["//tmp/config:/tmp/config"],
+        }
+    )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.bind_local == [BindLocal(source="//tmp/config", destination="/tmp/config")]
 
     with run_config_file(run_config) as run_config_path:
-        _, _, config = make_configuration(
-            ["--run-config-path", run_config_path, "--bind-local", "//tmp/cli:/tmp/cli"],
-        )
+        _, _, config = make_configuration(["--run-config-path", run_config_path, "--bind-local", "//tmp/cli:/tmp/cli"])
     assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
 
 

@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 from yt.common import YT_NULL_TRANSACTION_ID
 
@@ -7,6 +5,8 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
@@ -17,31 +17,20 @@ from tractorun.run import run
 
 
 def test_configuration() -> None:
-    _, _, config = make_configuration(["--yt-path", "foo", "command"])
+    _, _, config = make_configuration(make_cli_args())
     assert config.no_wait is False
 
-    run_config: dict[str, Any] = {
-        "command": ["foo"],
-        "yt_path": "foo",
-    }
+    run_config = make_run_config({})
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.no_wait is False
 
-    run_config = {
-        "command": ["foo"],
-        "yt_path": "foo",
-        "no_wait": False,
-    }
+    run_config = make_run_config({"no_wait": False})
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path, "--no-wait"])
     assert config.no_wait is True
 
-    run_config = {
-        "command": ["foo"],
-        "yt_path": "foo",
-        "no_wait": True,
-    }
+    run_config = make_run_config({"no_wait": True})
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
     assert config.no_wait is True

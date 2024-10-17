@@ -18,6 +18,7 @@ from tractorun.mesh import Mesh
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
 from tractorun.private.run_internal import CliCommand as _CliCommand
+from tractorun.private.run_internal import Runnable as _Runnable
 from tractorun.private.run_internal import TractorunParams as _TractorunParams
 from tractorun.private.run_internal import UserFunction as _UserFunction
 from tractorun.private.run_internal import prepare_and_get_toolbox as _prepare_and_get_toolbox
@@ -78,7 +79,7 @@ def run(
     yt_operation_spec = yt_operation_spec or {}
     yt_task_spec = yt_task_spec or {}
 
-    runnable = None
+    runnable: _Runnable
     match user_command:
         case user_function if callable(user_function):
             runnable = _UserFunction(function=user_function, backend=backend)

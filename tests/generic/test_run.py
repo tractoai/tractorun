@@ -24,9 +24,13 @@ from tractorun.backend.generic import GenericBackend
 from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
+from tractorun.bind import BindLocal
 from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
-from tractorun.run import run
+from tractorun.run import (
+    run,
+    run_script,
+)
 from tractorun.toolbox import Toolbox
 
 
@@ -356,3 +360,16 @@ def test_without_docker_image_pickle(yt_path: str) -> None:
             backend=GenericBackend(),
             dry_run=True,
         )
+
+
+def test_run_cli_command_from_python(yt_path: str) -> None:
+    run_script(
+        ["python3", "/tractorun_tests/dummy_script.py"],
+        yt_path=yt_path,
+        binds_local=[
+            BindLocal(source=get_data_path("../data/dummy_script.py"), destination="/tractorun_tests/dummy_script.py"),
+        ],
+        binds_local_lib=[get_data_path("../../tractorun")],
+        docker_image=DOCKER_IMAGE,
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+    )

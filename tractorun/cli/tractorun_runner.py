@@ -31,12 +31,8 @@ from tractorun.private.helpers import (
     create_attrs_converter,
     get_default_docker_image,
 )
-from tractorun.private.run import run_script
-from tractorun.private.run_internal import (
-    CliCommand,
-    TractorunParams,
-)
 from tractorun.resources import Resources
+from tractorun.run import run_script
 from tractorun.run_info import RunInfo
 from tractorun.sidecar import (
     RestartPolicy,
@@ -502,30 +498,27 @@ def main() -> None:
     errors = []
     try:
         run_info = run_script(
-            params=TractorunParams(
-                runnable=CliCommand(command=effective_config.command),
-                mesh=effective_config.mesh,
-                title=effective_config.title,
-                resources=effective_config.resources,
-                yt_path=effective_config.yt_path,
-                docker_image=effective_config.docker_image,
-                binds_local=effective_config.bind_local,
-                binds_local_lib=effective_config.bind_local_lib,
-                binds_cypress=effective_config.bind_cypress,
-                tensorproxy=effective_config.tensorproxy,
-                proxy_stderr_mode=effective_config.proxy_stderr_mode,
-                sidecars=effective_config.sidecars,
-                env=effective_config.env,
-                user_config=effective_config.user_config,
-                cluster_config_path=effective_config.cluster_config_path,
-                yt_operation_spec=effective_config.yt_operation_spec,
-                yt_task_spec=effective_config.yt_task_spec,
-                no_wait=effective_config.no_wait,
-                docker_auth=effective_config.docker_auth_secret,
-                dry_run=effective_config.dry_run,
-                yt_client=None,
-                attach_external_libs=False,
-            ),
+            user_command=effective_config.command,
+            mesh=effective_config.mesh,
+            title=effective_config.title,
+            resources=effective_config.resources,
+            yt_path=effective_config.yt_path,
+            docker_image=effective_config.docker_image,
+            binds_local=effective_config.bind_local,
+            binds_local_lib=effective_config.bind_local_lib,
+            binds_cypress=effective_config.bind_cypress,
+            tensorproxy=effective_config.tensorproxy,
+            proxy_stderr_mode=effective_config.proxy_stderr_mode,
+            sidecars=effective_config.sidecars,
+            env=effective_config.env,
+            user_config=effective_config.user_config,
+            cluster_config_path=effective_config.cluster_config_path,
+            yt_operation_spec=effective_config.yt_operation_spec,
+            yt_task_spec=effective_config.yt_task_spec,
+            no_wait=effective_config.no_wait,
+            docker_auth=effective_config.docker_auth_secret,
+            dry_run=effective_config.dry_run,
+            yt_client=None,
             local=effective_config.local,
         )
     except Exception:

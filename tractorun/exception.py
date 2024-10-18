@@ -6,6 +6,7 @@ __all__ = [
     "TractorunConfigurationError",
     "DockerAuthDataError",
     "TractorunVersionMismatchError",
+    "TractorunBootstrapError",
 ]
 
 
@@ -14,6 +15,10 @@ class BaseTractorunException(Exception):
 
 
 class StderrReaderError(BaseTractorunException):
+    pass
+
+
+class TractorunBootstrapError(BaseTractorunException):
     pass
 
 

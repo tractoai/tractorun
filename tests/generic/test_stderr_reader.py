@@ -11,11 +11,15 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
+from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
 from tractorun.private.stderr_reader import (
     STDERR_READER_THREAD_NAME,
     YtStderrReader,
@@ -26,6 +30,25 @@ from tractorun.toolbox import Toolbox
 
 
 TEST_STRINGS = ["hello", "my dear", "friend"]
+
+
+def test_configuration() -> None:
+    _, _, config = make_configuration(make_cli_args())
+    assert config.proxy_stderr_mode == StderrMode.disabled
+
+    _, _, config = make_configuration(make_cli_args("--proxy-stderr-mode", StderrMode.primary.value))
+    assert config.proxy_stderr_mode == StderrMode.primary
+
+    run_config = make_run_config({"proxy_stderr_mode": StderrMode.primary.value})
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.proxy_stderr_mode == StderrMode.primary
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--proxy-stderr-mode", StderrMode.disabled],
+        )
+    assert config.proxy_stderr_mode == StderrMode.disabled
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -118,7 +141,29 @@ def test_operation_pickling(
             raise Exception(f"Unknown mode {mode}")
 
 
-def test_operation_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
+def test_with_realtime_table(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    def checker(toolbox: Toolbox) -> None:
+        for test_string in TEST_STRINGS:
+            print(test_string)
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+        operation_log_mode=OperationLogMode.realtime_yt_table,
+    )
+    captured = capsys.readouterr()
+    for s in TEST_STRINGS:
+        assert f"{s}\n" in captured.out
+
+
+def test_operation_cli(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     tracto_cli = TractoCli(
@@ -139,40 +184,6 @@ def test_operation_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
         ],
     )
     op_run = tracto_cli.run()
-    assert op_run.is_exitcode_valid()
-    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
-
-    stdout = op_run.stdout.decode("utf-8")
-    for s in TEST_STRINGS:
-        assert f"{s}\n" in stdout
-
-
-def test_operation_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
-
-    run_config = {
-        "proxy_stderr_mode": StderrMode.primary.value,
-    }
-
-    with run_config_file(run_config) as run_config_path:
-        tracto_cli = TractoCli(
-            command=["python3", "/tractorun_tests/stderr_script.py"],
-            args=[
-                "--run-config-path",
-                run_config_path,
-                "--yt-path",
-                yt_path,
-                "--user-config",
-                json.dumps(
-                    {
-                        "test_strings": TEST_STRINGS,
-                    },
-                ),
-                "--bind-local",
-                f"{get_data_path('../data/stderr_script.py')}:/tractorun_tests/stderr_script.py",
-            ],
-        )
-        op_run = tracto_cli.run()
     assert op_run.is_exitcode_valid()
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 

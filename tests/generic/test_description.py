@@ -100,6 +100,10 @@ def test_set_tractorun_description(
         path=yt_path,
         cypress_link_template=cluster_config.cypress_link_template,
     )
+    assert str(tractorun_description["logs"]) == make_cypress_link(
+        path=f"{yt_path}/logs/0",
+        cypress_link_template=cluster_config.cypress_link_template,
+    )
     assert "primary" in tractorun_description
     assert "job_stderr" in tractorun_description["primary"]
     assert "address" in tractorun_description["primary"]

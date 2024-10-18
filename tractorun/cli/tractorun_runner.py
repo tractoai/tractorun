@@ -25,6 +25,7 @@ from tractorun.docker_auth import (
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.docker_auth import DockerAuthInternal
 from tractorun.private.helpers import (
@@ -52,6 +53,7 @@ TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
 NO_WAIT_DEFAULT = False
 PROXY_STDERR_MODE_DEFAULT = StderrMode.disabled
+OPERATION_LOG_MODE_DEFAULT = OperationLogMode.default
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -112,6 +114,7 @@ class Config:
     bind_local_lib: list[str] | None = attrs.field(default=None)
     bind_cypress: list[str] | None = attrs.field(default=None)
     proxy_stderr_mode: StderrMode | None = attrs.field(default=None)
+    operation_log_mode: OperationLogMode | None = attrs.field(default=None)
     cluster_config_path: str | None = attrs.field(default=None)
     command: list[str] | None = attrs.field(default=None)
 
@@ -147,6 +150,7 @@ class EffectiveConfig:
     bind_local_lib: list[str]
     bind_cypress: list[BindCypress]
     proxy_stderr_mode: StderrMode
+    operation_log_mode: OperationLogMode
     cluster_config_path: str
     command: list[str]
 
@@ -282,6 +286,11 @@ class EffectiveConfig:
                 args_value=args["proxy_stderr_mode"],
                 config_value=config.proxy_stderr_mode,
                 default=PROXY_STDERR_MODE_DEFAULT,
+            ),
+            operation_log_mode=_choose_value(
+                args_value=args["operation_log_mode"],
+                config_value=config.operation_log_mode,
+                default=OPERATION_LOG_MODE_DEFAULT,
             ),
             sidecars=[
                 Sidecar(
@@ -439,7 +448,16 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--proxy-stderr-mode",
         type=StderrMode,
-        help="Proxy jobs stderr to terminal. Mode: " + ", ".join(m for m in StderrMode),
+        help="Proxy jobs stderr to terminal. Mode: "
+        + ", ".join(m for m in StderrMode)
+        + f"Default: {PROXY_STDERR_MODE_DEFAULT}",
+    )
+    parser.add_argument(
+        "--operation-log-mode",
+        type=OperationLogMode,
+        help="Store operation log mode. Mode: "
+        + ", ".join(m for m in OperationLogMode)
+        + f"Default: {OPERATION_LOG_MODE_DEFAULT}",
     )
     parser.add_argument(
         "--no-wait",
@@ -509,6 +527,7 @@ def main() -> None:
             binds_cypress=effective_config.bind_cypress,
             tensorproxy=effective_config.tensorproxy,
             proxy_stderr_mode=effective_config.proxy_stderr_mode,
+            operation_log_mode=effective_config.operation_log_mode,
             sidecars=effective_config.sidecars,
             env=effective_config.env,
             user_config=effective_config.user_config,

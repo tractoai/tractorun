@@ -119,7 +119,6 @@ class StderrReaderWorker:
                 incarnation_path = self._training_dir.get_incarnation_path(incarnation)
                 operation_id = yt_client.get(incarnation_path + "/@incarnation_operation_id")
                 topology = yt_client.get(incarnation_path + "/@topology")
-                # print(f"1 reader has {incarnation} {operation_id} and {topology}", file=sys.stderr)
             except Exception:
                 # TODO: add debug logs
                 # it's important to reset all values
@@ -163,7 +162,7 @@ class StderrReaderWorker:
     def stop(self) -> None:
         if self._thread is not None:
             self._stop = True
-            self._thread.join(timeout=self._polling_interval * 2)
+            self._thread.join(timeout=self._polling_interval * 3)
 
     def start(self) -> None:
         assert self._thread is None

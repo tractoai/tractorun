@@ -8,6 +8,7 @@ from tractorun.mesh import Mesh
 class TractorunDescription:
     training_dir: Link
     primary_stderr: Link
+    logs: Link
     primary_address: str
     incarnation: int
     mesh: Mesh
@@ -19,6 +20,7 @@ class TractorunDescription:
                 "job_stderr": self.primary_stderr,
                 "address": self.primary_address,
             },
+            "logs": self.logs,
             "incarnation": self.incarnation,
             "mesh": attrs.asdict(self.mesh),  # type: ignore
         }

@@ -2,7 +2,7 @@ from typing import Optional
 
 import pytest
 
-from tractorun.private.bootstrapper import (
+from tractorun.private.process_manager import (
     PoolStatus,
     check_status,
     has_failed,

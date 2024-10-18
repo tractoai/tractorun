@@ -17,7 +17,7 @@ import yaml
 from yt import wrapper as yt
 
 
-DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-14-14-51-57"
+DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-18-22-05-42"
 OPERATION_INFO_RETRIES = 5
 OPERATION_INFO_TIMEOUT = 2
 

@@ -18,6 +18,9 @@ from tractorun.private.training_dir import TrainingDir
 from tractorun.private.yt_cluster import TractorunClusterConfig
 
 
+WorkerIndex = NewType("WorkerIndex", int)
+
+
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class WorkerConfig:
     mesh: Mesh
@@ -108,6 +111,3 @@ class WorkerRun:
         if TYPE_CHECKING:
             assert isinstance(self._process.stderr, io.TextIOWrapper)
         return self._process.stderr
-
-
-WorkerIndex = NewType("WorkerIndex", int)

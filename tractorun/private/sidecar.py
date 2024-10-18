@@ -15,6 +15,9 @@ from tractorun.sidecar import (
 )
 
 
+SidecarIndex = NewType("SidecarIndex", int)
+
+
 class RestartVerdict(enum.IntEnum):
     skip = enum.auto()
     restart = enum.auto()
@@ -94,6 +97,3 @@ class SidecarRun:
                 return RestartVerdict.fail
             case _:
                 return RestartVerdict.unknown
-
-
-SidecarIndex = NewType("SidecarIndex", int)

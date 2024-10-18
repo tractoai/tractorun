@@ -12,7 +12,6 @@ from typing import (
 import attrs
 
 from tractorun.mesh import Mesh
-from tractorun.operation_log import OperationLogMode
 from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir

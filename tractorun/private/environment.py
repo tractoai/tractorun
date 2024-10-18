@@ -26,7 +26,7 @@ def get_toolbox(closet: Closet) -> Toolbox:
     return toolbox
 
 
-def prepare_log_dir(closet: Closet):
+def prepare_log_dir(closet: Closet) -> None:
     logs_dir = f"{closet.training_dir.logs_path}/{closet.coordinator.get_incarnation_id()}"
     worker_logs_dir = f"{logs_dir}/workers"
     sidecar_logs_dir = f"{logs_dir}/sidecars"

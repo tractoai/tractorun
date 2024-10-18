@@ -4,7 +4,10 @@ import json
 import os
 import pickle
 import subprocess
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    NewType,
+)
 
 import attrs
 
@@ -105,3 +108,6 @@ class WorkerRun:
         if TYPE_CHECKING:
             assert isinstance(self._process.stderr, io.TextIOWrapper)
         return self._process.stderr
+
+
+WorkerIndex = NewType("WorkerIndex", int)

@@ -15,6 +15,7 @@ from tractorun.docker_auth import DockerAuthData
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
 from tractorun.private.run_internal import CliCommand as _CliCommand
@@ -56,6 +57,7 @@ def run_script(
     yt_task_spec: dict[Any, Any] | None = None,
     local: bool = False,
     proxy_stderr_mode: StderrMode = StderrMode.disabled,
+    operation_log_mode: OperationLogMode = OperationLogMode.default,
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> RunInfo:
@@ -91,6 +93,7 @@ def run_script(
         yt_operation_spec=yt_operation_spec,
         yt_task_spec=yt_task_spec,
         proxy_stderr_mode=proxy_stderr_mode,
+        operation_log_mode=operation_log_mode,
         docker_auth=docker_auth,
         dry_run=dry_run,
         attach_external_libs=False,
@@ -124,6 +127,7 @@ def run(
     yt_task_spec: dict[Any, Any] | None = None,
     local: bool = False,
     proxy_stderr_mode: StderrMode = StderrMode.disabled,
+    operation_log_mode: OperationLogMode = OperationLogMode.default,
     docker_auth: DockerAuthData | None = None,
     attach_external_libs: bool = False,
     dry_run: bool = False,
@@ -162,6 +166,7 @@ def run(
         yt_operation_spec=yt_operation_spec,
         yt_task_spec=yt_task_spec,
         proxy_stderr_mode=proxy_stderr_mode,
+        operation_log_mode=operation_log_mode,
         docker_auth=docker_auth,
         attach_external_libs=attach_external_libs,
         dry_run=dry_run,

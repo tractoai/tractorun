@@ -6,6 +6,7 @@ __all__ = [
     "TractorunConfigurationError",
     "DockerAuthDataError",
     "TractorunVersionMismatchError",
+    "TractorunBootstrapError",
 ]
 
 

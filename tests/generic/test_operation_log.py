@@ -7,10 +7,15 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
+    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
+from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
 from tractorun.private.process_manager import OutputType
 from tractorun.run import run
 from tractorun.sidecar import (
@@ -19,6 +24,25 @@ from tractorun.sidecar import (
 )
 from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
+
+
+def test_configuration() -> None:
+    _, _, config = make_configuration(make_cli_args())
+    assert config.operation_log_mode == OperationLogMode.default
+
+    _, _, config = make_configuration(make_cli_args("--operation-log-mode", OperationLogMode.realtime_yt_table.value))
+    assert config.operation_log_mode == OperationLogMode.realtime_yt_table
+
+    run_config = make_run_config({"operation_log_mode": OperationLogMode.realtime_yt_table.value})
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.operation_log_mode == OperationLogMode.realtime_yt_table
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--operation-log-mode", OperationLogMode.default.value]
+        )
+    assert config.operation_log_mode == OperationLogMode.default
 
 
 def validate_logs(yt_client: yt.YtClient, incarnation: int, yt_path: str) -> None:
@@ -63,6 +87,7 @@ def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
             checker,
             backend=GenericBackend(),
             yt_path=yt_path,
+            operation_log_mode=OperationLogMode.realtime_yt_table,
             sidecars=[
                 Sidecar(
                     command=["python3", "-c", f'import sys; print("{sidecar_stdout_message}", file=sys.stdout)'],
@@ -96,6 +121,8 @@ def test_cli(yt_instance: YtInstance, yt_path: str) -> None:
                 "2",
                 "--mesh.process-per-node",
                 "2",
+                "--operation-log-mode",
+                OperationLogMode.realtime_yt_table.value,
                 "--sidecar",
                 json.dumps(
                     {

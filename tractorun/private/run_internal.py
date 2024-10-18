@@ -33,6 +33,7 @@ from tractorun.exception import (
     TractorunVersionMismatchError,
 )
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
 from tractorun.private import constants as const
 from tractorun.private.bind import (
     BindsLibPacker,
@@ -102,6 +103,7 @@ class Runnable(abc.ABC):
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
+        operation_log_mode: OperationLogMode,
     ) -> Callable:
         pass
 
@@ -133,6 +135,7 @@ class CliCommand(Runnable):
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
+        operation_log_mode: OperationLogMode,
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -145,6 +148,7 @@ class CliCommand(Runnable):
                 tensorproxy=tensorproxy,
                 lib_versions=lib_versions,
                 cluster_config=cluster_config,
+                operation_log_mode=operation_log_mode,
             )
 
         return wrapped
@@ -199,6 +203,7 @@ class UserFunction(Runnable):
                     tensorproxy=config.tensorproxy,
                     lib_versions=config.lib_versions,
                     cluster_config=config.cluster_config,
+                    operation_log_mode=config.operation_log_mode,
                 )
 
         return wrapped
@@ -213,6 +218,7 @@ class UserFunction(Runnable):
         tensorproxy: Optional[TensorproxyBootstrap],
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
+        operation_log_mode: OperationLogMode,
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -230,6 +236,7 @@ class UserFunction(Runnable):
                     tensorproxy=tensorproxy,
                     lib_versions=lib_versions,
                     cluster_config=cluster_config,
+                    operation_log_mode=operation_log_mode,
                 )
 
         return wrapped
@@ -242,6 +249,7 @@ class TractorunParams:
     yt_path: str
     mesh: Mesh
     proxy_stderr_mode: StderrMode
+    operation_log_mode: OperationLogMode
     cluster_config_path: str
     title: str | None = None
     user_config: dict[Any, Any]
@@ -310,6 +318,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         tensorproxy=tp_bootstrap,
         lib_versions=LibVersions.create(),
         cluster_config=cluster_config,
+        operation_log_mode=params.operation_log_mode,
     )
 
     bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
@@ -377,8 +386,6 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     secure_vault: dict[str, Any] = {}
     if params.docker_auth:
         secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(params.docker_auth).to_spec()
-
-    if secure_vault:
         operation_spec.secure_vault(secure_vault)
 
     operation_spec = operation_spec.spec(params.yt_operation_spec)
@@ -450,6 +457,7 @@ def run_local(
             ytsaurus_client=yt.__version__,
         ),
         cluster_config=cluster_config,
+        operation_log_mode=params.operation_log_mode,
     )
     if not params.dry_run:
         prepare_training_dir(training_dir, yt_client)

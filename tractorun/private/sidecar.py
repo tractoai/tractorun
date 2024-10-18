@@ -2,7 +2,10 @@ import enum
 import io
 import os
 import subprocess
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    NewType,
+)
 
 import attrs
 
@@ -91,3 +94,6 @@ class SidecarRun:
                 return RestartVerdict.fail
             case _:
                 return RestartVerdict.unknown
+
+
+SidecarIndex = NewType("SidecarIndex", int)

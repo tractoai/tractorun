@@ -47,6 +47,7 @@ def main() -> None:
         tensorproxy=config.tensorproxy,
         lib_versions=config.lib_versions,
         cluster_config=config.cluster_config,
+        operation_log_mode=config.operation_log_mode,
     )
 
 

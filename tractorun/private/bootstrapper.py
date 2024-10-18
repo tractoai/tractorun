@@ -13,10 +13,14 @@ from tractorun import __version__
 from tractorun.env import EnvVariable
 from tractorun.exception import TractorunBootstrapError
 from tractorun.mesh import Mesh
+from tractorun.operation_log import OperationLogMode
+from tractorun.private.operation_log import (
+    LogHandlerFactory,
+    YTLogHandlerFactory,
+)
 from tractorun.private.process_manager import (
     ProcessManager,
     ProcessManagerPollStatus,
-    YTLogHandlerFactory,
 )
 from tractorun.private.tensorproxy import TensorproxyBootstrap
 from tractorun.private.training_dir import TrainingDir
@@ -50,6 +54,7 @@ class BootstrapConfig:
     tensorproxy: Optional[TensorproxyBootstrap]
     lib_versions: LibVersions
     cluster_config: TractorunClusterConfig
+    operation_log_mode: OperationLogMode
 
 
 def check_lib_versions(local_lib_versions: LibVersions) -> None:
@@ -79,6 +84,7 @@ def bootstrap(
     tensorproxy: Optional[TensorproxyBootstrap],
     lib_versions: LibVersions,
     cluster_config: TractorunClusterConfig,
+    operation_log_mode: OperationLogMode,
 ) -> None:
     # Runs inside a job
 
@@ -108,6 +114,12 @@ def bootstrap(
 
     sidecars = sidecars + tp_sidecars
 
+    log_handlers: list[LogHandlerFactory] = []
+    if operation_log_mode == OperationLogMode.realtime_yt_table:
+        log_handlers.append(
+            YTLogHandlerFactory(yt_client_config=yt_client_config, training_dir=training_dir),
+        )
+
     status = ProcessManagerPollStatus.running
     with ProcessManager.start(
         command=command,
@@ -120,9 +132,7 @@ def bootstrap(
         os_environ=os.environ,
         tp_env=tp_env,
         spec_env=spec_env,
-        log_handler_factories=[
-            YTLogHandlerFactory(yt_client_config=yt_client_config, training_dir=training_dir),
-        ],
+        log_handler_factories=log_handlers,
     ) as process_manager:
         while status == ProcessManagerPollStatus.running:
             time.sleep(PROCESSES_POLL_TIMEOUT)

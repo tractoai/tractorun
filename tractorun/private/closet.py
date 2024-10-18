@@ -51,8 +51,8 @@ def get_closet() -> Closet:
         ),
     )
     training_metadata = TrainingMetadata(
-        operation_id=os.environ["YT_OPERATION_ID"],
-        job_id=os.environ["YT_JOB_ID"],
+        operation_id=config.operation_id,
+        job_id=config.job_id,
     )
     description_manager = DescriptionManager(
         operation_id=training_metadata.operation_id,

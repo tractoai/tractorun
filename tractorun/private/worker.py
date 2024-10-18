@@ -30,6 +30,8 @@ class WorkerConfig:
     self_index: int
     training_dir: TrainingDir
     yt_client_config: str
+    operation_id: str
+    job_id: str
     cluster_config: TractorunClusterConfig
 
 
@@ -61,6 +63,8 @@ class WorkerRun:
             training_dir=training_dir,
             yt_client_config=base64.b64encode(pickle.dumps(yt_config)).decode("utf-8"),
             cluster_config=cluster_config,
+            operation_id=env["YT_OPERATION_ID"],
+            job_id=env["YT_JOB_ID"],
         )
         config_name = f"config_{proc_index}.json"
         with open(config_name, "w") as f:

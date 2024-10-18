@@ -16,6 +16,7 @@ from tractorun.mesh import Mesh
 from tractorun.private.process_manager import (
     ProcessManager,
     ProcessManagerPollStatus,
+    YTLogHandlerFactory,
 )
 from tractorun.private.tensorproxy import TensorproxyBootstrap
 from tractorun.private.training_dir import TrainingDir
@@ -119,6 +120,9 @@ def bootstrap(
         os_environ=os.environ,
         tp_env=tp_env,
         spec_env=spec_env,
+        log_handler_factories=[
+            YTLogHandlerFactory(yt_client_config=yt_client_config, training_dir=training_dir),
+        ],
     ) as process_manager:
         while status == ProcessManagerPollStatus.running:
             time.sleep(PROCESSES_POLL_TIMEOUT)

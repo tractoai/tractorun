@@ -1,3 +1,4 @@
+import abc
 import base64
 import contextlib
 import datetime
@@ -51,9 +52,6 @@ YT_LOG_WRITER_JOIN_TIMEOUT = 10
 QUEUE_TIMEOUT = 0.01
 
 
-STOP_LOG_WRITER = object()
-
-
 class _NoMessages:
     pass
 
@@ -94,16 +92,13 @@ class YtLogWriter:
     _queue: Queue
     _log_path: str
 
-    def _get_next_message(self) -> LogRecord | _NoMessages:
-        try:
-            return self._queue.get(timeout=QUEUE_TIMEOUT)
-        except queue.Empty:
-            return _NoMessages()
-
     def __call__(self) -> None:
-        return self.write_log()
+        return self._write_log()
 
-    def write_log(self) -> None:
+    def _write_log(self) -> None:
+        import os
+
+        pid = os.getpid()
         yt_config = pickle.loads(base64.b64decode(self._yt_client_config))
         yt_client = yt.YtClient(config=yt_config)
         yt_client.create(
@@ -112,10 +107,12 @@ class YtLogWriter:
             attributes={"schema": LogRecord.get_yt_schema().to_yson_type()},
         )
         got_last_message = False
+        print(pid, "hello from writer", file=sys.stderr)
         while not got_last_message:
             messages: list[dict[str, str | int]] = []
             while True:
                 message = self._get_next_message()
+                print(pid, "got message", message, file=sys.stderr)
                 match message:
                     case _NoMessages():
                         time.sleep(WAIT_LOG_RECORDS_TIMEOUT)
@@ -126,25 +123,23 @@ class YtLogWriter:
                         messages.append(message.to_dict())
                         if len(messages) >= BULK_TABLE_WRITE_SIZE:
                             break
+                print(pid, "all messages", messages, file=sys.stderr)
+            print(pid, "out of cycle")
             if not messages and not got_last_message:
+                print(pid, "wait", file=sys.stderr)
                 time.sleep(WAIT_LOG_RECORDS_TIMEOUT)
                 continue
+            print(pid, "going to write messages", messages, file=sys.stderr)
             yt_client.write_table(
                 yt.TablePath(self._log_path, append=True),
                 messages,
             )
 
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SelectorMeta:
-    queue: Queue
-    output_type: OutputType
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SidecarRunMeta:
-    sidecar_run: SidecarRun
-    queue: Queue
+    def _get_next_message(self) -> LogRecord | _NoMessages:
+        try:
+            return self._queue.get(timeout=QUEUE_TIMEOUT)
+        except queue.Empty:
+            return _NoMessages()
 
 
 class ProcessManagerPollStatus(enum.IntEnum):
@@ -154,25 +149,93 @@ class ProcessManagerPollStatus(enum.IntEnum):
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class YTLogHandler:
+class LogHandler(abc.ABC):
+    @abc.abstractmethod
+    def process(self, record: LogRecord) -> None:
+        pass
+
+    @abc.abstractmethod
+    def stop(self) -> None:
+        pass
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class LogHandlerFactory(abc.ABC):
+    @abc.abstractmethod
+    def create_for_worker(self, worker_index: WorkerIndex, worker_run: WorkerRun) -> LogHandler:
+        pass
+
+    @abc.abstractmethod
+    def create_for_sidecar(self, sidecar_index: SidecarIndex, sidecar_run: SidecarRun) -> LogHandler:
+        pass
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class YTLogHandler(LogHandler):
     _queue: Queue
+    _log_writer: Process
 
     @classmethod
-    def create(cls) -> "YTLogHandler":
-        io_queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
-        return YTLogHandler(queue=io_queue)
+    def start(cls, yt_client_config: str, log_path: str) -> "YTLogHandler":
+        io_queue: Queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
+        yt_log_writer = Process(
+            target=YtLogWriter(
+                yt_client_config=yt_client_config,
+                queue=io_queue,
+                log_path=log_path,
+            )
+        )
+        yt_log_writer.start()
+        return YTLogHandler(queue=io_queue, log_writer=yt_log_writer)
 
-    def stop(self):
-        self._queue.put(STOP_LOG_WRITER)
+    def process(self, record: LogRecord) -> None:
+        try:
+            self._queue.put(record, timeout=QUEUE_TIMEOUT)
+        except queue.Full:
+            print("io queue is full, can't write data to the table", file=sys.stderr)
+
+    def stop(self) -> None:
+        self._queue.put(_LastMessage())
+        self._log_writer.join(timeout=YT_LOG_WRITER_JOIN_TIMEOUT)
+        if self._log_writer.is_alive():
+            self._log_writer.kill()
+            self._log_writer.join()
+        self._log_writer.close()
+        self._queue.close()
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class YTLogHandlerFactory(LogHandlerFactory):
+    _yt_client_config: str
+    _training_dir: TrainingDir
+
+    def create_for_worker(self, worker_index: WorkerIndex, worker_run: WorkerRun) -> YTLogHandler:
+        log_path = f"{self._training_dir.worker_logs_path}/{worker_index}"
+        return YTLogHandler.start(log_path=log_path, yt_client_config=self._yt_client_config)
+
+    def create_for_sidecar(self, sidecar_index: SidecarIndex, sidecar_run: SidecarRun) -> YTLogHandler:
+        log_path = f"{self._training_dir.sidecar_logs_path}/{sidecar_index}"
+        return YTLogHandler.start(log_path=log_path, yt_client_config=self._yt_client_config)
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class SelectorMeta:
+    log_handlers: list[LogHandler]
+    output_type: OutputType
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class SidecarRunMeta:
+    sidecar_run: SidecarRun
+    log_handlers: list[LogHandler]
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class ProcessManager:
     _sidecar_runs: dict[SidecarIndex, SidecarRunMeta]
     _worker_runs: dict[WorkerIndex, WorkerRun]
-    _io_queues: list[Queue]
-    _log_writers: list[Process]
     _io_selector: selectors.DefaultSelector
+    _log_handlers: list[LogHandler]
 
     @classmethod
     @contextlib.contextmanager
@@ -188,6 +251,7 @@ class ProcessManager:
         os_environ: Mapping,
         tp_env: dict,
         spec_env: dict,
+        log_handler_factories: list[LogHandlerFactory],
     ) -> Generator["ProcessManager", None, None]:
         pm = ProcessManager._start(
             command=command,
@@ -200,6 +264,7 @@ class ProcessManager:
             os_environ=os_environ,
             tp_env=tp_env,
             spec_env=spec_env,
+            log_handler_factories=log_handler_factories,
         )
         yield pm
         pm._stop()
@@ -217,6 +282,7 @@ class ProcessManager:
         os_environ: Mapping,
         tp_env: dict,
         spec_env: dict,
+        log_handler_factories: list[LogHandlerFactory],
     ) -> "ProcessManager":
         worker_runs: dict[WorkerIndex, WorkerRun] = {}
         sidecar_runs: dict[SidecarIndex, SidecarRun] = {}
@@ -267,89 +333,77 @@ class ProcessManager:
             )
             sidecar_runs[sidecar_index] = sidecar_run
 
-        yt_log_writers: list[Process] = []
-        io_queues: list[Queue] = []
-        for worker_run in worker_runs.values():
-            io_queue: Queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
-            selector.register(
-                worker_run.stdout(),
-                selectors.EVENT_READ,
-                data=SelectorMeta(queue=io_queue, output_type=OutputType.stdout),
-            )
-            selector.register(
-                worker_run.stderr(),
-                selectors.EVENT_READ,
-                data=SelectorMeta(queue=io_queue, output_type=OutputType.stderr),
-            )
-            io_queues.append(io_queue)
-            yt_log_writer = Process(
-                target=YtLogWriter(
-                    yt_client_config=yt_client_config,
-                    queue=io_queue,
-                    log_path=f"{training_dir.worker_logs_path}/{worker_run.worker_config.self_index}",
+        log_handlers = []
+
+        for worker_index, worker_run in worker_runs.items():
+            worker_log_handlers = []
+            for factory in log_handler_factories:
+                handler = factory.create_for_worker(worker_index, worker_run)
+                log_handlers.append(handler)
+                worker_log_handlers.append(handler)
+            fds = {
+                OutputType.stdout: worker_run.stdout(),
+                OutputType.stderr: worker_run.stderr(),
+            }
+            for output_type, fd in fds.items():
+                selector.register(
+                    fd,
+                    selectors.EVENT_READ,
+                    data=SelectorMeta(log_handlers=worker_log_handlers, output_type=output_type),
                 )
-            )
-            yt_log_writer.start()
-            yt_log_writers.append(yt_log_writer)
 
         sidecar_runs_meta: dict[SidecarIndex, SidecarRunMeta] = {}
         for sidecar_index, sidecar_run in sidecar_runs.items():
-            io_queue = Queue(maxsize=IO_QUEUE_MAXSIZE)
-            selector.register(
-                sidecar_run.stdout(),
-                selectors.EVENT_READ,
-                data=SelectorMeta(queue=io_queue, output_type=OutputType.stdout),
-            )
-            selector.register(
-                sidecar_run.stderr(),
-                selectors.EVENT_READ,
-                data=SelectorMeta(queue=io_queue, output_type=OutputType.stderr),
-            )
-            io_queues.append(io_queue)
-            yt_log_writer = Process(
-                target=YtLogWriter(
-                    yt_client_config=yt_client_config,
-                    queue=io_queue,
-                    log_path=f"{training_dir.sidecar_logs_path}/{sidecar_index}",
+            sidecar_log_handlers = []
+            for factory in log_handler_factories:
+                handler = factory.create_for_sidecar(sidecar_index, sidecar_run)
+                log_handlers.append(handler)
+                sidecar_log_handlers.append(handler)
+            fds = {
+                OutputType.stdout: sidecar_run.stdout(),
+                OutputType.stderr: sidecar_run.stderr(),
+            }
+            for output_type, fd in fds.items():
+                selector.register(
+                    fd,
+                    selectors.EVENT_READ,
+                    data=SelectorMeta(log_handlers=sidecar_log_handlers, output_type=output_type),
                 )
-            )
-            yt_log_writer.start()
-            yt_log_writers.append(yt_log_writer)
             sidecar_runs_meta[sidecar_index] = SidecarRunMeta(
                 sidecar_run=sidecar_run,
-                queue=io_queue,
+                log_handlers=sidecar_log_handlers,
             )
         return ProcessManager(
             sidecar_runs=sidecar_runs_meta,
             worker_runs=worker_runs,
-            io_queues=io_queues,
-            log_writers=yt_log_writers,
             io_selector=selector,
+            log_handlers=log_handlers,
         )
 
     def _restart_sidecar(self, sidecar_index: SidecarIndex) -> None:
         sidecar_run_meta = self._sidecar_runs[sidecar_index]
         sidecar_run = sidecar_run_meta.sidecar_run
-        io_queue = sidecar_run_meta.queue
-        self._io_selector.unregister(sidecar_run.stdout())
-        self._io_selector.unregister(sidecar_run.stderr())
+        log_handlers = sidecar_run_meta.log_handlers
+        for fd in [sidecar_run.stdout(), sidecar_run.stderr()]:
+            self._io_selector.unregister(fd)
 
         sidecar_run = sidecar_run.restart()
         new_sidecar_run_meta = SidecarRunMeta(
             sidecar_run=sidecar_run,
-            queue=io_queue,
+            log_handlers=log_handlers,
         )
         self._sidecar_runs[sidecar_index] = new_sidecar_run_meta
-        self._io_selector.register(
-            sidecar_run.stdout(),
-            selectors.EVENT_READ,
-            data=SelectorMeta(queue=io_queue, output_type=OutputType.stdout),
-        )
-        self._io_selector.register(
-            sidecar_run.stderr(),
-            selectors.EVENT_READ,
-            data=SelectorMeta(queue=io_queue, output_type=OutputType.stderr),
-        )
+
+        fds = {
+            OutputType.stdout: sidecar_run.stdout(),
+            OutputType.stderr: sidecar_run.stderr(),
+        }
+        for output_type, fd in fds.items():
+            self._io_selector.register(
+                fd,
+                selectors.EVENT_READ,
+                data=SelectorMeta(log_handlers=log_handlers, output_type=output_type),
+            )
 
     def poll(self) -> ProcessManagerPollStatus:
         status = self._poll_processes()
@@ -386,7 +440,6 @@ class ProcessManager:
             if TYPE_CHECKING:
                 assert isinstance(key, selectors.SelectorKey)
             meta: SelectorMeta = key.data
-            io_queue = meta.queue
             lines = key.fileobj.readlines()  # type: ignore
             if not lines:
                 continue
@@ -398,34 +451,17 @@ class ProcessManager:
                     fd=meta.output_type,
                     datetime=datetime.datetime.now(),
                 )
-                try:
-                    io_queue.put(record, timeout=QUEUE_TIMEOUT)
-                except queue.Full:
-                    print("io queue is full, can't write data to the table", file=sys.stderr)
+                for handler in meta.log_handlers:
+                    handler.process(record)
 
     def _stop(self) -> None:
-        for io_queue in self._io_queues:
-            try:
-                io_queue.put_nowait(_LastMessage())
-            except queue.Full:
-                pass
         for worker_run in self._worker_runs.values():
             worker_run.terminate()
         for sidecar_run_meta in self._sidecar_runs.values():
             sidecar_run_meta.sidecar_run.terminate()
         self._io_selector.close()
-        for yt_log_writer in self._log_writers:
-            yt_log_writer.join(timeout=YT_LOG_WRITER_JOIN_TIMEOUT)
-            if yt_log_writer.is_alive():
-                yt_log_writer.kill()
-                yt_log_writer.join()
-            yt_log_writer.close()
-        for io_queue in self._io_queues:
-            try:
-                io_queue.put_nowait(_LastMessage())
-            except queue.Full:
-                pass
-            io_queue.close()
+        for handler in self._log_handlers:
+            handler.stop()
 
 
 def has_failed(exit_codes: list[Optional[int]]) -> bool:

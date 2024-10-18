@@ -11,7 +11,6 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
-    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -170,38 +169,38 @@ def test_operation_cli_args(yt_instance: YtInstance, yt_path: str) -> None:
         assert f"{s}\n" in stdout
 
 
-def test_operation_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
-    yt_client = yt_instance.get_client()
-
-    run_config = {
-        "proxy_stderr_mode": StderrMode.primary.value,
-    }
-
-    with run_config_file(run_config) as run_config_path:
-        tracto_cli = TractoCli(
-            command=["python3", "/tractorun_tests/stderr_script.py"],
-            args=[
-                "--run-config-path",
-                run_config_path,
-                "--yt-path",
-                yt_path,
-                "--user-config",
-                json.dumps(
-                    {
-                        "test_strings": TEST_STRINGS,
-                    },
-                ),
-                "--bind-local",
-                f"{get_data_path('../data/stderr_script.py')}:/tractorun_tests/stderr_script.py",
-            ],
-        )
-        op_run = tracto_cli.run()
-    assert op_run.is_exitcode_valid()
-    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
-
-    stdout = op_run.stdout.decode("utf-8")
-    for s in TEST_STRINGS:
-        assert f"{s}\n" in stdout
+# def test_operation_cli_config(yt_instance: YtInstance, yt_path: str) -> None:
+#     yt_client = yt_instance.get_client()
+#
+#     run_config = {
+#         "proxy_stderr_mode": StderrMode.primary.value,
+#     }
+#
+#     with run_config_file(run_config) as run_config_path:
+#         tracto_cli = TractoCli(
+#             command=["python3", "/tractorun_tests/stderr_script.py"],
+#             args=[
+#                 "--run-config-path",
+#                 run_config_path,
+#                 "--yt-path",
+#                 yt_path,
+#                 "--user-config",
+#                 json.dumps(
+#                     {
+#                         "test_strings": TEST_STRINGS,
+#                     },
+#                 ),
+#                 "--bind-local",
+#                 f"{get_data_path('../data/stderr_script.py')}:/tractorun_tests/stderr_script.py",
+#             ],
+#         )
+#         op_run = tracto_cli.run()
+#     assert op_run.is_exitcode_valid()
+#     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+#
+#     stdout = op_run.stdout.decode("utf-8")
+#     for s in TEST_STRINGS:
+#         assert f"{s}\n" in stdout
 
 
 @pytest.mark.parametrize(

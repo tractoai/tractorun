@@ -8,7 +8,9 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
-    run_config_file, make_cli_args, make_run_config,
+    make_cli_args,
+    make_run_config,
+    run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
@@ -26,12 +28,13 @@ def test_configuration() -> None:
     _, _, config = make_configuration(make_cli_args())
     assert config.env == []
 
-    env_json = json.dumps({
-        "name": "cli",
-        "cypress_path": "raw_cypress_path",
-        "value": "raw_value",
-    })
-
+    env_json = json.dumps(
+        {
+            "name": "cli",
+            "cypress_path": "raw_cypress_path",
+            "value": "raw_value",
+        }
+    )
 
     _, _, config = make_configuration(
         make_cli_args(

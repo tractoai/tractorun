@@ -169,6 +169,13 @@ class EffectiveConfig:
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
+        docker_image = _choose_value(
+            args_value=args["docker_image"],
+            config_value=config.docker_image,
+            default=get_default_docker_image(),
+        )
+        if docker_image is None:
+            raise TractorunConfigError("docker_image should be set in config or by cli param")
 
         binds = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
         if binds is None:
@@ -201,13 +208,6 @@ class EffectiveConfig:
             docker_auth_secret = DockerAuthSecret(
                 cypress_path=args["docker_auth_secret.cypress_path"],
             )
-        docker_image = _choose_value(
-            args_value=args["docker_image"],
-            config_value=config.docker_image,
-            default=get_default_docker_image(),
-        )
-        if docker_image is None:
-            raise TractorunConfigError("docker_image should be set in config or by cli param")
 
         new_config = EffectiveConfig(
             yt_path=yt_path,

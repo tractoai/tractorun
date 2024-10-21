@@ -5,6 +5,8 @@ import attrs
 
 __all__ = ["Sidecar", "RestartPolicy"]
 
+from tractorun.private.helpers import AttrSerializer as _AttrSerializer
+
 
 class RestartPolicy(str, enum.Enum):
     ON_FAILURE = "on_failure"
@@ -17,3 +19,7 @@ class RestartPolicy(str, enum.Enum):
 class Sidecar:
     command: list[str]
     restart_policy: RestartPolicy
+
+    @staticmethod
+    def from_args(value: str) -> "Sidecar":
+        return _AttrSerializer(Sidecar).deserialize(value)

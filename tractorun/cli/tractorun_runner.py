@@ -177,38 +177,6 @@ class EffectiveConfig:
         if docker_image is None:
             raise TractorunConfigError("docker_image should be set in config or by cli param")
 
-        binds = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
-        if binds is None:
-            binds = []
-        effective_binds: list[BindLocal] = []
-        for bind in binds:
-            source, destination = bind.split(":")
-            effective_binds.append(
-                BindLocal(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-
-        binds_cypress = _choose_value(args_value=args["bind_cypress"], config_value=config.bind_cypress, default=[])
-        effective_cypress_binds: list[BindCypress] = []
-        for bind in binds_cypress:
-            source, destination = bind.split(":")
-            effective_cypress_binds.append(
-                BindCypress(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-
-        docker_auth_secret = None
-        if config.docker_auth_secret is not None:
-            docker_auth_secret = DockerAuthSecret(cypress_path=config.docker_auth_secret.cypress_path)
-        if args["docker_auth_secret.cypress_path"] is not None:
-            docker_auth_secret = DockerAuthSecret(
-                cypress_path=args["docker_auth_secret.cypress_path"],
-            )
-
         new_config = EffectiveConfig(
             yt_path=yt_path,
             docker_image=docker_image,
@@ -227,11 +195,23 @@ class EffectiveConfig:
                 config_value=config.cluster_config_path,
                 default=CLUSTER_CONFIG_PATH_DEFAULT,
             ),
-            bind_local=effective_binds,
+            bind_local=cls._make_bind_local(
+                _choose_value(
+                    args_value=args["bind_local"],
+                    config_value=config.bind_local,
+                    default=[],
+                ),
+            ),
             bind_local_lib=_choose_value(
                 args_value=args["bind_local_lib"], config_value=config.bind_local_lib, default=[]
             ),
-            bind_cypress=effective_cypress_binds,
+            bind_cypress=cls._make_bind_cypress(
+                _choose_value(
+                    args_value=args["bind_cypress"],
+                    config_value=config.bind_cypress,
+                    default=[],
+                ),
+            ),
             proxy_stderr_mode=_choose_value(
                 args_value=args["proxy_stderr_mode"],
                 config_value=config.proxy_stderr_mode,
@@ -293,10 +273,48 @@ class EffectiveConfig:
                     default=TENSORPROXY_RESTART_POLICY_DEFAULT,
                 ),
             ),
-            docker_auth_secret=docker_auth_secret,
+            docker_auth_secret=cls._make_docker_auth_secret(
+                _choose_value(
+                    args_value=args["docker_auth_secret.cypress_path"],
+                    # TODO: make some helper
+                    config_value=getattr(config.docker_auth_secret, "cypress_path", None),
+                ),
+            ),
             dry_run=args["dry_run"],
         )
         return new_config
+
+    @classmethod
+    def _make_bind_local(cls, binds: list[str]) -> list[BindLocal]:
+        effective_binds: list[BindLocal] = []
+        for bind in binds:
+            source, destination = bind.split(":")
+            effective_binds.append(
+                BindLocal(
+                    source=source,
+                    destination=destination,
+                ),
+            )
+        return effective_binds
+
+    @classmethod
+    def _make_bind_cypress(cls, binds: list[str]) -> list[BindCypress]:
+        effective_cypress_binds: list[BindCypress] = []
+        for bind in binds:
+            source, destination = bind.split(":")
+            effective_cypress_binds.append(
+                BindCypress(
+                    source=source,
+                    destination=destination,
+                ),
+            )
+        return effective_cypress_binds
+
+    @classmethod
+    def _make_docker_auth_secret(cls, docker_auth_cypress_path: str | None) -> DockerAuthSecret | None:
+        if docker_auth_cypress_path is None:
+            return None
+        return DockerAuthSecret(cypress_path=docker_auth_cypress_path)
 
 
 def _load_json(value: str | None) -> dict | None:

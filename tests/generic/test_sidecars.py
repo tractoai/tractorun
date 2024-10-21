@@ -7,10 +7,13 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
+from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.mesh import Mesh
 from tractorun.private.sidecar import (
     RestartVerdict,
@@ -22,6 +25,46 @@ from tractorun.sidecar import (
     Sidecar,
 )
 from tractorun.toolbox import Toolbox
+
+
+def test_configuration() -> None:
+    _, _, config = make_configuration(make_cli_args())
+    assert config.sidecars == []
+
+    sidecars_json = json.dumps(
+        {
+            "command": ["cli"],
+            "restart_policy": RestartPolicy.ON_FAILURE.value,
+        },
+    )
+
+    _, _, config = make_configuration(
+        make_cli_args(
+            "--sidecar",
+            sidecars_json,
+        ),
+    )
+    assert config.sidecars == [Sidecar(command=["cli"], restart_policy=RestartPolicy.ON_FAILURE)]
+
+    run_config = make_run_config(
+        {
+            "sidecars": [
+                {
+                    "command": ["config"],
+                    "restart_policy": RestartPolicy.ON_FAILURE.value,
+                }
+            ]
+        },
+    )
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.sidecars == [Sidecar(command=["config"], restart_policy=RestartPolicy.ON_FAILURE)]
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--sidecar", sidecars_json],
+        )
+    assert config.sidecars == [Sidecar(command=["cli"], restart_policy=RestartPolicy.ON_FAILURE)]
 
 
 def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:

@@ -71,23 +71,10 @@ class ResourcesConfig:
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class SidecarConfig:
-    command: list[str]
-    restart_policy: RestartPolicy
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TensorproxyConfig:
     enabled: bool | None = attrs.field(default=None)
     restart_policy: RestartPolicy | None = attrs.field(default=None)
     yt_path: str | None = attrs.field(default=None)
-
-
-@attrs.define(kw_only=True, slots=True, auto_attribs=True)
-class EnvVariableConfig:
-    name: str
-    value: str | None = None
-    cypress_path: str | None = None
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -120,8 +107,8 @@ class Config:
 
     mesh: MeshConfig = attrs.field(default=MeshConfig())
     resources: ResourcesConfig = attrs.field(default=ResourcesConfig())
-    sidecars: list[SidecarConfig] | None = attrs.field(default=None)
-    env: list[EnvVariableConfig] | None = attrs.field(default=None)
+    sidecars: list[Sidecar] | None = attrs.field(default=None)
+    env: list[EnvVariable] | None = attrs.field(default=None)
     tensorproxy: TensorproxyConfig = attrs.field(default=TensorproxyConfig())
     docker_auth_secret: DockerAuthSecretConfig | None = attrs.field(default=None)
 
@@ -176,83 +163,12 @@ class EffectiveConfig:
                 return default
             return result
 
-        user_config = json.loads(args["user_config"]) if args["user_config"] is not None else None
-        yt_operation_spec = json.loads(args["yt_operation_spec"]) if args["yt_operation_spec"] is not None else None
-        yt_task_spec = json.loads(args["yt_task_spec"]) if args["yt_task_spec"] is not None else None
-
-        # here is `args["command"] or None` as a special hack
-        # because argparse can't use default=None here
         command = _choose_value(args["command"] or None, config.command)
         if not command:
             raise TractorunConfigError("Command should be set in config or by cli param")
         yt_path = _choose_value(args["yt_path"], config.yt_path)
         if yt_path is None:
             raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
-
-        binds = _choose_value(args_value=args["bind_local"], config_value=config.bind_local)
-        if binds is None:
-            binds = []
-        effective_binds: list[BindLocal] = []
-        for bind in binds:
-            source, destination = bind.split(":")
-            effective_binds.append(
-                BindLocal(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-
-        bind_lib = _choose_value(args_value=args["bind_local_lib"], config_value=config.bind_local_lib)
-        if bind_lib is None:
-            bind_lib = []
-
-        binds_cypress = _choose_value(args_value=args["bind_cypress"], config_value=config.bind_cypress)
-        effective_cypress_binds: list[BindCypress] = []
-        if binds_cypress is None:
-            binds_cypress = []
-        for bind in binds_cypress:
-            source, destination = bind.split(":")
-            effective_cypress_binds.append(
-                BindCypress(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-
-        sidecars = config.sidecars
-        if args["sidecar"] is not None:
-            raw_sidecars = [json.loads(sidecar) for sidecar in args["sidecar"]]
-            sidecars = [
-                SidecarConfig(
-                    command=sidecar["command"],
-                    restart_policy=sidecar["restart_policy"],
-                )
-                for sidecar in raw_sidecars
-            ]
-        if sidecars is None:
-            sidecars = []
-
-        env = config.env
-        if args["env"] is not None:
-            raw_env = [json.loads(e) for e in args["env"]]
-            env = [
-                EnvVariableConfig(
-                    name=e["name"],
-                    cypress_path=e.get("cypress_path"),
-                    value=e.get("value"),
-                )
-                for e in raw_env
-            ]
-        if env is None:
-            env = []
-
-        docker_auth_secret = None
-        if config.docker_auth_secret is not None:
-            docker_auth_secret = DockerAuthSecret(cypress_path=config.docker_auth_secret.cypress_path)
-        if args["docker_auth_secret.cypress_path"] is not None:
-            docker_auth_secret = DockerAuthSecret(
-                cypress_path=args["docker_auth_secret.cypress_path"],
-            )
         docker_image = _choose_value(
             args_value=args["docker_image"],
             config_value=config.docker_image,
@@ -265,13 +181,13 @@ class EffectiveConfig:
             yt_path=yt_path,
             docker_image=docker_image,
             title=_choose_value(args_value=args["title"], config_value=config.title),
-            user_config=_choose_value(args_value=user_config, config_value=config.user_config, default={}),
+            user_config=_choose_value(args_value=args["user_config"], config_value=config.user_config, default={}),
             yt_operation_spec=_choose_value(
-                args_value=yt_operation_spec,
+                args_value=args["yt_operation_spec"],
                 config_value=config.yt_operation_spec,
                 default={},
             ),
-            yt_task_spec=_choose_value(args_value=yt_task_spec, config_value=config.yt_task_spec, default={}),
+            yt_task_spec=_choose_value(args_value=args["yt_task_spec"], config_value=config.yt_task_spec, default={}),
             local=_choose_value(args_value=args["local"], config_value=config.local, default=LOCAL_DEFAULT),
             no_wait=_choose_value(args_value=args["no_wait"], config_value=config.no_wait, default=NO_WAIT_DEFAULT),
             cluster_config_path=_choose_value(
@@ -279,9 +195,23 @@ class EffectiveConfig:
                 config_value=config.cluster_config_path,
                 default=CLUSTER_CONFIG_PATH_DEFAULT,
             ),
-            bind_local=effective_binds,
-            bind_local_lib=bind_lib,
-            bind_cypress=effective_cypress_binds,
+            bind_local=cls._make_bind_local(
+                _choose_value(
+                    args_value=args["bind_local"],
+                    config_value=config.bind_local,
+                    default=[],
+                ),
+            ),
+            bind_local_lib=_choose_value(
+                args_value=args["bind_local_lib"], config_value=config.bind_local_lib, default=[]
+            ),
+            bind_cypress=cls._make_bind_cypress(
+                _choose_value(
+                    args_value=args["bind_cypress"],
+                    config_value=config.bind_cypress,
+                    default=[],
+                ),
+            ),
             proxy_stderr_mode=_choose_value(
                 args_value=args["proxy_stderr_mode"],
                 config_value=config.proxy_stderr_mode,
@@ -292,21 +222,8 @@ class EffectiveConfig:
                 config_value=config.operation_log_mode,
                 default=OPERATION_LOG_MODE_DEFAULT,
             ),
-            sidecars=[
-                Sidecar(
-                    command=sidecar.command,
-                    restart_policy=sidecar.restart_policy,
-                )
-                for sidecar in sidecars
-            ],
-            env=[
-                EnvVariable(
-                    name=e.name,
-                    value=e.value,
-                    cypress_path=e.cypress_path,
-                )
-                for e in env
-            ],
+            sidecars=_choose_value(args_value=args["sidecar"], config_value=config.sidecars, default=[]),
+            env=_choose_value(args_value=args["env"], config_value=config.env, default=[]),
             command=command,
             mesh=Mesh(
                 node_count=_choose_value(
@@ -356,10 +273,54 @@ class EffectiveConfig:
                     default=TENSORPROXY_RESTART_POLICY_DEFAULT,
                 ),
             ),
-            docker_auth_secret=docker_auth_secret,
+            docker_auth_secret=cls._make_docker_auth_secret(
+                _choose_value(
+                    args_value=args["docker_auth_secret.cypress_path"],
+                    # TODO: make some helper
+                    config_value=getattr(config.docker_auth_secret, "cypress_path", None),
+                ),
+            ),
             dry_run=args["dry_run"],
         )
         return new_config
+
+    @classmethod
+    def _make_bind_local(cls, binds: list[str]) -> list[BindLocal]:
+        effective_binds: list[BindLocal] = []
+        for bind in binds:
+            source, destination = bind.split(":")
+            effective_binds.append(
+                BindLocal(
+                    source=source,
+                    destination=destination,
+                ),
+            )
+        return effective_binds
+
+    @classmethod
+    def _make_bind_cypress(cls, binds: list[str]) -> list[BindCypress]:
+        effective_cypress_binds: list[BindCypress] = []
+        for bind in binds:
+            source, destination = bind.split(":")
+            effective_cypress_binds.append(
+                BindCypress(
+                    source=source,
+                    destination=destination,
+                ),
+            )
+        return effective_cypress_binds
+
+    @classmethod
+    def _make_docker_auth_secret(cls, docker_auth_cypress_path: str | None) -> DockerAuthSecret | None:
+        if docker_auth_cypress_path is None:
+            return None
+        return DockerAuthSecret(cypress_path=docker_auth_cypress_path)
+
+
+def _load_json(value: str | None) -> dict | None:
+    if value is None:
+        return None
+    return json.loads(value)
 
 
 def make_cli_parser() -> argparse.ArgumentParser:
@@ -393,7 +354,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mesh.pool-trees", help="mesh pool trees", action="append")
     parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
     parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
-    parser.add_argument("--user-config", type=str, help="json config that will be passed to the jobs")
+    parser.add_argument("--user-config", type=_load_json, help="json config that will be passed to the jobs")
     parser.add_argument(
         "--cluster-config-path",
         type=str,
@@ -414,8 +375,8 @@ def make_cli_parser() -> argparse.ArgumentParser:
         type=str,
         help=f"Tensorflow's sidecar restart policy. Default {TENSORPROXY_RESTART_POLICY_DEFAULT}",
     )
-    parser.add_argument("--yt-operation-spec", help="yt operation spec", type=str)
-    parser.add_argument("--yt-task-spec", help="yt task spec", type=str)
+    parser.add_argument("--yt-operation-spec", help="yt operation spec", type=_load_json)
+    parser.add_argument("--yt-task-spec", help="yt task spec", type=_load_json)
     # TODO: rename to run mode
     parser.add_argument("--local", type=bool, help=f"enable local run mode. Default {LOCAL_DEFAULT}")
     parser.add_argument(
@@ -442,6 +403,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--sidecar",
         action="append",
+        type=Sidecar.from_args,
         help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
         + ", ".join(p for p in RestartPolicy),
     )
@@ -468,6 +430,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--env",
         action="append",
+        type=EnvVariable.from_args,
         help="set env variable by value or from cypress node. JSON message like {} or {}".format(
             EnvVariable(
                 name="placeholder",

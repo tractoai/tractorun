@@ -8,10 +8,13 @@ from tests.utils import (
     DOCKER_IMAGE,
     TractoCli,
     get_data_path,
+    make_cli_args,
+    make_run_config,
     run_config_file,
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
+from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.run import run
@@ -19,6 +22,48 @@ from tractorun.run import run
 
 SECRET_ENV_VALUE = "secret"
 NOT_SECRET_ENV_VALUE = "not_secret"
+
+
+def test_configuration() -> None:
+    _, _, config = make_configuration(make_cli_args())
+    assert config.env == []
+
+    env_json = json.dumps(
+        {
+            "name": "cli",
+            "cypress_path": "raw_cypress_path",
+            "value": "raw_value",
+        }
+    )
+
+    _, _, config = make_configuration(
+        make_cli_args(
+            "--env",
+            env_json,
+        ),
+    )
+    assert config.env == [EnvVariable(name="cli", value="raw_value", cypress_path="raw_cypress_path")]
+
+    run_config = make_run_config(
+        {
+            "env": [
+                {
+                    "name": "config",
+                    "cypress_path": "raw_cypress_path",
+                    "value": "raw_value",
+                },
+            ]
+        },
+    )
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(["--run-config-path", run_config_path])
+    assert config.env == [EnvVariable(name="config", value="raw_value", cypress_path="raw_cypress_path")]
+
+    with run_config_file(run_config) as run_config_path:
+        _, _, config = make_configuration(
+            ["--run-config-path", run_config_path, "--env", env_json],
+        )
+    assert config.env == [EnvVariable(name="cli", value="raw_value", cypress_path="raw_cypress_path")]
 
 
 @pytest.fixture

@@ -1,7 +1,5 @@
 __all__ = ["RunInfo"]
 
-from typing import Any
-
 import attrs
 
 
@@ -9,4 +7,3 @@ import attrs
 class RunInfo:
     operation_spec: dict
     operation_id: str | None
-    operation_attributes: dict[Any, Any] | None

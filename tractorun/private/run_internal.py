@@ -393,7 +393,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 
-    operation_id = operation_attributes = None
+    operation_id = None
     is_sync = not params.no_wait
     if not params.dry_run:
         prepare_training_dir(yt_client=yt_client, training_dir=training_dir)
@@ -407,12 +407,10 @@ def run_tracto(params: TractorunParams) -> RunInfo:
             operation = yt_client.run_operation(operation_spec, sync=is_sync)
             assert isinstance(operation, yt.Operation)
             operation_id = operation.id
-            operation_attributes = operation.get_attributes()
 
     run_info = RunInfo(
         operation_spec=operation_spec.build(client=yt_client),
         operation_id=operation_id,
-        operation_attributes=operation_attributes,
     )
 
     tmp_dir.cleanup()
@@ -462,7 +460,7 @@ def run_local(
     if not params.dry_run:
         prepare_training_dir(training_dir, yt_client)
         wrapped()
-    return RunInfo(operation_spec={}, operation_id=None, operation_attributes=None)
+    return RunInfo(operation_spec={}, operation_id=None)
 
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:

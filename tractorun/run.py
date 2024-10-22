@@ -32,7 +32,7 @@ from tractorun.tensorproxy import TensorproxySidecar
 from tractorun.toolbox import Toolbox
 
 
-__all__ = ["run", "prepare_and_get_toolbox"]
+__all__ = ["run", "run_script", "prepare_and_get_toolbox"]
 
 
 def run_script(

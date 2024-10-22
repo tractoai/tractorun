@@ -61,7 +61,7 @@ class MeshConfig:
     node_count: int | None = attrs.field(default=None)
     process_per_node: int | None = attrs.field(default=None)
     gpu_per_process: int | None = attrs.field(default=None)
-    pool_trees: list[str] = attrs.field(default=None)
+    pool_trees: list[str] | None = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -507,7 +507,7 @@ def main() -> None:
         errors.append(traceback.format_exc())
         if not effective_config.dry_run:
             raise
-    if effective_config.dry_run:
+    if effective_config.dry_run or effective_config.no_wait:
         cli_run_info = CliRunInfo(
             configuration=ConfigurationDebug(
                 file_config=file_config_content,
@@ -517,7 +517,6 @@ def main() -> None:
             run_info=run_info,
             errors=errors,
         )
-
         print(
             json.dumps(
                 attrs.asdict(cli_run_info),  # type: ignore

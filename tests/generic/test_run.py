@@ -25,8 +25,10 @@ from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.bind import BindLocal
+from tractorun.cli.tractorun_runner import CliRunInfo
 from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
+from tractorun.private.helpers import AttrSerializer
 from tractorun.run import (
     run,
     run_script,
@@ -373,3 +375,28 @@ def test_run_cli_command_from_python(yt_path: str) -> None:
         docker_image=DOCKER_IMAGE,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
     )
+
+
+def test_script_debug_info(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/torch_run_script.py"],
+        args=[
+            "--mesh.node-count",
+            "1",
+            "--mesh.process-per-node",
+            "1",
+            "--mesh.gpu-per-process",
+            "0",
+            "--yt-path",
+            yt_path,
+            "--bind-local",
+            f"{get_data_path('../data/dummy_script.py')}:/tractorun_tests/dummy_script.py",
+            "--no-wait",
+        ],
+    )
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    serializer = AttrSerializer(CliRunInfo)
+    run_info = serializer.deserialize(op_run.stdout.decode("utf-8"))
+    assert run_info.run_info is not None
+    assert run_info.run_info.operation_id is not None

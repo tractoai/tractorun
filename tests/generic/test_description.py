@@ -69,7 +69,7 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
             cluster_config_path=config_path,
         )
     operation = yt_client.get_operation(run_info.operation_id)
-    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
+    description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
     assert tractorun_description is not None
 
@@ -94,7 +94,7 @@ def test_set_tractorun_description(
         cluster_config_path=cluster_config_path,
     )
     operation = yt_client.get_operation(run_info.operation_id)
-    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
+    description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
     assert str(tractorun_description["training_dir"]) == make_cypress_link(
         path=yt_path,
@@ -140,7 +140,7 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         cluster_config_path=cluster_config_path,
     )
     operation = yt_client.get_operation(run_info.operation_id)
-    description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
+    description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     user_description = description[USER_DESCRIPTION_MANAGER_NAME]
     assert user_description == {
         "wandb": Link(value="https://fake.wandb.url/some/page").to_yson(),

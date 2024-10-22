@@ -61,7 +61,7 @@ class MeshConfig:
     node_count: int | None = attrs.field(default=None)
     process_per_node: int | None = attrs.field(default=None)
     gpu_per_process: int | None = attrs.field(default=None)
-    pool_trees: list[str] = attrs.field(default=None)
+    pool_trees: list[str] | None = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

@@ -84,7 +84,8 @@ def get_job_stderr_with_retry(
             try:
                 data = get_job_stderr(yt_client=yt_client, operation_id=operation_id, job_id=job_id)()
                 return data
-            except YtError:
+            except YtError as e:
+                print("error in reader process", e)
                 # TODO: add debug logs
                 time.sleep(retry_interval)
 
@@ -119,7 +120,8 @@ class StderrReaderWorker:
                 incarnation_path = self._training_dir.get_incarnation_path(incarnation)
                 operation_id = yt_client.get(incarnation_path + "/@incarnation_operation_id")
                 topology = yt_client.get(incarnation_path + "/@topology")
-            except Exception:
+            except Exception as e:
+                print("error in checking iteration process", e)
                 # TODO: add debug logs
                 # it's important to reset all values
                 # because if stderr get new incarnation id
@@ -154,7 +156,8 @@ class StderrReaderWorker:
                     data = next(output_stream)
                     if data:
                         print(data.decode("unicode_escape"), end="")
-                except Exception:
+                except Exception as e:
+                    print("error in main process", e)
                     # TODO: add debug logs
                     pass
             time.sleep(self._polling_interval)

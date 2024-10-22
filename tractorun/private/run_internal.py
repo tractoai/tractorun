@@ -382,6 +382,8 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     if params.mesh.pool_trees is not None:
         operation_spec = operation_spec.pool_trees(params.mesh.pool_trees)
+    if params.mesh.pool is not None:
+        operation_spec = operation_spec.pool(params.mesh.pool)
 
     secure_vault: dict[str, Any] = {}
     if params.docker_auth:

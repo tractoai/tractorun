@@ -390,6 +390,10 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(params.docker_auth).to_spec()
         operation_spec.secure_vault(secure_vault)
 
+    # save job stderr for 150 jobs
+    # we can't make it bigger because 150 is a scheduler's limit
+    operation_spec.max_stderr_count(150)
+
     operation_spec = operation_spec.spec(params.yt_operation_spec)
     operation_spec = params.runnable.modify_operation(operation_spec)
 

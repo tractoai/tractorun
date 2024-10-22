@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.34.0 (2024-10-22)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.33.0...0.34.0)
+
+### Changes
+
+- NYT-756: add pool param (#103). [206227b](https://github.com/tractoai/tractorun/commit/206227b57168247844b99a9fc42631e54a51d1e7)
+    
+- Remove sleep (#102). [0a550a4](https://github.com/tractoai/tractorun/commit/0a550a44374c3e62cbe7105e2dee1fb7ac8cbd84)
+    
+
 ## 0.33.0 (2024-10-22)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.32.0...0.33.0)

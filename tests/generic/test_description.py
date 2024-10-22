@@ -59,7 +59,7 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
     )
     assert isinstance(ctx_manager, ContextManager)
     with ctx_manager:
-        operation = run(
+        run_info = run(
             checker,
             backend=GenericBackend(),
             yt_path=yt_path,
@@ -68,6 +68,7 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
             docker_image=DOCKER_IMAGE,
             cluster_config_path=config_path,
         )
+    operation = yt_client.get_operation(run_info.operation_id)
     assert operation.operation_attributes is not None
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
@@ -84,7 +85,7 @@ def test_set_tractorun_description(
         pass
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    operation = run(
+    run_info = run(
         checker,
         backend=GenericBackend(),
         yt_path=yt_path,
@@ -93,6 +94,7 @@ def test_set_tractorun_description(
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
+    operation = yt_client.get_operation(run_info.operation_id)
     assert operation.operation_attributes is not None
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
@@ -130,7 +132,7 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         )
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    operation = run(
+    run_info = run(
         checker,
         backend=GenericBackend(),
         yt_path=yt_path,
@@ -139,6 +141,7 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
+    operation = yt_client.get_operation(run_info.operation_id)
     assert operation.operation_attributes is not None
     description = operation.operation_attributes["runtime_parameters"]["annotations"]["description"]
     user_description = description[USER_DESCRIPTION_MANAGER_NAME]

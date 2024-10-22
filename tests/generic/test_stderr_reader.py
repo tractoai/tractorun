@@ -1,7 +1,6 @@
 import json
 import sys
 import threading
-import time
 
 from _pytest.capture import CaptureFixture
 import attrs
@@ -189,8 +188,6 @@ def test_operation_cli(yt_instance: YtInstance, yt_path: str) -> None:
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
     stdout = op_run.stdout.decode("utf-8")
-    # TODO: check artifact's readiness
-    time.sleep(5)
     for s in TEST_STRINGS:
         assert f"{s}\n" in stdout
 

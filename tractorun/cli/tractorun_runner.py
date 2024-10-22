@@ -62,6 +62,7 @@ class MeshConfig:
     process_per_node: int | None = attrs.field(default=None)
     gpu_per_process: int | None = attrs.field(default=None)
     pool_trees: list[str] | None = attrs.field(default=None)
+    pool: str | None = attrs.field(default=None)
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -245,6 +246,10 @@ class EffectiveConfig:
                     args_value=args["mesh.pool_trees"],
                     config_value=config.mesh.pool_trees,
                 ),
+                pool=_choose_value(
+                    args_value=args["mesh.pool"],
+                    config_value=config.mesh.pool,
+                ),
             ),
             resources=Resources(
                 cpu_limit=_choose_value(
@@ -336,7 +341,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--docker-auth-secret.cypress-path",
         type=str,
-        help="Path to the cypress node with format {}".format(
+        help="path to the cypress node with format {}".format(
             json.dumps(
                 attrs.asdict(DockerAuthInternal(username="placeholder", password="placeholder", auth="placeholder")),  # type: ignore
             ),
@@ -352,23 +357,24 @@ def make_cli_parser() -> argparse.ArgumentParser:
         "--mesh.gpu-per-process", type=int, help=f"mesh gpu per process. Default: {MESH_GPU_PER_PROCESS_DEFAULT}"
     )
     parser.add_argument("--mesh.pool-trees", help="mesh pool trees", action="append")
+    parser.add_argument("--mesh.pool", help="mesh pool", type=str)
     parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
     parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
     parser.add_argument("--user-config", type=_load_json, help="json config that will be passed to the jobs")
     parser.add_argument(
         "--cluster-config-path",
         type=str,
-        help=f"Path to the global tractorun config on YTSaurus cluster. Default: {CLUSTER_CONFIG_PATH_DEFAULT}",
+        help=f"path to the global tractorun config on YTSaurus cluster. Default: {CLUSTER_CONFIG_PATH_DEFAULT}",
     )
     parser.add_argument(
         "--tensorproxy.enabled",
         type=bool,
-        help=f"Enable tensorproxy sidecar. Default {TENSORPROXY_ENABLED_DEFAULT}",
+        help=f"enable tensorproxy sidecar. Default {TENSORPROXY_ENABLED_DEFAULT}",
     )
     parser.add_argument(
         "--tensorproxy.yt_path",
         type=str,
-        help=f"YT path to tensorproxy binary. Default {TENSORPROXY_YT_PATH_DEFAULT}",
+        help=f"YTsaurus path to tensorproxy binary. Default {TENSORPROXY_YT_PATH_DEFAULT}",
     )
     parser.add_argument(
         "--tensorproxy.restart_policy",
@@ -410,14 +416,14 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--proxy-stderr-mode",
         type=StderrMode,
-        help="Proxy jobs stderr to terminal. Mode: "
+        help="proxy jobs stderr to terminal. Mode: "
         + ", ".join(m for m in StderrMode)
         + f"Default: {PROXY_STDERR_MODE_DEFAULT}",
     )
     parser.add_argument(
         "--operation-log-mode",
         type=OperationLogMode,
-        help="Store operation log mode. Mode: "
+        help="store operation log mode. Mode: "
         + ", ".join(m for m in OperationLogMode)
         + f"Default: {OPERATION_LOG_MODE_DEFAULT}",
     )
@@ -425,7 +431,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         "--no-wait",
         action="store_true",
         default=None,
-        help=f"Don't create transaction and don't wait for operation to complete. Default {NO_WAIT_DEFAULT}",
+        help=f"don't create transaction and don't wait for operation to complete. Default {NO_WAIT_DEFAULT}",
     )
     parser.add_argument(
         "--env",

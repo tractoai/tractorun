@@ -6,6 +6,7 @@ from typing import (
 
 import attrs
 import pytest
+import yt.wrapper as yt
 
 from tests.utils import DOCKER_IMAGE
 from tests.yt_instances import YtInstance
@@ -68,7 +69,7 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
             docker_image=DOCKER_IMAGE,
             cluster_config_path=config_path,
         )
-    operation = yt_client.get_operation(run_info.operation_id)
+    operation = yt.Operation(id=run_info.operation_id, client=yt_client)
     description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
     assert tractorun_description is not None
@@ -93,7 +94,7 @@ def test_set_tractorun_description(
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
-    operation = yt_client.get_operation(run_info.operation_id)
+    operation = yt.Operation(id=run_info.operation_id, client=yt_client)
     description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     tractorun_description = description[TRACTORUN_DESCRIPTION_MANAGER_NAME]
     assert str(tractorun_description["training_dir"]) == make_cypress_link(
@@ -139,7 +140,7 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         docker_image=DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
-    operation = yt_client.get_operation(run_info.operation_id)
+    operation = yt.Operation(id=run_info.operation_id, client=yt_client)
     description = operation.get_attributes()["runtime_parameters"]["annotations"]["description"]
     user_description = description[USER_DESCRIPTION_MANAGER_NAME]
     assert user_description == {

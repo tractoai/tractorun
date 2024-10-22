@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.33.0 (2024-10-22)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.32.0...0.33.0)
+
+### Changes
+
+- NYT-755: print run info if no wait is set (#101). [75cdb07](https://github.com/tractoai/tractorun/commit/75cdb07dfbd7678f5e7e1cde78939bf1a4f53bc6)
+    
+- NYT-745: simplify cli params parsing and add more tests (#100). [139af96](https://github.com/tractoai/tractorun/commit/139af96848c1a7691ce3e7587d3427a5fbce2aa9)
+    
+- NYT-709: return yt table logs with cli arg (#96). [2355ec5](https://github.com/tractoai/tractorun/commit/2355ec5738e6923b26d402d5a06bd4cfc20b0907)
+    
+- NYT-746: make run_script public (#99). [779d9a6](https://github.com/tractoai/tractorun/commit/779d9a6035a9d9593c3383eb173cb4fe2847328d)
+    
+- NYT-745: simplify parameters passing, remove default docker image (#98). [ba72548](https://github.com/tractoai/tractorun/commit/ba72548721336e8033e2c8525b67356949c32cb2)
+    
+- Remove special run info objects and heavy overrides (#97). [a891214](https://github.com/tractoai/tractorun/commit/a89121436100081352f4042e05e79fcd0d7219ad)
+    
+- NYT-739: use native title instead of yt_operation_spec (#95). [d14102b](https://github.com/tractoai/tractorun/commit/d14102b2377cc70278659ecc01b27dc38e891549)
+    
+- NYT-739: add extra tests for title (#94). [c3b3bc1](https://github.com/tractoai/tractorun/commit/c3b3bc15a361be8f66a5c5e44fb6b387977eae7c)
+    
+- NYT-738: run tests in parallel (#93). [700bd2d](https://github.com/tractoai/tractorun/commit/700bd2d035d4a244a71cbd79263eeba45b573085)
+    
+- Add tests for binds (#92). [60b9ca7](https://github.com/tractoai/tractorun/commit/60b9ca71070090816953462ebfcc41af8d42a981)
+    
+- Cypress binds: test for executable flag (#91). [9cf3929](https://github.com/tractoai/tractorun/commit/9cf3929e618d76024757ebf3d7c4ad6639a02881)
+    
+- Cleanup bind tests (#90). [a1f3141](https://github.com/tractoai/tractorun/commit/a1f31416efd719e37af4fc9f94c04f321c9e1733)
+    
+
 ## 0.32.0 (2024-10-10)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.31.0...0.32.0)

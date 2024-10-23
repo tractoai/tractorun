@@ -1,0 +1,45 @@
+name: build and upload to external pypi
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_tag:
+        description: Git tag
+        required: true
+
+jobs:
+  build-and-upload:
+    runs-on: tractoai-runners
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tractorun
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_tag }}
+
+      - name: "Install Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: "Install package"
+        run: pip install .
+
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install
+          build
+          --user
+
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

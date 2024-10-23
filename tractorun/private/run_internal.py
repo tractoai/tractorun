@@ -304,11 +304,6 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     cluster_config = TractorunClusterConfig.load_from_yt(yt_client=yt_client, path=params.cluster_config_path)
 
-    # "fail_on_job_restart" is useful for gang operations,
-    # so let's turn it on unless disabled explicitly.
-    if "fail_on_job_restart" not in params.yt_operation_spec:
-        params.yt_operation_spec["fail_on_job_restart"] = True
-
     bootstrap_config = BootstrapConfig(
         mesh=params.mesh,
         sidecars=params.sidecars,
@@ -350,6 +345,8 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     )
 
     yt_command = params.runnable.make_yt_command()
+
+    # prepare task spec
     task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
 
     task_spec = task_spec.file_paths(yt_file_bindings + tp_yt_files)
@@ -376,7 +373,9 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         )
     )
 
+    # prepare operation spec
     operation_spec = task_spec.end_task()
+    additional_operation_spec = copy.deepcopy(params.yt_operation_spec)
 
     operation_spec = operation_spec.title(params.title)
 
@@ -390,11 +389,19 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         secure_vault["docker_auth"] = DockerAuthDataExtractor(yt_client=yt_client).extract(params.docker_auth).to_spec()
         operation_spec.secure_vault(secure_vault)
 
+    # "fail_on_job_restart" is useful for gang operations,
+    # so let's turn it on unless disabled explicitly.
+    if "fail_on_job_restart" not in additional_operation_spec:
+        additional_operation_spec["fail_on_job_restart"] = True
+
+    additional_operation_spec["annotations"] = additional_operation_spec.get("annotations", {})
+    additional_operation_spec["annotations"]["is_tractorun"] = True
+
     # save job stderr for 150 jobs
     # we can't make it bigger because 150 is a scheduler's limit
     operation_spec.max_stderr_count(150)
 
-    operation_spec = operation_spec.spec(params.yt_operation_spec)
+    operation_spec = operation_spec.spec(additional_operation_spec)
     operation_spec = params.runnable.modify_operation(operation_spec)
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)

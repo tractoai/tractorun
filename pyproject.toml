@@ -1,5 +1,6 @@
 [project]
 name = "tractorun"
+description = "Run distributed training on YTsaurus"
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies", "optional-dependencies"]
@@ -7,7 +8,7 @@ dynamic = ["version", "dependencies", "optional-dependencies"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*", "tractorun.*"]
-exclude = ["__pycache__", "*.pyc", ".mypy_cache"]
+exclude = ["__pycache__", "*.pyc", ".mypy_cache", "tests", "examples", ".github"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tractorun.__version__"}

@@ -36,7 +36,7 @@ from tractorun.run import (
 from tractorun.toolbox import Toolbox
 
 
-def test_important_spec_options(yt_path: str):
+def test_important_spec_options(yt_path: str) -> None:
     def checker() -> None:
         pass
 

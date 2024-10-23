@@ -1,10 +1,6 @@
 [project]
 name = "tractorun"
-
 description = "Run distributed training on YTsaurus"
-long_description = "Run distributed training on YTsaurus"
-long_description_content_type = "text/markdown"
-
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies", "optional-dependencies"]

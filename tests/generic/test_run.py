@@ -36,6 +36,22 @@ from tractorun.run import (
 from tractorun.toolbox import Toolbox
 
 
+def test_important_spec_options(yt_path: str) -> None:
+    def checker() -> None:
+        pass
+
+    run_info = run(
+        checker,
+        yt_path=yt_path,
+        docker_image=DOCKER_IMAGE,
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        backend=GenericBackend(),
+        dry_run=True,
+    )
+    assert run_info.operation_spec["annotations"]["is_tractorun"] is True
+    assert run_info.operation_spec["fail_on_job_restart"] is True
+
+
 def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
     row_count = yt_client.get_attribute(mnist_ds_path, "row_count")

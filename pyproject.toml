@@ -4,7 +4,6 @@ description = "Run distributed training on YTsaurus"
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies", "optional-dependencies"]
-readme = {file = "package_description.md", content-type = "text/markdown"}
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -14,6 +13,7 @@ exclude = ["__pycache__", "*.pyc", ".mypy_cache", "tests", "examples", ".github"
 [tool.setuptools.dynamic]
 version = {attr = "tractorun.__version__"}
 dependencies = {file = ["requirements.txt"]}
+readme = {file = "package_description.md", content-type = "text/markdown"}
 optional-dependencies.torch = { file = ["requirements_torch.txt"] }
 optional-dependencies.jax = { file = ["requirements_jax.txt"] }
 optional-dependencies.tests = { file = ["requirements_tests.txt"] }

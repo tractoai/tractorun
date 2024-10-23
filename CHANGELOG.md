@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.35.0 (2024-10-23)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.34.0...0.35.0)
+
+### Changes
+
+- NYT-759: create pypi_external.yaml (#109). [96aeb98](https://github.com/tractoai/tractorun/commit/96aeb980acd764b4f88d8142c2e408237963627c)
+    
+- Rename pypi.yaml to pypi_internal.yaml (#108). [a8b8769](https://github.com/tractoai/tractorun/commit/a8b8769f8ac3ac00d6d48574dec99326182106a3)
+    
+- NYT-758: add is_tractorun flag (#107). [c1aac38](https://github.com/tractoai/tractorun/commit/c1aac3867272bf7ff0769ff2c30997775202a406)
+    
+- Add short sleep to stderr reader (I'm so sorry) (#106). [482c179](https://github.com/tractoai/tractorun/commit/482c1798a527cf710d1cbdc5ec8aa87f828bdf30)
+    
+- Set max_stderr_count to max value (#104). [9afd82c](https://github.com/tractoai/tractorun/commit/9afd82c64acfdd4ebb18f15a324b471886575a92)
+    
+
 ## 0.34.0 (2024-10-22)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.33.0...0.34.0)

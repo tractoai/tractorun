@@ -22,6 +22,7 @@ from tractorun.stderr_reader import StderrMode
 
 YT_RETRY_INTERVAL = 5
 STDERR_READER_THREAD_NAME = "tractorun_stderr_reader"
+STDERR_READER_STOP_TIMEOUT = 5
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -164,6 +165,9 @@ class StderrReaderWorker:
 
     def stop(self) -> None:
         if self._thread is not None:
+            # sometimes we lost last lines of stderr
+            # TODO: we should check the readiness of artifacts
+            time.sleep(STDERR_READER_STOP_TIMEOUT)
             self._stop = True
             self._thread.join(timeout=self._polling_interval * 3)
 

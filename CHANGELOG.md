@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.38.0 (2024-10-24)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.37.0...0.38.0)
+
+### Changes
+
+- NYT-759: remove tests from pypi package (#114). [239233e](https://github.com/tractoai/tractorun/commit/239233e1cbd46e35b77e3bc81d2b18ced68b5f68)
+    
+
 ## 0.37.0 (2024-10-24)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.36.0...0.37.0)

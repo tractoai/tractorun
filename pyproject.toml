@@ -9,7 +9,7 @@ readme = {file = "package_description.md", content-type = "text/markdown"}
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*", "tractorun.*"]
-exclude = ["__pycache__", "*.pyc", ".mypy_cache", "tests", "examples", ".github", "README.md"]
+exclude = ["__pycache__", "*.pyc", ".mypy_cache", "tractorun.tests", "examples", ".github", "README.md"]
 
 [tool.setuptools.dynamic]
 version = {attr = "tractorun.__version__"}

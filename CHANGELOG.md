@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.37.0 (2024-10-24)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.36.0...0.37.0)
+
+### Changes
+
+- NYT-759: another try to fix pypi build (#113). [686deec](https://github.com/tractoai/tractorun/commit/686deec718e2f26248c05f7f3099809918719f53)
+    
+
 ## 0.36.0 (2024-10-24)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.35.0...0.36.0)

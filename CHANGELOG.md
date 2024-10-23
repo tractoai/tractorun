@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.36.0 (2024-10-24)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.35.0...0.36.0)
+
+### Changes
+
+- NYT-759: move readme to another section (#112). [61148c5](https://github.com/tractoai/tractorun/commit/61148c5cf2506613887524d7db66cc621286e06a)
+    
+- NYT-759: don't use README.md as a long description (#111). [504eca3](https://github.com/tractoai/tractorun/commit/504eca3c2bda479369cd3ec56735a42335b4b8fc)
+    
+- NYT-759: prepare pyproject.toml to be uploaded on PYPI (#110). [ec60fbd](https://github.com/tractoai/tractorun/commit/ec60fbddc3970baecf68821f4e7693116bcf7ca2)
+    
+
 ## 0.35.0 (2024-10-23)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.34.0...0.35.0)

@@ -1,1 +1,1 @@
-Run distributed training on YTsaurus
+Run distributed training in TractoAI

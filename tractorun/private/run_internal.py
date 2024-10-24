@@ -394,6 +394,9 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     if "fail_on_job_restart" not in additional_operation_spec:
         additional_operation_spec["fail_on_job_restart"] = True
 
+    if "is_gang" not in additional_operation_spec:
+        additional_operation_spec["is_gang"] = True
+
     additional_operation_spec["annotations"] = additional_operation_spec.get("annotations", {})
     additional_operation_spec["annotations"]["is_tractorun"] = True
 

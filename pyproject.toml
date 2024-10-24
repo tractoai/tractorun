@@ -1,6 +1,6 @@
 [project]
 name = "tractorun"
-description = "Run distributed training on YTsaurus"
+description = "Run distributed training in TractoAI"
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies", "optional-dependencies"]

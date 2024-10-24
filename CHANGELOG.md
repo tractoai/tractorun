@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.39.0 (2024-10-24)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.38.0...0.39.0)
+
+### Changes
+
+- NYT-756: set is_gang by default (#115). [03651e4](https://github.com/tractoai/tractorun/commit/03651e4ea6b6c5ff3f01d2b6cbf4d80b957e8b12)
+    
+
 ## 0.38.0 (2024-10-24)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.37.0...0.38.0)

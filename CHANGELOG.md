@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.40.0 (2024-10-24)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.39.0...0.40.0)
+
+### Changes
+
+- Change pypi project's description (#116). [e772b1c](https://github.com/tractoai/tractorun/commit/e772b1ccdf7c50e51100fd27954710a457a90246)
+    
+
 ## 0.39.0 (2024-10-24)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.38.0...0.39.0)

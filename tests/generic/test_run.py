@@ -50,6 +50,7 @@ def test_important_spec_options(yt_path: str) -> None:
     )
     assert run_info.operation_spec["annotations"]["is_tractorun"] is True
     assert run_info.operation_spec["fail_on_job_restart"] is True
+    assert run_info.operation_spec["is_gang"] is True
 
 
 def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:

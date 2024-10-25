@@ -52,7 +52,10 @@ from tractorun.private.constants import (
 )
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
-from tractorun.private.environment import get_toolbox
+from tractorun.private.environment import (
+    get_toolbox,
+    prepare_environment,
+)
 from tractorun.private.helpers import (
     AttrSerializer,
     create_attrs_converter,
@@ -469,5 +472,6 @@ def run_local(
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     # Runs in a job
     closet = get_closet()
+    prepare_environment(closet)
     backend.environment.prepare(closet)
     return get_toolbox(closet)

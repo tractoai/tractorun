@@ -81,10 +81,6 @@ class Runnable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
-        pass
-
-    @abc.abstractmethod
     def get_bootstrap_command(self) -> list[str]:
         pass
 
@@ -114,9 +110,6 @@ class CliCommand(Runnable):
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
         return task
-
-    def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
-        return operation
 
     def get_bootstrap_command(self) -> list[str]:
         return self.command
@@ -161,9 +154,6 @@ class UserFunction(Runnable):
 
     def modify_task(self, task: yt.TaskSpecBuilder) -> yt.TaskSpecBuilder:
         return task
-
-    def modify_operation(self, operation: yt.VanillaSpecBuilder) -> yt.VanillaSpecBuilder:
-        return operation
 
     def get_bootstrap_command(self) -> list[str]:
         # on YT it should be native YT-wrapper command like
@@ -348,10 +338,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     # prepare task spec
     task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
-
-    task_spec = task_spec.file_paths(yt_file_bindings + tp_yt_files)
-
-    task_spec = params.runnable.modify_task(
+    task_spec = (
         task_spec.command(yt_command)
         .job_count(params.mesh.node_count)
         .gpu_limit(params.mesh.gpu_per_process * params.mesh.process_per_node)
@@ -359,6 +346,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         .cpu_limit(params.resources.cpu_limit)
         .memory_limit(params.resources.memory_limit)
         .docker_image(params.docker_image)
+        .file_paths(yt_file_bindings + tp_yt_files)
         .spec(params.yt_task_spec)
         .environment(
             {
@@ -405,7 +393,6 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     operation_spec.max_stderr_count(150)
 
     operation_spec = operation_spec.spec(additional_operation_spec)
-    operation_spec = params.runnable.modify_operation(operation_spec)
 
     prev_incarnation_id = get_incarnation_id(yt_client, training_dir)
 

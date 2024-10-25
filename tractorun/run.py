@@ -61,7 +61,7 @@ def run_script(
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> RunInfo:
-    docker_image = get_docker_image(docker_image)
+    docker_image = _get_docker_image(docker_image)
 
     sidecars = sidecars or []
     binds_local = binds_local or []
@@ -133,8 +133,8 @@ def run(
     dry_run: bool = False,
 ) -> RunInfo:
     if attach_external_libs:
-        warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use in production.")
-    docker_image = get_docker_image(docker_image)
+        warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use it in production.")
+    docker_image = _get_docker_image(docker_image)
 
     sidecars = sidecars or []
     binds_local = binds_local or []
@@ -177,7 +177,7 @@ def run(
         return _run_tracto(params=params)
 
 
-def get_docker_image(docker_image: str | None) -> str:
+def _get_docker_image(docker_image: str | None) -> str:
     if docker_image is not None:
         return docker_image
     docker_image = _get_default_docker_image()

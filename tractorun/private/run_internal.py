@@ -52,7 +52,10 @@ from tractorun.private.constants import (
 )
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
-from tractorun.private.environment import get_toolbox, prepare_environment
+from tractorun.private.environment import (
+    get_toolbox,
+    prepare_environment,
+)
 from tractorun.private.helpers import (
     AttrSerializer,
     create_attrs_converter,

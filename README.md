@@ -40,7 +40,7 @@ YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests generic test_sidecars.py:
 
 ### Build and upload
 1. Run [Create release](https://github.com/tractoai/tractorun/actions/workflows/release.yaml)
-2. Run [Build and upload to internal pypi](https://github.com/tractoai/tractorun/actions/workflows/pypi.yaml). Specify the latest tag from [the list](https://github.com/tractoai/tractorun/tags) to upload the latest version.
+2. Run [Build and upload to external pypi](https://github.com/tractoai/tractorun/actions/workflows/pypi_external.yaml). Specify the latest tag from [the list](https://github.com/tractoai/tractorun/tags) to upload the latest version.
 
 ### Bump library version
 Just run `Create release` action.

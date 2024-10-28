@@ -4,12 +4,12 @@ from typing import (
     Iterator,
     Sized,
 )
+import warnings
 
 import attrs
 import torch.utils.data
 from torch.utils.data.dataset import T_co
 from yt import wrapper as yt
-import warnings
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
 
@@ -31,21 +31,13 @@ class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
     def __init__(
         self,
         path: str,
+        yt_client: yt.YtClient,
         transform: Callable[[list[str], dict], T_co],
         start: int = 0,
-        yt_client: yt.YtClient | None = None,
-        toolbox: Toolbox | None = None,
         end: int | None = None,
         columns: list | None = None,
     ) -> None:
-        if yt_client is not None:
-            self._yt_client = yt_client
-        # for migration
-        elif toolbox is not None:
-            warnings.warn("Set yt_client instead of toolbox")
-            self._yt_client = toolbox.yt_client
-        else:
-            raise ValueError("missing 1 required positional argument: yt_client")
+        self._yt_client = yt_client
 
         row_count = self._yt_client.get(path + "/@row_count")
         if end is None:
@@ -84,9 +76,19 @@ class YtTensorDataset(YtDataset[tuple]):
         yt_client: yt.YtClient,
         path: str,
         start: int = 0,
+        toolbox: Toolbox | None = None,
         end: int | None = None,
         columns: list | None = None,
     ) -> None:
+        if yt_client is not None:
+            self._yt_client = yt_client
+        # for migration
+        elif toolbox is not None:
+            warnings.warn("Set yt_client instead of toolbox")
+            self._yt_client = toolbox.yt_client
+        else:
+            raise ValueError("missing 1 required positional argument: yt_client")
+
         super().__init__(
             yt_client=yt_client,
             path=path,

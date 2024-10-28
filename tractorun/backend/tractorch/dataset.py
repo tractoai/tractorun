@@ -9,11 +9,14 @@ import attrs
 import torch.utils.data
 from torch.utils.data.dataset import T_co
 from yt import wrapper as yt
+import warnings
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
 
 
 __all__ = ["YTTensorTransform", "YtTensorDataset", "YtDataset"]
+
+from tractorun.toolbox import Toolbox
 
 
 @attrs.define(frozen=True, slots=True)
@@ -27,14 +30,22 @@ class YTTensorTransform:
 class YtDataset(torch.utils.data.IterableDataset[T_co], Sized):
     def __init__(
         self,
-        yt_client: yt.YtClient,
         path: str,
         transform: Callable[[list[str], dict], T_co],
         start: int = 0,
+        yt_client: yt.YtClient | None = None,
+        toolbox: Toolbox | None = None,
         end: int | None = None,
         columns: list | None = None,
     ) -> None:
-        self._yt_client = yt_client
+        if yt_client is not None:
+            self._yt_client = yt_client
+        # for migration
+        elif toolbox is not None:
+            warnings.warn("Set yt_client instead of toolbox")
+            self._yt_client = toolbox.yt_client
+        else:
+            raise ValueError("missing 1 required positional argument: yt_client")
 
         row_count = self._yt_client.get(path + "/@row_count")
         if end is None:

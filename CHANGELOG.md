@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.41.0 (2024-10-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.40.0...0.41.0)
+
+### Changes
+
+- Let's YtDataset depend only on yt_client, not toolbox (#73). [4995f7f](https://github.com/tractoai/tractorun/commit/4995f7f10a81808497d8f56ddcb6bd07fb76176e)
+    
+- Move closet's preparing to common code (#119). [3c5ec60](https://github.com/tractoai/tractorun/commit/3c5ec6026b2f403c0af4e6f3fa2cf34a4344d00a)
+    
+- Remove unused methods, fix style (#118). [80017a7](https://github.com/tractoai/tractorun/commit/80017a73bc2eed10b728f492c9afc7d55e86f89c)
+    
+- Update README.md (#117). [f42ce17](https://github.com/tractoai/tractorun/commit/f42ce178eacce7602e392d290e14228df6a9a875)
+    
+
 ## 0.40.0 (2024-10-24)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.39.0...0.40.0)

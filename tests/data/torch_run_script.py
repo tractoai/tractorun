@@ -27,7 +27,7 @@ if __name__ == "__main__":
     user_config = toolbox.get_user_config()
     mnist_ds_path = user_config["MNIST_DS_PATH"]
     device = torch.device("cpu")
-    train_dataset = YtTensorDataset(toolbox, mnist_ds_path)
+    train_dataset = YtTensorDataset(toolbox.yt_client, mnist_ds_path)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=1.0)

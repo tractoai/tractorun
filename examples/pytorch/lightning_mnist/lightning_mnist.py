@@ -45,7 +45,7 @@ def train(toolbox: Toolbox) -> None:
 
     mnist_model = MNISTModel()
     train_dataset = YtTensorDataset(
-        toolbox,
+        toolbox.yt_client,
         "//home/gritukan/mnist/datasets/train",
         start=0,
         end=1000,

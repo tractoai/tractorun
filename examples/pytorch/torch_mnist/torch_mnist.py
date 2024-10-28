@@ -51,7 +51,7 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     train_dataset = YtTensorDataset(
-        toolbox,
+        toolbox.yt_client,
         dataset_path,
         start=0,
         end=2000,

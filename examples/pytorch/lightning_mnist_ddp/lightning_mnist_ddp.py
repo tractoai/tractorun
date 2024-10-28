@@ -73,7 +73,7 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtTensorDataset(toolbox, dataset_path)
+    train_dataset = YtTensorDataset(toolbox.yt_client, dataset_path)
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(

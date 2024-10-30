@@ -12,14 +12,13 @@ import torch.utils.data
 from yt import wrapper as yt
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
+from tractorun.toolbox import Toolbox
 
 
 T_co = TypeVar("T_co")
 
 
 __all__ = ["YTTensorTransform", "YtTensorDataset", "YtDataset"]
-
-from tractorun.toolbox import Toolbox
 
 
 @attrs.define(frozen=True, slots=True)

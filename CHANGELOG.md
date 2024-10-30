@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.44.0 (2024-10-30)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.43.0...0.44.0)
+
+### Changes
+
+- Hack it again (#122). [2b89164](https://github.com/tractoai/tractorun/commit/2b89164c13ab8b5f2d155a88e75857e647beaa81)
+    
+
 ## 0.43.0 (2024-10-30)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.42.0...0.43.0)

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.42.0 (2024-10-30)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.41.0...0.42.0)
+
+### Changes
+
+- Fix types in pytorch dataset (#120). [263a0fb](https://github.com/tractoai/tractorun/commit/263a0fb1ef6509d5e87cf01e0fb03a96b1209cb9)
+    
+
 ## 0.41.0 (2024-10-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.40.0...0.41.0)

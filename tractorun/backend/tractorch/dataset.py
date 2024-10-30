@@ -3,15 +3,18 @@ from typing import (
     Callable,
     Iterator,
     Sized,
+    TypeVar,
 )
 
 import attrs
 import torch.utils.data
-from torch.utils.data.dataset import T_co
 from yt import wrapper as yt
 
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.toolbox import Toolbox
+
+
+T_co = TypeVar("T_co")
 
 
 __all__ = ["YTTensorTransform", "YtTensorDataset", "YtDataset"]

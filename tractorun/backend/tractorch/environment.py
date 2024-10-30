@@ -35,7 +35,7 @@ class Environment(EnvironmentBase):
         backend = "gloo" if closet.mesh.gpu_per_process == 0 else "nccl"
         torch.distributed.init_process_group(
             backend=backend,
-            init_method="tcp://" + closet.coordinator.get_primary_endpoint(),
+            init_method="tcp://" + coordinator_address,
             rank=closet.coordinator.get_self_index(),
             world_size=closet.coordinator.get_total_peer_count(),
         )

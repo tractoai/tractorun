@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.43.0 (2024-10-30)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.42.0...0.43.0)
+
+### Changes
+
+- Hack env set up for torch (like for jax) (#121). [7f06f84](https://github.com/tractoai/tractorun/commit/7f06f84ba0ad7e4d92a0ad3fec3d9d0170e8e67d)
+    
+
 ## 0.42.0 (2024-10-30)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.41.0...0.42.0)

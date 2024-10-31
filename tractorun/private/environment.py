@@ -75,6 +75,7 @@ def prepare_environment(closet: Closet) -> None:
     os.environ["WORLD_SIZE"] = str(closet.coordinator.get_total_peer_count())
     os.environ["NODE_RANK"] = str(closet.coordinator.get_self_index() // closet.mesh.process_per_node)
     os.environ["LOCAL_RANK"] = str(closet.coordinator.get_self_index() % closet.mesh.process_per_node)
+    os.environ["RANK"] = str(closet.coordinator.get_self_index())
 
     if closet.coordinator.is_primary():
         prepare_log_dir(closet=closet)

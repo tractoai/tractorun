@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.45.0 (2024-10-31)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.44.0...0.45.0)
+
+### Changes
+
+- NYT-765: add RANK env (#123). [0072027](https://github.com/tractoai/tractorun/commit/0072027a2e2918f765ae4e56b3aefc8b780a9a7b)
+    
+
 ## 0.44.0 (2024-10-30)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.43.0...0.44.0)

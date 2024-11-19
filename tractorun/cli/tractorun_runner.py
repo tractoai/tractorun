@@ -393,7 +393,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path` or {0}".format(
-            BindCypress(source="yt path", destination="path inside job"),
+            attrs.asdict(BindCypress(source="yt path", destination="path inside job")),
         ),
     )
     parser.add_argument(

@@ -4,6 +4,7 @@ import pathlib
 import typing as t
 
 import pytest
+import yt.wrapper as yt
 
 from tests.utils import (
     DOCKER_IMAGE,
@@ -16,6 +17,7 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.bind import (
+    BindAttributes,
     BindCypress,
     BindLocal,
 )
@@ -168,6 +170,42 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: 
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
         docker_image=DOCKER_IMAGE,
+    )
+
+
+def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    def checker() -> None:
+        pass
+
+    run_info = run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        dry_run=True,
+        binds_cypress=[
+            BindCypress(
+                source="//tmp/cypress",
+                destination="local_file",
+                attributes=BindAttributes(
+                    executable=False,
+                    format="dummy",
+                    bypass_artifact_cache=True,
+                ),
+            )
+        ],
+    )
+    assert run_info.operation_spec["tasks"]["task"]["file_paths"][-1] == yt.ypath.FilePath(
+        "//tmp/cypress",
+        attributes={
+            "executable": False,
+            "file_name": "local_file",
+            "bypass_artifact_cache": True,
+        },
     )
 
 

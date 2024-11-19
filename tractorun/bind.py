@@ -12,6 +12,13 @@ def _to_abs_path(path: str) -> str:
 
 
 @attrs.define(kw_only=True, slots=True)
+class BindAttributes:
+    executable: bool = attrs.field(default=True)
+    format: str | None = attrs.field(default=None)
+    bypass_artifact_cache: bool = attrs.field(default=False)
+
+
+@attrs.define(kw_only=True, slots=True)
 class BindLocal:
     # TODO: just use pathlib
     source: str = attrs.field(converter=_to_abs_path)
@@ -22,3 +29,4 @@ class BindLocal:
 class BindCypress:
     source: str = attrs.field()
     destination: str = attrs.field()
+    attributes: BindAttributes = attrs.field(default=BindAttributes())

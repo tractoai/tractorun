@@ -4,6 +4,7 @@ import pathlib
 import typing as t
 
 import pytest
+import yt.wrapper as yt
 
 from tests.utils import (
     DOCKER_IMAGE,
@@ -16,6 +17,7 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.bind import (
+    BindAttributes,
     BindCypress,
     BindLocal,
 )
@@ -44,10 +46,20 @@ def test_configuration_cypress() -> None:
     )
     assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
 
+    _, _, config = make_configuration(
+        make_cli_args("--bind-cypress", json.dumps({"source": "//tmp/cli", "destination": "cli"}), "command"),
+    )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+
     run_config = make_run_config(
         {
-            "bind_cypress": ["//tmp/config:config"],
-        }
+            "bind_cypress": [
+                {
+                    "source": "//tmp/config",
+                    "destination": "config",
+                }
+            ],
+        },
     )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
@@ -64,9 +76,19 @@ def test_configuration_local() -> None:
     _, _, config = make_configuration(make_cli_args("--bind-local", "//tmp/cli:/tmp/cli"))
     assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
 
+    _, _, config = make_configuration(
+        make_cli_args("--bind-cypress", json.dumps({"source": "//tmp/cli", "destination": "/tmp/cli"}), "command"),
+    )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="/tmp/cli")]
+
     run_config = make_run_config(
         {
-            "bind_local": ["//tmp/config:/tmp/config"],
+            "bind_local": [
+                {
+                    "source": "//tmp/config",
+                    "destination": "/tmp/config",
+                }
+            ],
         }
     )
     with run_config_file(run_config) as run_config_path:
@@ -151,6 +173,42 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: 
     )
 
 
+def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    def checker() -> None:
+        pass
+
+    run_info = run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=DOCKER_IMAGE,
+        dry_run=True,
+        binds_cypress=[
+            BindCypress(
+                source="//tmp/cypress",
+                destination="local_file",
+                attributes=BindAttributes(
+                    executable=False,
+                    format="dummy",
+                    bypass_artifact_cache=True,
+                ),
+            )
+        ],
+    )
+    assert run_info.operation_spec["tasks"]["task"]["file_paths"][-1] == yt.ypath.FilePath(
+        "//tmp/cypress",
+        attributes={
+            "executable": False,
+            "file_name": "local_file",
+            "bypass_artifact_cache": True,
+        },
+    )
+
+
 def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
 
@@ -161,7 +219,10 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cyp
             "gpu_per_process": 0,
         },
         "bind_cypress": [
-            f"{cypress_file}:bar",
+            {
+                "source": f"{cypress_file}",
+                "destination": "bar",
+            },
         ],
     }
 

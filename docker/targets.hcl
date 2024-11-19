@@ -109,24 +109,6 @@ RUN python3 -m pip install --no-deps "/src"
 EOT
 }
 
-target "demo_image" {
-  platforms = ["linux/amd64"]
-  tags = [
-    "${DOCKER_REPO}/demo:${DOCKER_TAG}"
-  ]
-  dockerfile-inline = <<EOT
-FROM quay.io/jupyter/pytorch-notebook:cuda12-python-3.11.8
-
-RUN pip3 install torchvision wandb
-
-COPY . /src
-USER root
-RUN python3 -m pip install "/src"
-USER 1000
-
-EOT
-}
-
 target "papyrax_demo" {
   platform = ["linux/amd64"]
   tags = [

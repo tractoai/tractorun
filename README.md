@@ -16,11 +16,6 @@
 ```
 and update image in `run_tests`
 
-### Build and push new demo image
-```shell
-./run_build demo_image --push
-```
-
 ### Run tests
 ```shell
 YT_PROXY=dirac.yt.nebius.yt YT_TOKEN=<...> ./run_tests all . -s

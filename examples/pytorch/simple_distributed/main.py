@@ -1,3 +1,6 @@
+import argparse
+import os
+
 import torch
 import torch.distributed as dist
 
@@ -9,7 +12,6 @@ from tractorun.toolbox import Toolbox
 
 def train(toolbox: Toolbox) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # device = torch.device('cpu')
     print("Running on device:", device)
 
     if toolbox.coordinator.get_self_index() == 0:
@@ -37,10 +39,21 @@ def train(toolbox: Toolbox) -> None:
 
 
 if __name__ == "__main__":
-    mesh = Mesh(1, 2, 0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--yt-home-dir", type=str, required=True)
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
+    args = parser.parse_args()
+
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+
     run(
         train,
         backend=Tractorch(),
-        yt_path="//home/gritukan/train",
+        yt_path=args.yt_home_dir,
         mesh=mesh,
+        docker_image=args.docker_image,
+        binds_local_lib=["../../../tractorun"],
     )

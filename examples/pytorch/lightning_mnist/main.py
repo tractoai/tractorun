@@ -1,3 +1,5 @@
+import argparse
+import os
 import sys
 from typing import (
     Any,
@@ -44,9 +46,10 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
+    dataset_path = toolbox.get_user_config()["dataset_path"]
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
-        "//home/gritukan/mnist/datasets/train",
+        dataset_path,
         start=0,
         end=1000,
     )
@@ -58,13 +61,27 @@ def train(toolbox: Toolbox) -> None:
 
 
 if __name__ == "__main__":
-    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--yt-home-dir", type=str, required=True)
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
+    args = parser.parse_args()
+
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+
     run(
         train,
         backend=Tractorch(),
-        yt_path="//home/gritukan/mnist/trainings/dense",
+        yt_path=args.yt_home_dir,
         mesh=mesh,
+        docker_image=args.docker_image,
         resources=Resources(
             memory_limit=1076021002,
         ),
+        user_config={
+            "dataset_path": args.dataset_path,
+        },
+        binds_local_lib=["../../../tractorun"],
     )

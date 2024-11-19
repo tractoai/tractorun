@@ -45,19 +45,24 @@ class MNISTModel(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 
 
-toolbox = prepare_and_get_toolbox(backend=Tractorch())
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Running on device:", device, file=sys.stderr)
+if __name__ == "__main__":
+    toolbox = prepare_and_get_toolbox(backend=Tractorch())
+    dataset_path = toolbox.get_user_config()["dataset_path"]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Running on device:", device, file=sys.stderr)
 
-mnist_model = MNISTModel()
-train_dataset = YtTensorDataset(toolbox.yt_client, "//home/gritukan/mnist/datasets/train")
-train_loader = DataLoader(train_dataset, batch_size=64)
+    mnist_model = MNISTModel()
+    train_dataset = YtTensorDataset(
+        yt_client=toolbox.yt_client,
+        path=dataset_path,
+    )
+    train_loader = DataLoader(train_dataset, batch_size=64)
 
-trainer = Trainer(
-    max_epochs=3,
-    devices=toolbox.mesh.process_per_node,
-    num_nodes=toolbox.mesh.node_count,
-    strategy="ddp",
-)
+    trainer = Trainer(
+        max_epochs=3,
+        devices=toolbox.mesh.process_per_node,
+        num_nodes=toolbox.mesh.node_count,
+        strategy="ddp",
+    )
 
-trainer.fit(mnist_model, train_loader)
+    trainer.fit(mnist_model, train_loader)

@@ -72,11 +72,17 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtTensorDataset(toolbox.yt_client, dataset_path)
+    train_dataset = YtTensorDataset(
+        yt_client=toolbox.yt_client,
+        path=dataset_path,
+        columns=["data", "labels"],
+        start=0,
+        end=10,
+    )
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(
-        max_epochs=3,
+        max_epochs=1,
         devices=toolbox.mesh.process_per_node,
         num_nodes=toolbox.mesh.node_count,
         strategy="ddp",

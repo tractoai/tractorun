@@ -50,12 +50,13 @@ def train(toolbox: Toolbox) -> None:
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
         dataset_path,
+        columns=["data", "labels"],
         start=0,
-        end=1000,
+        end=20,
     )
     train_loader = DataLoader(train_dataset, batch_size=64)
 
-    trainer = Trainer(max_epochs=3)
+    trainer = Trainer(max_epochs=1)
 
     trainer.fit(mnist_model, train_loader)
 

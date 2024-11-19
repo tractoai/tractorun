@@ -35,8 +35,9 @@ def train(toolbox: Toolbox) -> None:
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
         dataset_path,
+        columns=["data", "labels"],
         start=0,
-        end=2000,
+        end=10,
     )
     dataset_len = len(train_dataset)
 

@@ -67,9 +67,10 @@ def train(toolbox: Toolbox) -> None:
 
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
+        columns=["data", "labels"],
         path=dataset_path,
         start=0,
-        end=4000,
+        end=20,
     )
     dataset_len = len(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)

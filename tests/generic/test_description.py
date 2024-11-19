@@ -8,7 +8,7 @@ import attrs
 import pytest
 import yt.wrapper as yt
 
-from tests.utils import DOCKER_IMAGE
+from tests.utils import TRACTORCH_DOCKER_IMAGE
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.description import (
@@ -66,7 +66,7 @@ def test_description_empty_config(config_exists: bool, yt_path: str, yt_instance
             yt_path=yt_path,
             mesh=mesh,
             yt_client=yt_client,
-            docker_image=DOCKER_IMAGE,
+            docker_image=TRACTORCH_DOCKER_IMAGE,
             cluster_config_path=config_path,
         )
     operation = yt.Operation(id=run_info.operation_id, client=yt_client)
@@ -91,7 +91,7 @@ def test_set_tractorun_description(
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
     operation = yt.Operation(id=run_info.operation_id, client=yt_client)
@@ -137,7 +137,7 @@ def test_set_user_description(yt_instance: YtInstance, cluster_config_path: str,
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         cluster_config_path=cluster_config_path,
     )
     operation = yt.Operation(id=run_info.operation_id, client=yt_client)

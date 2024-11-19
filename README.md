@@ -11,10 +11,16 @@
 
 ### Build and push new image for tests
 ```shell
-./run_build torchesaurus_tests --push
+./run_build tractorch_tests --push
+./run_build tractorax_tests --push
 ./run_build tensorproxy_tests --push
 ```
 and update image in `run_tests`
+
+### Build and push new image for examples
+```shell
+./run_build examples_runtime --push
+```
 
 ### Run tests
 ```shell

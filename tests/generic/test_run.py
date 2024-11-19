@@ -15,7 +15,7 @@ import torch.optim as optim
 import torch.utils.data
 
 from tests.utils import (
-    DOCKER_IMAGE,
+    TRACTORCH_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
 )
@@ -43,7 +43,7 @@ def test_important_spec_options(yt_path: str) -> None:
     run_info = run(
         checker,
         yt_path=yt_path,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         backend=GenericBackend(),
         dry_run=True,
@@ -111,7 +111,7 @@ def test_run_torch_simple(yt_instance: YtInstance, yt_path: str, mnist_ds_path: 
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
     )
 
 
@@ -128,7 +128,7 @@ def test_run_torch_distributed(yt_instance: YtInstance, yt_path: str, mnist_ds_p
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
     )
 
 
@@ -148,7 +148,7 @@ def test_run_with_spec(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         yt_task_spec={"title": task_title},
         yt_operation_spec={"title": operation_title},
     )
@@ -236,7 +236,7 @@ def test_run_torch_with_checkpoints(yt_instance: YtInstance, yt_path: str, mnist
             yt_path=yt_path,
             mesh=mesh,
             yt_client=yt_client,
-            docker_image=DOCKER_IMAGE,
+            docker_image=TRACTORCH_DOCKER_IMAGE,
         )
 
     # First launch is failed because of the exception in the train function.
@@ -389,7 +389,7 @@ def test_run_cli_command_from_python(yt_path: str) -> None:
             BindLocal(source=get_data_path("../data/dummy_script.py"), destination="/tractorun_tests/dummy_script.py"),
         ],
         binds_local_lib=[get_data_path("../../tractorun")],
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
     )
 

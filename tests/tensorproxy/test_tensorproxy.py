@@ -1,6 +1,7 @@
 import json
 
 from tests.utils import (
+    TENSORPROXY_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     run_config_file,
@@ -8,15 +9,12 @@ from tests.utils import (
 from tests.yt_instances import YtInstance
 
 
-DOCKER_IMAGE = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
-
-
 def test_run_script(yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     tracto_cli = TractoCli(
         command=["python3", "/tractorun_tests/tensorproxy_script.py"],
-        docker_image=DOCKER_IMAGE,
+        docker_image=TENSORPROXY_DOCKER_IMAGE,
         args=[
             "--mesh.gpu-per-process",
             "0",
@@ -58,7 +56,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str) -> None:
     with run_config_file(run_config) as run_config_path:
         tracto_cli = TractoCli(
             command=["python3", "/tractorun_tests/tensorproxy_script.py"],
-            docker_image=DOCKER_IMAGE,
+            docker_image=TENSORPROXY_DOCKER_IMAGE,
             args=[
                 "--run-config-path",
                 run_config_path,

@@ -5,7 +5,6 @@ BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str = "BOOTSTRAP_CONFIG_FILENAME"
 DEFAULT_CLUSTER_CONFIG_PATH: str = "//home/tractorun/config"
 DEFAULT_OPERATION_TITLE: str = "Tractorun operation"
 
-DEFAULT_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_runtime:2024-09-21-01-01-28"
 BOOTSTRAP_CONFIG_NAME: str = "__bootstrap_config"
 
 USER_DESCRIPTION_MANAGER_NAME = "extra"

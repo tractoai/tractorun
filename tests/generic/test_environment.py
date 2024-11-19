@@ -5,7 +5,7 @@ import pytest
 import yt.wrapper as yt
 
 from tests.utils import (
-    DOCKER_IMAGE,
+    TRACTORCH_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -89,7 +89,7 @@ def test_environment(yt_secret_path: str, yt_instance: YtInstance, yt_path: str)
         yt_path=yt_path,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         env=[
             EnvVariable(name="SECRET", cypress_path=yt_secret_path),
             EnvVariable(name="NOT_SECRET", value="not_secret"),

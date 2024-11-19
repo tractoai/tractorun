@@ -7,7 +7,7 @@ import pytest
 import yt.wrapper as yt
 
 from tests.utils import (
-    DOCKER_IMAGE,
+    TRACTORCH_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -129,7 +129,7 @@ def test_local_bind_file_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         ],
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
     )
 
 
@@ -148,7 +148,7 @@ def test_local_bind_dir_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         ],
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
     )
 
 
@@ -169,7 +169,7 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: 
         ],
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
     )
 
 
@@ -185,7 +185,7 @@ def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
         yt_path=yt_path,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         dry_run=True,
         binds_cypress=[
             BindCypress(

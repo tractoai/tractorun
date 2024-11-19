@@ -44,10 +44,20 @@ def test_configuration_cypress() -> None:
     )
     assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
 
+    _, _, config = make_configuration(
+        make_cli_args("--bind-cypress", json.dumps({"source": "//tmp/cli", "destination": "cli"}), "command"),
+    )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+
     run_config = make_run_config(
         {
-            "bind_cypress": ["//tmp/config:config"],
-        }
+            "bind_cypress": [
+                {
+                    "source": "//tmp/config",
+                    "destination": "config",
+                }
+            ],
+        },
     )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
@@ -64,9 +74,19 @@ def test_configuration_local() -> None:
     _, _, config = make_configuration(make_cli_args("--bind-local", "//tmp/cli:/tmp/cli"))
     assert config.bind_local == [BindLocal(source="//tmp/cli", destination="/tmp/cli")]
 
+    _, _, config = make_configuration(
+        make_cli_args("--bind-cypress", json.dumps({"source": "//tmp/cli", "destination": "/tmp/cli"}), "command"),
+    )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="/tmp/cli")]
+
     run_config = make_run_config(
         {
-            "bind_local": ["//tmp/config:/tmp/config"],
+            "bind_local": [
+                {
+                    "source": "//tmp/config",
+                    "destination": "/tmp/config",
+                }
+            ],
         }
     )
     with run_config_file(run_config) as run_config_path:
@@ -161,7 +181,10 @@ def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cyp
             "gpu_per_process": 0,
         },
         "bind_cypress": [
-            f"{cypress_file}:bar",
+            {
+                "source": f"{cypress_file}",
+                "destination": "bar",
+            },
         ],
     }
 

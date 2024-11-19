@@ -328,9 +328,17 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         [yt.LocalFile(packed_bind.local_path, packed_bind.yt_path) for packed_bind in packed_binds],
     )
 
-    yt_file_bindings.extend(
-        [yson.to_yson_type(cb.source, attributes={"file_name": cb.destination}) for cb in params.binds_cypress]
-    )
+    for bind in params.binds_cypress:
+        attributes = {
+            "file_name": bind.destination,
+        }
+        attributes.update(attrs.asdict(bind.attributes))
+        yt_file_bindings.append(
+            yson.to_yson_type(
+                bind.source,
+                attributes=attributes,
+            ),
+        )
 
     yt_file_bindings.extend([yt.LocalFile(packed_lib.path, packed_lib.archive_name) for packed_lib in packed_libs])
     yt_file_bindings.append(

@@ -98,9 +98,9 @@ class Config:
     yt_task_spec: dict[str, Any] | None = attrs.field(default=None)
     local: bool | None = attrs.field(default=None)
     no_wait: bool | None = attrs.field(default=None)
-    bind_local: list[str] | None = attrs.field(default=None)
+    bind_local: list[BindLocal] | None = attrs.field(default=None)
     bind_local_lib: list[str] | None = attrs.field(default=None)
-    bind_cypress: list[str] | None = attrs.field(default=None)
+    bind_cypress: list[BindCypress] | None = attrs.field(default=None)
     proxy_stderr_mode: StderrMode | None = attrs.field(default=None)
     operation_log_mode: OperationLogMode | None = attrs.field(default=None)
     cluster_config_path: str | None = attrs.field(default=None)
@@ -196,22 +196,18 @@ class EffectiveConfig:
                 config_value=config.cluster_config_path,
                 default=CLUSTER_CONFIG_PATH_DEFAULT,
             ),
-            bind_local=cls._make_bind_local(
-                _choose_value(
-                    args_value=args["bind_local"],
-                    config_value=config.bind_local,
-                    default=[],
-                ),
+            bind_local=_choose_value(
+                args_value=args["bind_local"],
+                config_value=config.bind_local,
+                default=[],
             ),
             bind_local_lib=_choose_value(
                 args_value=args["bind_local_lib"], config_value=config.bind_local_lib, default=[]
             ),
-            bind_cypress=cls._make_bind_cypress(
-                _choose_value(
-                    args_value=args["bind_cypress"],
-                    config_value=config.bind_cypress,
-                    default=[],
-                ),
+            bind_cypress=_choose_value(
+                args_value=args["bind_cypress"],
+                config_value=config.bind_cypress,
+                default=[],
             ),
             proxy_stderr_mode=_choose_value(
                 args_value=args["proxy_stderr_mode"],
@@ -290,32 +286,6 @@ class EffectiveConfig:
         return new_config
 
     @classmethod
-    def _make_bind_local(cls, binds: list[str]) -> list[BindLocal]:
-        effective_binds: list[BindLocal] = []
-        for bind in binds:
-            source, destination = bind.split(":")
-            effective_binds.append(
-                BindLocal(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-        return effective_binds
-
-    @classmethod
-    def _make_bind_cypress(cls, binds: list[str]) -> list[BindCypress]:
-        effective_cypress_binds: list[BindCypress] = []
-        for bind in binds:
-            source, destination = bind.split(":")
-            effective_cypress_binds.append(
-                BindCypress(
-                    source=source,
-                    destination=destination,
-                ),
-            )
-        return effective_cypress_binds
-
-    @classmethod
     def _make_docker_auth_secret(cls, docker_auth_cypress_path: str | None) -> DockerAuthSecret | None:
         if docker_auth_cypress_path is None:
             return None
@@ -326,6 +296,24 @@ def _load_json(value: str | None) -> dict | None:
     if value is None:
         return None
     return json.loads(value)
+
+
+def _parse_bind_local_arg(value: str | None) -> BindLocal | None:
+    if value is None:
+        return None
+    if value.startswith("{"):
+        return BindLocal(**json.loads(value))
+    source, destination = value.split(":")
+    return BindLocal(source=source, destination=destination)
+
+
+def _parse_bind_cypress_arg(value: str | None) -> BindCypress | None:
+    if value is None:
+        return None
+    if value.startswith("{"):
+        return BindCypress(**json.loads(value))
+    source, destination = value.split(":")
+    return BindCypress(source=source, destination=destination)
 
 
 def make_cli_parser() -> argparse.ArgumentParser:
@@ -387,7 +375,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument("--local", type=bool, help=f"enable local run mode. Default {LOCAL_DEFAULT}")
     parser.add_argument(
         "--bind-local",
-        type=str,
+        type=_parse_bind_local_arg,
         action="append",
         default=None,
         help="bind local file or folder to be passed to the docker container. Format: `local_path:remote_path`",
@@ -401,10 +389,12 @@ def make_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--bind-cypress",
-        type=str,
+        type=_parse_bind_cypress_arg,
         action="append",
         default=None,
-        help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path`",
+        help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path` or {0}".format(
+            BindCypress(source="yt path", destination="path inside job"),
+        ),
     )
     parser.add_argument(
         "--sidecar",

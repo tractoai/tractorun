@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.46.0 (2024-11-19)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.45.0...0.46.0)
+
+### Changes
+
+- NYT-784: add attributes to binds, change bind's format (#127). [af53741](https://github.com/tractoai/tractorun/commit/af53741435689f1bef9e8ffc3424008f3e3294da)
+    
+
 ## 0.45.0 (2024-10-31)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.44.0...0.45.0)

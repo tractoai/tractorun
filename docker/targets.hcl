@@ -96,13 +96,13 @@ target "examples_runtime" {
   ]
   dockerfile-inline = <<EOT
 FROM base_image
-COPY requirements.txt requirements_tests.txt requirements_jax.txt requirements_lightning.txt requirements_torch.txt /tmp
+COPY requirements.txt requirements_tests.txt requirements_jax.txt requirements_examples.txt requirements_torch.txt /tmp
 RUN python3 -m pip install --index-url https://download.pytorch.org/whl/cpu -r "/tmp/requirements_torch.txt"
 RUN python3 -m pip install \
   -r /tmp/requirements.txt \
   -r /tmp/requirements_tests.txt \
   -r /tmp/requirements_jax.txt \
-  -r /tmp/requirements_lightning.txt
+  -r /tmp/requirements_examples.txt
 RUN python3 -m pip install wandb
 EOT
 }

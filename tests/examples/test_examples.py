@@ -99,6 +99,8 @@ def test_pytorch_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds
 def test_jax_pickle_examples(
     can_test_jax: bool, yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path
 ) -> None:
+    if example_path.name == "jax_simple_distributed.py":
+        pytest.skip("jax_simple_distributed.py can be run only on GPU backend")
     if not can_test_jax:
         pytest.skip("jax can't be run on this platform")
     run_example_pickle(

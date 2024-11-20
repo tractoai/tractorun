@@ -4,7 +4,7 @@ import pytest
 from yt import wrapper as yt
 
 from tests.utils import (
-    DOCKER_IMAGE,
+    TRACTORCH_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -91,7 +91,7 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
         yt_path=yt_path,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         title=operation_title,
         local=False,
         dry_run=True,
@@ -158,7 +158,7 @@ def test_invalid_format(secret: dict, yt_instance: YtInstance, yt_path: str) -> 
             yt_path=yt_path,
             mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
             yt_client=yt_client,
-            docker_image=DOCKER_IMAGE,
+            docker_image=TRACTORCH_DOCKER_IMAGE,
             title=operation_title,
             local=False,
             dry_run=True,

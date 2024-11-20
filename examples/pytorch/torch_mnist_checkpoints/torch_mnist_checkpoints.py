@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import Any
 import uuid
@@ -22,9 +23,6 @@ from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
-DEFAULT_DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
-
-
 class Net(nn.Module):
     def __init__(self) -> None:
         super(Net, self).__init__()
@@ -37,9 +35,8 @@ class Net(nn.Module):
 def train(toolbox: Toolbox) -> None:
     user_config = toolbox.get_user_config()
     dataset_path = user_config["dataset_path"]
-    wandb_enabled = user_config["wandb_enabled"]
-    if wandb_enabled:
-        wandb.login(key=os.environ["WANDB_TOKEN"])
+    if os.environ.get("WANDB_API_KEY"):
+        wandb.login(key=os.environ["WANDB_API_KEY"])
         wandb.init(
             project="tractorun",
             name="torch_mnist_checkpoints",
@@ -71,15 +68,16 @@ def train(toolbox: Toolbox) -> None:
 
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
+        columns=["data", "labels"],
         path=dataset_path,
         start=0,
-        end=4000,
+        end=20,
     )
     dataset_len = len(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
 
     model.train()
-    if wandb_enabled:
+    if os.environ.get("WANDB_API_KEY"):
         wandb.watch(model, log_freq=100)
 
     final_loss = None
@@ -108,7 +106,7 @@ def train(toolbox: Toolbox) -> None:
                 ),
                 file=sys.stderr,
             )
-            if wandb_enabled:
+            if os.environ.get("WANDB_API_KEY"):
                 wandb.log({"loss": loss.item(), "batch_idx": batch_idx})
 
         if batch_idx % 3 == 0:
@@ -141,32 +139,41 @@ def train(toolbox: Toolbox) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--yt-home-dir", type=str, required=True)
-    parser.add_argument("--dataset-path", type=str, default=DEFAULT_DATASET_PATH)
-    parser.add_argument("--wandb", action=argparse.BooleanOptionalAction, default=False)  # type: ignore  # FIXME: min python -> 3.10
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
     args = parser.parse_args()
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
 
     # Remove old checkpoints.
     workdir = args.yt_home_dir
     if yt.exists(f"{workdir}/checkpoints"):
         yt.remove(f"{workdir}/checkpoints", recursive=True)
 
-    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    env = []
+    if os.environ.get("WANDB_SECRET"):
+        env = [
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            ),
+        ]
+
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
         yt_path=workdir,
         mesh=mesh,
+        docker_image=args.docker_image,
         user_config={
             "workdir": workdir,
             "dataset_path": args.dataset_path,
             "wandb_run_id": str(uuid.uuid4()),
-            "wandb_enabled": args.wandb,
         },
-        env=[
-            EnvVariable(
-                name="WANDB_API_KEY",
-                cypress_path=os.environ.get("WANDB_SECRET"),
-            ),
-        ],
+        env=env,
         resources=Resources(memory_limit=4 * (1024**3)),
+        binds_local_lib=[str(tractorun_path)],
     )

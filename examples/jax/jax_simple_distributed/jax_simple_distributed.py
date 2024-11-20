@@ -1,3 +1,6 @@
+import argparse
+import os
+from pathlib import Path
 import sys
 
 import jax
@@ -18,12 +21,22 @@ def task(_: Toolbox) -> None:
 
 
 if __name__ == "__main__":
-    mesh = Mesh(node_count=1, process_per_node=7, gpu_per_process=1, pool_trees=["gpu-h100"])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--yt-home-dir", type=str, required=True)
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
+    args = parser.parse_args()
+
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         task,
         backend=Tractorax(),
-        yt_path="//home/gritukan/mnist/trainings/dense",
+        yt_path=args.yt_home_dir,
         mesh=mesh,
-        docker_image="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_runtime:2024-06-18-17-42-54",
-        resources=Resources(cpu_limit=4.0, memory_limit=64 * 1024**3),
+        docker_image=args.docker_image,
+        resources=Resources(cpu_limit=1.0, memory_limit=8076021002),
+        binds_local_lib=[str(tractorun_path)],
     )

@@ -1,4 +1,6 @@
 import argparse
+import os
+from pathlib import Path
 import sys
 from typing import Any
 
@@ -12,6 +14,7 @@ from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -20,32 +23,13 @@ class Net(nn.Module):
     def __init__(self) -> None:
         super(Net, self).__init__()
         self.l1 = torch.nn.Linear(28 * 28, 10)
-        # self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        # self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        # self.dropout1 = nn.Dropout(0.25)
-        # self.dropout2 = nn.Dropout(0.5)
-        # self.fc1 = nn.Linear(9216, 128)
-        # self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x: Any) -> torch.Tensor:
         return torch.relu(self.l1(x.view(x.size(0), -1)))
-        # x = self.conv1(x)
-        # x = F.relu(x)
-        # x = self.conv2(x)
-        # x = F.relu(x)
-        # x = F.max_pool2d(x, 2)
-        # x = self.dropout1(x)
-        # x = torch.flatten(x, 1)
-        # x = self.fc1(x)
-        # x = F.relu(x)
-        # x = self.dropout2(x)
-        # x = self.fc2(x)
-        # output = F.log_softmax(x, dim=1)
-        # return output
 
 
 def train(toolbox: Toolbox) -> None:
-    dataset_path = "//home/gritukan/mnist/datasets/train"
+    dataset_path = toolbox.get_user_config()["dataset_path"]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     serializer = TensorSerializer()
     print("Running on device:", device, file=sys.stderr)
@@ -53,8 +37,9 @@ def train(toolbox: Toolbox) -> None:
     train_dataset = YtTensorDataset(
         toolbox.yt_client,
         dataset_path,
+        columns=["data", "labels"],
         start=0,
-        end=2000,
+        end=10,
     )
     dataset_len = len(train_dataset)
 
@@ -91,14 +76,25 @@ def train(toolbox: Toolbox) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--yt-home-dir", required=True)
+    parser.add_argument("--yt-home-dir", type=str, required=True)
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
     args = parser.parse_args()
 
-    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
-        yt_path=f"{args.yt_home_dir}/mnist/trainings/dense",
+        yt_path=args.yt_home_dir,
+        resources=Resources(
+            memory_limit=8076021002,
+        ),
         mesh=mesh,
-        user_config={"yt_home_dir": args.yt_home_dir},
+        docker_image=args.docker_image,
+        binds_local_lib=[str(tractorun_path)],
+        user_config={"dataset_path": args.dataset_path},
     )

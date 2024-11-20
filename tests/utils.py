@@ -1,6 +1,6 @@
 import contextlib
 import json
-import os
+from pathlib import Path
 import random
 import string
 import subprocess
@@ -17,13 +17,20 @@ import yaml
 from yt import wrapper as yt
 
 
-DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-18-22-05-42"
+TRACTORCH_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
+TRACTORAX_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_tests:2024-11-19-19-46-05"
+GENERIC_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/generic_tests:2024-11-19-19-45-03"
+EXAMPLES_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
+TENSORPROXY_DOCKER_IMAGE: str = (
+    "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
+)
+
 OPERATION_INFO_RETRIES = 5
 OPERATION_INFO_TIMEOUT = 2
 
 
-def get_data_path(filename: str) -> str:
-    return os.path.join(os.path.dirname(__file__), "data", filename)
+def get_data_path(filename: str | Path) -> Path:
+    return (Path(__file__).parent / "data" / filename).resolve()
 
 
 def get_random_string(length: int) -> str:
@@ -72,8 +79,8 @@ class TractoCliRun:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TractoCli:
-    _command: list[str]
-    _docker_image: str | None = attrs.field(default=DOCKER_IMAGE)
+    _command: list[str | Path]
+    _docker_image: str | None = attrs.field(default=TRACTORCH_DOCKER_IMAGE)
     _args: list[str]
     _task_spec: dict[str, Any] = attrs.field(default={})
     _operation_spec: dict[str, Any] = attrs.field(default={})
@@ -101,7 +108,7 @@ class TractoCli:
         assert run.is_exitcode_valid()
         return json.loads(run.stdout)
 
-    def _prepare_command(self) -> tuple[list[str], str, str]:
+    def _prepare_command(self) -> tuple[list[str | Path], str, str]:
         operation_title = f"test operation {uuid.uuid4()}"
         task_title = f"test operation's task {uuid.uuid4()}"
 
@@ -110,8 +117,8 @@ class TractoCli:
                 return ("--docker-image", self._docker_image)
             return tuple()
 
-        command = [
-            get_data_path("../../tractorun/cli/tractorun_runner.py"),
+        command: list[str | Path] = [
+            str(get_data_path("../../tractorun/cli/tractorun_runner.py")),
             *_get_docker_image_arg(),
             "--title",
             operation_title,
@@ -129,7 +136,7 @@ class TractoCli:
                 },
             ),
             "--bind-local-lib",
-            get_data_path("../../tractorun"),
+            str(get_data_path("../../tractorun")),
             *self._args,
             *self._command,
         ]
@@ -144,13 +151,13 @@ def run_config_file(config: dict[str, Any]) -> Generator[str, None, None]:
 
 
 def make_cli_args(*cli_args: str) -> list:
-    return ["--yt-path", "foo", "--docker-image", DOCKER_IMAGE, *cli_args, "command"]
+    return ["--yt-path", "foo", "--docker-image", TRACTORCH_DOCKER_IMAGE, *cli_args, "command"]
 
 
 def make_run_config(config: dict[str, Any]) -> dict[str, Any]:
     return {
         "command": ["foo"],
         "yt_path": "foo",
-        "docker_image": DOCKER_IMAGE,
+        "docker_image": TRACTORCH_DOCKER_IMAGE,
         **config,
     }

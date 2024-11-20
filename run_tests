@@ -2,11 +2,13 @@
 
 set -x
 
-IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/torchesaurus_tests:2024-10-18-22-05-42"
+IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
 IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
+IMAGE_EXAMPLES="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
 
 PATH_GENERIC="/src/tests/generic"
 PATH_TENSORPROXY="/src/tests/tensorproxy"
+PATH_EXAMPLES="/src/tests/examples"
 
 TEST_TYPE="${1:-all}"
 
@@ -22,9 +24,13 @@ case "$TEST_TYPE" in
     IMAGES=("$IMAGE_TENSORPROXY")
     TEST_PATHS=("$PATH_TENSORPROXY")
     ;;
+  "examples")
+    IMAGES=("$IMAGE_EXAMPLES")
+    TEST_PATHS=("$PATH_EXAMPLES")
+    ;;
   "all")
-    IMAGES=("$IMAGE_GENERIC" "$IMAGE_TENSORPROXY")
-    TEST_PATHS=("$PATH_GENERIC" "$PATH_TENSORPROXY")
+    IMAGES=("$IMAGE_GENERIC" "$IMAGE_TENSORPROXY" "$IMAGE_EXAMPLES")
+    TEST_PATHS=("$PATH_GENERIC" "$PATH_TENSORPROXY" "$PATH_EXAMPLES")
     ;;
   *)
     echo "Invalid test type: $TEST_TYPE. Choose from 'all', 'tensorproxy', or 'generic'."

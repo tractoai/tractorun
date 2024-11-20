@@ -2,7 +2,7 @@ import pytest
 from yt.common import YT_NULL_TRANSACTION_ID
 
 from tests.utils import (
-    DOCKER_IMAGE,
+    TRACTORCH_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -55,7 +55,7 @@ def test_transaction_pickle(no_wait: bool, expected: bool, yt_instance: YtInstan
         yt_path=yt_path,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         yt_client=yt_client,
-        docker_image=DOCKER_IMAGE,
+        docker_image=TRACTORCH_DOCKER_IMAGE,
         no_wait=no_wait,
     )
     operation_info = yt_client.get_operation(run_info.operation_id)

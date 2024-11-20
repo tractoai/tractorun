@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import (
     Any,
@@ -28,7 +29,7 @@ from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
 
-DEFAULT_DATASET_PATH = "//home/yt-team/chiffa/tractorun/mnist/datasets/train"
+DEFAULT_DATASET_PATH = "//home/samples/mnist-torch-train"
 
 
 class MNISTModel(LightningModule):
@@ -56,8 +57,7 @@ class MNISTModel(LightningModule):
 def train(toolbox: Toolbox) -> None:
     user_config = toolbox.get_user_config()
     dataset_path = user_config["dataset_path"]
-    wandb_enabled = user_config["wandb_enabled"]
-    if wandb_enabled:
+    if os.environ.get("WANDB_TOKEN"):
         wandb.login(key=os.environ["WANDB_TOKEN"])
         wandb_logger = WandbLogger(
             project="tractorun",
@@ -73,11 +73,17 @@ def train(toolbox: Toolbox) -> None:
     print("Running on device:", device, file=sys.stderr)
 
     mnist_model = MNISTModel()
-    train_dataset = YtTensorDataset(toolbox.yt_client, dataset_path)
+    train_dataset = YtTensorDataset(
+        yt_client=toolbox.yt_client,
+        path=dataset_path,
+        columns=["data", "labels"],
+        start=0,
+        end=10,
+    )
     train_loader = DataLoader(train_dataset, batch_size=64)
 
     trainer = Trainer(
-        max_epochs=3,
+        max_epochs=1,
         devices=toolbox.mesh.process_per_node,
         num_nodes=toolbox.mesh.node_count,
         strategy="ddp",
@@ -90,30 +96,37 @@ def train(toolbox: Toolbox) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--yt-home-dir", type=str, required=True)
-    parser.add_argument("--dataset-path", type=str, default=DEFAULT_DATASET_PATH)
-    parser.add_argument("--wandb", action=argparse.BooleanOptionalAction, default=False)  # type: ignore  # FIXME: min python -> 3.10
+    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
+    parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
+    parser.add_argument("--gpu-per-process", type=int, default=0)
     args = parser.parse_args()
 
-    workdir = args.yt_home_dir
-    mesh = Mesh(node_count=1, process_per_node=3, gpu_per_process=1)
+    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
+    env = []
+    if os.environ.get("WANDB_SECRET"):
+        env = [
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            )
+        ]
     run(
         train,
         backend=Tractorch(),
-        yt_path=workdir,
+        yt_path=args.yt_home_dir,
         mesh=mesh,
         resources=Resources(
             memory_limit=8076021002,
         ),
-        env=[
-            EnvVariable(
-                name="WANDB_API_KEY",
-                cypress_path=os.environ.get("WANDB_SECRET"),
-            ),
-        ],
+        docker_image=args.docker_image,
+        env=env,
+        binds_local_lib=[str(tractorun_path)],
         user_config={
             "dataset_path": args.dataset_path,
             "wandb_run_id": str(uuid.uuid4()),
-            "wandb_enabled": args.wandb,
         },
     )
 

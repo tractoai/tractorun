@@ -78,7 +78,7 @@ def run_example_script(path: Path, yt_path: str, dataset_path: str) -> None:
 def can_test_jax() -> bool:
     # it's a session fixture because we can't import jax twice (I don't know why)
     try:
-        pass
+        import jax
     except RuntimeError as e:
         if "This version of jaxlib was built using AVX instructions" in str(e):
             warnings.warn(str(e))

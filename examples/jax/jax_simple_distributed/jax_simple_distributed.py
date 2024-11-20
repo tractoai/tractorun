@@ -37,6 +37,6 @@ if __name__ == "__main__":
         yt_path=args.yt_home_dir,
         mesh=mesh,
         docker_image=args.docker_image,
-        resources=Resources(cpu_limit=4.0, memory_limit=64 * 1024**3),
+        resources=Resources(cpu_limit=1.0, memory_limit=8076021002),
         binds_local_lib=[str(tractorun_path)],
     )

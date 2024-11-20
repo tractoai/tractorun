@@ -119,7 +119,6 @@ def test_pytorch_script_examples(yt_instance: YtInstance, yt_path: str, mnist_ds
     )
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="Jax doesn't work on MacOS")
 @pytest.mark.parametrize("example_path", get_examples_script_path(example_type="jax"))
 def test_jax_script_examples(
     can_test_jax: bool, yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path

@@ -49,7 +49,6 @@ class YtInstanceTestContainers(YtInstance):
         return self.yt_container.get_client(
             config={
                 "proxy": {
-                    "url": "http://localhost:80",
                     "retries": retries_config(
                         enable=True,
                         total_timeout=timedelta(minutes=5),

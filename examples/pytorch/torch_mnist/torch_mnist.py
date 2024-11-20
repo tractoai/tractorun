@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import Any
 
@@ -13,6 +14,7 @@ from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.dataset import YtTensorDataset
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -83,11 +85,16 @@ if __name__ == "__main__":
 
     mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
 
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
         yt_path=args.yt_home_dir,
+        resources=Resources(
+            memory_limit=8076021002,
+        ),
         mesh=mesh,
         docker_image=args.docker_image,
+        binds_local_lib=[str(tractorun_path)],
         user_config={"dataset_path": args.dataset_path},
     )

@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import Any
 import uuid
@@ -151,21 +152,28 @@ if __name__ == "__main__":
     if yt.exists(f"{workdir}/checkpoints"):
         yt.remove(f"{workdir}/checkpoints", recursive=True)
 
+    env = []
+    if os.environ.get("WANDB_SECRET"):
+        env = [
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            ),
+        ]
+
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
         yt_path=workdir,
         mesh=mesh,
+        docker_image=args.docker_image,
         user_config={
             "workdir": workdir,
             "dataset_path": args.dataset_path,
             "wandb_run_id": str(uuid.uuid4()),
         },
-        env=[
-            EnvVariable(
-                name="WANDB_API_KEY",
-                cypress_path=os.environ.get("WANDB_SECRET"),
-            ),
-        ],
+        env=env,
         resources=Resources(memory_limit=4 * (1024**3)),
+        binds_local_lib=[str(tractorun_path)],
     )

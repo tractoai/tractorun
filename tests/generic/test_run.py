@@ -278,7 +278,7 @@ def test_run_script_with_config(yt_instance: YtInstance, yt_path: str, mnist_ds_
         command=["python3", "/tractorun_tests/torch_run_script.py"],
         args=[
             "--run-config-path",
-            get_data_path("../data/run_config.yaml"),
+            str(get_data_path("../data/run_config.yaml")),
             "--yt-path",
             yt_path,
             "--user-config",
@@ -386,9 +386,13 @@ def test_run_cli_command_from_python(yt_path: str) -> None:
         ["python3", "/tractorun_tests/dummy_script.py"],
         yt_path=yt_path,
         binds_local=[
-            BindLocal(source=get_data_path("../data/dummy_script.py"), destination="/tractorun_tests/dummy_script.py"),
+            BindLocal(
+                source=str(get_data_path("../data/dummy_script.py")), destination="/tractorun_tests/dummy_script.py"
+            ),
         ],
-        binds_local_lib=[get_data_path("../../tractorun")],
+        binds_local_lib=[
+            str(get_data_path("../../tractorun")),
+        ],
         docker_image=TRACTORCH_DOCKER_IMAGE,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
     )

@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import (
     Any,
@@ -72,6 +73,7 @@ if __name__ == "__main__":
 
     mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
 
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
@@ -79,10 +81,10 @@ if __name__ == "__main__":
         mesh=mesh,
         docker_image=args.docker_image,
         resources=Resources(
-            memory_limit=1076021002,
+            memory_limit=8076021002,
         ),
         user_config={
             "dataset_path": args.dataset_path,
         },
-        binds_local_lib=["../../../tractorun"],
+        binds_local_lib=[str(tractorun_path)],
     )

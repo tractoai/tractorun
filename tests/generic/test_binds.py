@@ -123,7 +123,7 @@ def test_local_bind_file_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         yt_path=yt_path,
         binds_local=[
             BindLocal(
-                source=get_data_path("../data/binds/another_file"),
+                source=str(get_data_path("../data/binds/another_file")),
                 destination=FILE_PATH,
             ),
         ],
@@ -142,7 +142,7 @@ def test_local_bind_dir_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         yt_path=yt_path,
         binds_local=[
             BindLocal(
-                source=get_data_path("../data/binds/bind_dir"),
+                source=str(get_data_path("../data/binds/bind_dir")),
                 destination=DIR_PATH,
             ),
         ],

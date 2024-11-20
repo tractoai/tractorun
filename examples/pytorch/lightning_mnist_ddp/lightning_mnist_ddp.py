@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 import sys
 from typing import (
     Any,
@@ -56,7 +57,7 @@ class MNISTModel(LightningModule):
 def train(toolbox: Toolbox) -> None:
     user_config = toolbox.get_user_config()
     dataset_path = user_config["dataset_path"]
-    if os.environ["WANDB_TOKEN"]:
+    if os.environ.get("WANDB_TOKEN"):
         wandb.login(key=os.environ["WANDB_TOKEN"])
         wandb_logger = WandbLogger(
             project="tractorun",
@@ -103,6 +104,15 @@ def main() -> None:
 
     mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
 
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
+    env = []
+    if os.environ.get("WANDB_SECRET"):
+        env = [
+            EnvVariable(
+                name="WANDB_API_KEY",
+                cypress_path=os.environ.get("WANDB_SECRET"),
+            )
+        ]
     run(
         train,
         backend=Tractorch(),
@@ -112,13 +122,8 @@ def main() -> None:
             memory_limit=8076021002,
         ),
         docker_image=args.docker_image,
-        env=[
-            EnvVariable(
-                name="WANDB_API_KEY",
-                cypress_path=os.environ.get("WANDB_SECRET"),
-            ),
-        ],
-        binds_local_lib=["../../../tractorun"],
+        env=env,
+        binds_local_lib=[str(tractorun_path)],
         user_config={
             "dataset_path": args.dataset_path,
             "wandb_run_id": str(uuid.uuid4()),

@@ -17,7 +17,7 @@ jobs:
       - run: pytest tests/generic -n 4 -s
         env:
           YT_MODE: testcontainers
-#          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
+          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
 
   examples:
     runs-on: tractoai-runners
@@ -32,4 +32,4 @@ jobs:
       - run: pytest tests/examples -n 4 -s
         env:
           YT_MODE: testcontainers
-#          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
+          TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'

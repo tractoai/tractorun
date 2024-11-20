@@ -1,11 +1,13 @@
 import argparse
 import os
+from pathlib import Path
 
 import torch
 import torch.distributed as dist
 
 from tractorun.backend.tractorch import Tractorch
 from tractorun.mesh import Mesh
+from tractorun.resources import Resources
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
 
@@ -47,13 +49,17 @@ if __name__ == "__main__":
     parser.add_argument("--gpu-per-process", type=int, default=0)
     args = parser.parse_args()
 
-    mesh = Mesh(node_count=1, process_per_node=8, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
+    mesh = Mesh(node_count=1, process_per_node=2, gpu_per_process=args.gpu_per_process, pool_trees=[args.pool_tree])
 
+    tractorun_path = (Path(__file__).parent.parent.parent.parent / "tractorun").resolve()
     run(
         train,
         backend=Tractorch(),
         yt_path=args.yt_home_dir,
         mesh=mesh,
+        resources=Resources(
+            memory_limit=8076021002,
+        ),
         docker_image=args.docker_image,
-        binds_local_lib=["../../../tractorun"],
+        binds_local_lib=[str(tractorun_path)],
     )

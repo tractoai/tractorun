@@ -3,6 +3,7 @@ from pathlib import Path
 import subprocess
 import sys
 from typing import Iterable
+import warnings
 
 import pytest
 
@@ -73,6 +74,18 @@ def run_example_script(path: Path, yt_path: str, dataset_path: str) -> None:
     assert op_run.is_exitcode_valid()
 
 
+@pytest.fixture(scope="session")
+def can_test_jax() -> bool:
+    # it's a session fixture because we can't import jax twice (I don't know why)
+    try:
+        pass
+    except RuntimeError as e:
+        if "This version of jaxlib was built using AVX instructions" in str(e):
+            warnings.warn(str(e))
+            return False
+    return True
+
+
 @pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="pytorch"))
 def test_pytorch_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
     run_example_pickle(
@@ -82,9 +95,12 @@ def test_pytorch_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds
     )
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="Jax doesn't work on MacOS")
 @pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="jax"))
-def test_jax_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
+def test_jax_pickle_examples(
+    can_test_jax: bool, yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path
+) -> None:
+    if not can_test_jax:
+        pytest.skip("jax can't be run on this platform")
     run_example_pickle(
         path=example_path,
         yt_path=yt_path,
@@ -103,7 +119,11 @@ def test_pytorch_script_examples(yt_instance: YtInstance, yt_path: str, mnist_ds
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="Jax doesn't work on MacOS")
 @pytest.mark.parametrize("example_path", get_examples_script_path(example_type="jax"))
-def test_jax_script_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
+def test_jax_script_examples(
+    can_test_jax: bool, yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path
+) -> None:
+    if not can_test_jax:
+        pytest.skip("jax can't be run on this platform")
     run_example_script(
         path=example_path,
         yt_path=yt_path,

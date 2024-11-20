@@ -29,7 +29,7 @@ jobs:
       - run: pip install -r requirements.txt -r requirements_tests.txt -r requirements_examples.txt -r requirements_jax.txt
       - run: pip install --index-url https://download.pytorch.org/whl/cpu -r requirements_torch.txt
       - run: pip install --no-deps .
-      - run: pytest tests/examples -n 4 -s
+      - run: pytest tests/examples -n 1 -s
         env:
           YT_MODE: testcontainers
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'

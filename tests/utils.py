@@ -1,4 +1,5 @@
 import contextlib
+import inspect
 import json
 from pathlib import Path
 import random
@@ -6,9 +7,10 @@ import string
 import subprocess
 import tempfile
 import time
+from types import ModuleType
 from typing import (
     Any,
-    Generator,
+    Generator, Iterable,
 )
 import uuid
 
@@ -161,3 +163,39 @@ def make_run_config(config: dict[str, Any]) -> dict[str, Any]:
         "docker_image": GENERIC_DOCKER_IMAGE,
         **config,
     }
+
+
+def _is_private_module(module: ModuleType | None) -> bool:
+    if module is None:
+        return False
+    private_prefixes = [
+        "tractorun.private",
+        "tractorun.tests",
+        "tractorun.cli",
+    ]
+    for prefix in private_prefixes:
+        if module.__name__.startswith(prefix):
+            return True
+    return False
+
+
+def check_no_private_objects_in_public_namespace(modules: Iterable[ModuleType]) -> bool:
+    # this test can't check variables with primitive types like strings, int, float and so on
+    invalid_public_modules: list[tuple[str, object, ModuleType]] = []
+    for module in modules:
+        if _is_private_module(module):
+            continue
+        for name, obj in inspect.getmembers(module):
+            if name.startswith("_"):
+                continue
+            if not isinstance(obj, object):
+                continue
+            if inspect.ismodule(obj):
+                continue
+            obj_module = inspect.getmodule(obj)
+            if obj_module is None:
+                continue
+            if not _is_private_module(obj_module):
+                continue
+            invalid_public_modules.append((name, obj, module))
+    return invalid_public_modules == []

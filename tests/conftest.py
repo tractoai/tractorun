@@ -1,4 +1,5 @@
 import os
+import warnings
 from typing import Generator
 
 import pytest
@@ -90,3 +91,16 @@ def mnist_ds_path(yt_base_dir: str, yt_instance: YtInstance) -> Generator[str, N
     yield table_path
 
     yt_client.remove(table_path)
+
+
+@pytest.fixture(scope="session")
+def can_test_jax() -> bool:
+    # we can't import jax inside orbax container
+    # it's a session fixture because we can't import jax twice (I don't know why)
+    try:
+        import jax  # noqa: F401
+    except RuntimeError as e:
+        if "This version of jaxlib was built using AVX instructions" in str(e):
+            warnings.warn(str(e))
+            return False
+    return True

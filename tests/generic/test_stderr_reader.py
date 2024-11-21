@@ -8,7 +8,7 @@ import pytest
 from yt.wrapper import YtOperationFailedError
 
 from tests.utils import (
-    TRACTORCH_DOCKER_IMAGE,
+    GENERIC_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -124,7 +124,7 @@ def test_operation_pickling(
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=mode,
     )
     captured = capsys.readouterr()
@@ -154,7 +154,7 @@ def test_with_realtime_table(yt_path: str, yt_instance: YtInstance, capsys: Capt
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=StderrMode.primary,
         operation_log_mode=OperationLogMode.realtime_yt_table,
     )
@@ -210,7 +210,7 @@ def test_stop_on_fail(mode: StderrMode, yt_path: str, yt_instance: YtInstance) -
             yt_path=yt_path,
             mesh=mesh,
             yt_client=yt_client,
-            docker_image=TRACTORCH_DOCKER_IMAGE,
+            docker_image=GENERIC_DOCKER_IMAGE,
             proxy_stderr_mode=mode,
             yt_operation_spec={"max_failed_job_count": 1},
         )
@@ -232,7 +232,7 @@ def test_multiple_processes(yt_path: str, yt_instance: YtInstance, capsys: Captu
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=StderrMode.primary,
     )
     captured = capsys.readouterr()
@@ -255,7 +255,7 @@ def test_read_two_operations(yt_path: str, yt_instance: YtInstance, capsys: Capt
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=StderrMode.primary,
         user_config={key: "1"},
     )
@@ -268,7 +268,7 @@ def test_read_two_operations(yt_path: str, yt_instance: YtInstance, capsys: Capt
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=StderrMode.primary,
         user_config={key: "2"},
     )

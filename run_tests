@@ -3,10 +3,12 @@
 set -x
 
 IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
+IMAGE_TRACTORCH="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
 IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
 IMAGE_EXAMPLES="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
 
 PATH_GENERIC="/src/tests/generic"
+PATH_TRACTORCH="/src/tests/tractorch"
 PATH_TENSORPROXY="/src/tests/tensorproxy"
 PATH_EXAMPLES="/src/tests/examples"
 
@@ -20,6 +22,10 @@ case "$TEST_TYPE" in
     IMAGES=("$IMAGE_GENERIC")
     TEST_PATHS=("$PATH_GENERIC")
     ;;
+  "tractorch")
+    IMAGES=("$IMAGE_TRACTORCH")
+    TEST_PATHS=("$PATH_TRACTORCH")
+    ;;
   "tensorproxy")
     IMAGES=("$IMAGE_TENSORPROXY")
     TEST_PATHS=("$PATH_TENSORPROXY")
@@ -29,8 +35,8 @@ case "$TEST_TYPE" in
     TEST_PATHS=("$PATH_EXAMPLES")
     ;;
   "all")
-    IMAGES=("$IMAGE_GENERIC" "$IMAGE_TENSORPROXY" "$IMAGE_EXAMPLES")
-    TEST_PATHS=("$PATH_GENERIC" "$PATH_TENSORPROXY" "$PATH_EXAMPLES")
+    IMAGES=("$IMAGE_GENERIC" "$IMAGE_TRACTORCH" "$IMAGE_TENSORPROXY" "$IMAGE_EXAMPLES")
+    TEST_PATHS=("$PATH_GENERIC" "$PATH_TRACTORCH" "$PATH_TENSORPROXY" "$PATH_EXAMPLES")
     ;;
   *)
     echo "Invalid test type: $TEST_TYPE. Choose from 'all', 'tensorproxy', or 'generic'."

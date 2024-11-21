@@ -1,7 +1,7 @@
 import uuid
 
 from tests.utils import (
-    TRACTORCH_DOCKER_IMAGE,
+    GENERIC_DOCKER_IMAGE,
     make_cli_args,
     make_run_config,
     run_config_file,
@@ -39,7 +39,7 @@ def test_run_pickle(yt_path: str) -> None:
         title=title,
         mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
         backend=GenericBackend(),
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
         dry_run=True,
     )
     assert run_info.operation_spec["title"] == title

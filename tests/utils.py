@@ -17,7 +17,7 @@ import yaml
 from yt import wrapper as yt
 
 
-TRACTORCH_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
+TRACTORCH_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/generic_tests:2024-11-21-15-13-48"
 TRACTORAX_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_tests:2024-11-19-19-46-05"
 GENERIC_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/generic_tests:2024-11-19-19-45-03"
 EXAMPLES_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
@@ -80,7 +80,7 @@ class TractoCliRun:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TractoCli:
     _command: list[str | Path]
-    _docker_image: str | None = attrs.field(default=TRACTORCH_DOCKER_IMAGE)
+    _docker_image: str | None = attrs.field(default=GENERIC_DOCKER_IMAGE)
     _args: list[str]
     _task_spec: dict[str, Any] = attrs.field(default={})
     _operation_spec: dict[str, Any] = attrs.field(default={})
@@ -151,13 +151,13 @@ def run_config_file(config: dict[str, Any]) -> Generator[str, None, None]:
 
 
 def make_cli_args(*cli_args: str) -> list:
-    return ["--yt-path", "foo", "--docker-image", TRACTORCH_DOCKER_IMAGE, *cli_args, "command"]
+    return ["--yt-path", "foo", "--docker-image", GENERIC_DOCKER_IMAGE, *cli_args, "command"]
 
 
 def make_run_config(config: dict[str, Any]) -> dict[str, Any]:
     return {
         "command": ["foo"],
         "yt_path": "foo",
-        "docker_image": TRACTORCH_DOCKER_IMAGE,
+        "docker_image": GENERIC_DOCKER_IMAGE,
         **config,
     }

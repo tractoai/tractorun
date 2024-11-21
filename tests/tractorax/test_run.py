@@ -1,8 +1,6 @@
-import sys
 import json
-from typing import (
-    Callable,
-)
+import sys
+from typing import Callable
 
 import pytest
 
@@ -20,6 +18,7 @@ from tractorun.toolbox import Toolbox
 def _get_simple_train(mnist_ds_path: str) -> Callable:
     def _simple_train(toolbox: Toolbox) -> None:
         pass
+
     return _simple_train
 
 
@@ -27,13 +26,17 @@ def test_run_pickle(can_test_jax: bool, yt_instance: YtInstance, yt_path: str, m
     if not can_test_jax:
         pytest.skip("jax can't be run on this platform")
 
-    from jax import grad, jit
+    from jax import (
+        grad,
+        jit,
+    )
+
     from tractorun.backend.tractorax import Tractorax
 
     def checker(_: Toolbox) -> None:
         @jit
         def f(x: int) -> int:
-            return x ** 2 + 3 * x + 1
+            return x**2 + 3 * x + 1
 
         grad_f = grad(f)
         print(grad_f(1.0), file=sys.stderr)

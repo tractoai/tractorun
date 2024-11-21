@@ -11,6 +11,7 @@ from tractorun.run import prepare_and_get_toolbox
 
 def main() -> None:
     _ = prepare_and_get_toolbox(backend=Tractorax())
+
     @jit
     def f(x: int) -> int:
         return x**2 + 3 * x + 1

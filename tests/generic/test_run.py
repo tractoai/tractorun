@@ -20,6 +20,7 @@ from tractorun.run import (
     run,
     run_script,
 )
+from tractorun.toolbox import Toolbox
 
 
 def test_important_spec_options(yt_path: str) -> None:
@@ -48,7 +49,7 @@ def test_prepare_dataset(yt_instance: YtInstance, mnist_ds_path: str) -> None:
 
 
 def test_run(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
-    def checker() -> None:
+    def checker(toolbox: Toolbox) -> None:
         pass
 
     yt_client = yt_instance.get_client()

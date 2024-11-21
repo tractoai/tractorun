@@ -63,7 +63,7 @@ def _get_simple_train(mnist_ds_path: str) -> Callable:
     return _simple_train
 
 
-def test_run_torch_simple(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     train_func = _get_simple_train(mnist_ds_path)

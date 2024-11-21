@@ -4,7 +4,7 @@ import pytest
 import yt.wrapper as yt
 
 from tests.utils import (
-    TRACTORCH_DOCKER_IMAGE,
+    GENERIC_DOCKER_IMAGE,
     TractoCli,
     get_data_path,
     make_cli_args,
@@ -102,7 +102,7 @@ def test_pickle(yt_instance: YtInstance, yt_path: str) -> None:
         ],
         mesh=mesh,
         yt_client=yt_client,
-        docker_image=TRACTORCH_DOCKER_IMAGE,
+        docker_image=GENERIC_DOCKER_IMAGE,
     )
 
 

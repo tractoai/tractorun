@@ -3,7 +3,6 @@ from pathlib import Path
 import subprocess
 import sys
 from typing import Iterable
-import warnings
 
 import pytest
 
@@ -74,19 +73,7 @@ def run_example_script(path: Path, yt_path: str, dataset_path: str) -> None:
     assert op_run.is_exitcode_valid()
 
 
-@pytest.fixture(scope="session")
-def can_test_jax() -> bool:
-    # it's a session fixture because we can't import jax twice (I don't know why)
-    try:
-        import jax  # noqa: F401
-    except RuntimeError as e:
-        if "This version of jaxlib was built using AVX instructions" in str(e):
-            warnings.warn(str(e))
-            return False
-    return True
-
-
-@pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="pytorch"))
+@pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="tractorch"))
 def test_pytorch_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
     run_example_pickle(
         path=example_path,
@@ -110,7 +97,7 @@ def test_jax_pickle_examples(
     )
 
 
-@pytest.mark.parametrize("example_path", get_examples_script_path(example_type="pytorch"))
+@pytest.mark.parametrize("example_path", get_examples_script_path(example_type="tractorch"))
 def test_pytorch_script_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
     run_example_script(
         path=example_path,

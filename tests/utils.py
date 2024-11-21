@@ -10,7 +10,8 @@ import time
 from types import ModuleType
 from typing import (
     Any,
-    Generator, Iterable,
+    Generator,
+    Iterable,
 )
 import uuid
 

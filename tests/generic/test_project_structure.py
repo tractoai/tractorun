@@ -11,7 +11,9 @@ def _get_all_modules() -> Iterable[ModuleType]:
 
     for module_info in pkgutil.walk_packages(tractorun.__path__, tractorun.__name__ + "."):
         # should base tractorun logic and  generic backend
-        if module_info.name.startswith("tractorun.backend") and not module_info.name.startswith("tractorun.backend.generic"):
+        if module_info.name.startswith("tractorun.backend") and not module_info.name.startswith(
+            "tractorun.backend.generic"
+        ):
             continue
         yield importlib.import_module(module_info.name)
 

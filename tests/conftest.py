@@ -1,6 +1,6 @@
 import os
-import warnings
 from typing import Generator
+import warnings
 
 import pytest
 import yt_yson_bindings

@@ -11,7 +11,6 @@ from tests.utils import (
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
-from tractorun.backend.tractorch import Tractorch
 from tractorun.bind import BindLocal
 from tractorun.cli.tractorun_runner import CliRunInfo
 from tractorun.exception import TractorunConfigurationError
@@ -61,7 +60,7 @@ def test_run(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
 
     run(
         checker,
-        backend=Tractorch(),
+        backend=GenericBackend(),
         yt_path=yt_path,
         mesh=mesh,
         yt_client=yt_client,

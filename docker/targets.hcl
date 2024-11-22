@@ -103,6 +103,5 @@ RUN python3 -m pip install \
   -r /tmp/requirements_tests.txt \
   -r /tmp/requirements_jax.txt \
   -r /tmp/requirements_examples.txt
-RUN python3 -m pip install wandb
 EOT
 }

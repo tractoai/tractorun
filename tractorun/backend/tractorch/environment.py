@@ -6,6 +6,7 @@ import torch
 import torch.distributed
 
 from tractorun.base_backend import EnvironmentBase
+from tractorun.exception import TractorunConfigurationError
 from tractorun.private.closet import Closet as _Closet
 
 
@@ -18,7 +19,7 @@ class Environment(EnvironmentBase):
             assert torch.cuda.is_available()
 
             if closet.mesh.gpu_per_process > 1:
-                raise RuntimeError("not supported")
+                raise TractorunConfigurationError("gpu per process should be <= 1 for tractorch")
 
             device_index = closet.coordinator.get_process_index()
             assert device_index < torch.cuda.device_count()

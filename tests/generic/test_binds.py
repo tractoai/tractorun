@@ -105,11 +105,17 @@ def checker_dir(toolbox: Toolbox) -> None:
     assert (pathlib.Path(DIR_PATH) / "some_file").is_file()
 
 
-def get_file_checker(file_path: str = FILE_PATH, check_executable: bool = False) -> t.Callable[[Toolbox], None]:
+def get_file_checker(
+    file_paths: list[str] | None = None, check_executable: bool = False
+) -> t.Callable[[Toolbox], None]:
+    if file_paths is None:
+        file_paths = [FILE_PATH]
+
     def checker_file(toolbox: Toolbox) -> None:
-        assert pathlib.Path(file_path).is_file()
-        if check_executable:
-            assert os.access(file_path, os.X_OK)
+        for file_path in file_paths:
+            assert pathlib.Path(file_path).is_file()
+            if check_executable:
+                assert os.access(file_path, os.X_OK)
 
     return checker_file
 
@@ -158,7 +164,7 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: 
     destination_path = "bar"
 
     run(
-        get_file_checker(destination_path, check_executable=True),
+        get_file_checker([destination_path], check_executable=True),
         backend=GenericBackend(),
         yt_path=yt_path,
         binds_cypress=[
@@ -173,7 +179,7 @@ def test_cypress_bind_file(yt_instance: YtInstance, yt_path: str, cypress_file: 
     )
 
 
-def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
+def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
 
     def checker() -> None:
@@ -189,7 +195,7 @@ def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
         dry_run=True,
         binds_cypress=[
             BindCypress(
-                source="//tmp/cypress",
+                source=cypress_file,
                 destination="local_file",
                 attributes=BindAttributes(
                     executable=False,
@@ -200,13 +206,81 @@ def test_cypress_bind_file_attrs(yt_instance: YtInstance, yt_path: str) -> None:
         ],
     )
     assert run_info.operation_spec["tasks"]["task"]["file_paths"][-1] == yt.ypath.FilePath(
-        "//tmp/cypress",
+        cypress_file,
         attributes={
             "executable": False,
             "file_name": "local_file",
             "bypass_artifact_cache": True,
         },
     )
+
+
+def test_cypress_bind_multiple_files(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    file_names = ["foo", "bar", "baz"]
+    for file_name in file_names:
+        file_path = f"{yt_path}/{file_name}"
+        yt_client.write_file(file_path, b"hello")
+        yt_client.set_attribute(file_path, "executable", True)
+
+    run(
+        get_file_checker(file_names, check_executable=True),
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        binds_cypress=[
+            BindCypress(
+                source=f"{yt_path}/{file_name}",
+                destination=file_name,
+            )
+            for file_name in file_names
+        ],
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=GENERIC_DOCKER_IMAGE,
+    )
+
+
+def test_cypress_bind_multiple_files_spec(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    file_names = ["foo", "bar", "baz"]
+    for file_name in file_names:
+        file_path = f"{yt_path}/{file_name}"
+        yt_client.write_file(file_path, b"hello")
+        yt_client.set_attribute(file_path, "executable", True)
+
+    run_info = run(
+        get_file_checker(file_names, check_executable=True),
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        binds_cypress=[
+            BindCypress(
+                source=f"{yt_path}/{file_name}",
+                destination=file_name,
+            )
+            for file_name in file_names
+        ],
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=GENERIC_DOCKER_IMAGE,
+        dry_run=True,
+    )
+    attached_files = run_info.operation_spec["tasks"]["task"]["file_paths"]
+    attached_files = [
+        attach for attach in attached_files if isinstance(attach, yt.ypath.FilePath)  # skip yt wrapper files
+    ]
+    assert attached_files == [
+        yt.ypath.FilePath(
+            f"{yt_path}/{file_name}",
+            attributes={
+                "executable": False,
+                "file_name": "local_file",
+                "bypass_artifact_cache": True,
+            },
+        )
+        for file_name in file_names
+    ]
 
 
 def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:

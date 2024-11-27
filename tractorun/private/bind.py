@@ -2,12 +2,19 @@ from collections import Counter
 import json
 import os
 import shutil
-from typing import List
+from typing import Iterable
+import warnings
 import zipfile
 
 import attrs
+import yt.wrapper as yt
+from yt.wrapper.errors import YtResolveError
 
-from tractorun.bind import BindLocal
+from tractorun.bind import (
+    BindCypress,
+    BindLocal,
+)
+from tractorun.exception import TractorunConfigurationError
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -18,11 +25,11 @@ class PackedBind:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsPacker:
-    _files: List[BindLocal]
-    _dirs: List[BindLocal]
+    _files: Iterable[BindLocal]
+    _dirs: Iterable[BindLocal]
 
     @classmethod
-    def from_binds(cls, binds: list[BindLocal]) -> "BindsPacker":
+    def from_binds(cls, binds: Iterable[BindLocal]) -> "BindsPacker":
         files: list[BindLocal] = []
         dirs: list[BindLocal] = []
 
@@ -108,7 +115,7 @@ class PackedLib:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BindsLibPacker:
-    _paths: list[str]
+    _paths: Iterable[str]
 
     def pack(self, base_result_path: str) -> list[PackedLib]:
         paths = [os.path.abspath(path) for path in self._paths]
@@ -128,3 +135,42 @@ class BindsLibPacker:
                 )
             )
         return result
+
+
+@attrs.define(kw_only=True, slots=True, auto_attribs=True)
+class BindsCypressProcessor:
+    _yt_client: yt.YtClient
+    _binds: Iterable[BindCypress]
+
+    def process(self) -> list[BindCypress]:
+        new_binds: list[BindCypress] = []
+        for bind in self._binds:
+            node_type = self._get_source_node_type(bind.source)
+            if node_type == "map_node":
+                for nested_node in self._expand_nested_nodes(bind):
+                    new_binds.append(
+                        BindCypress(
+                            source=nested_node,
+                            destination=bind.destination,
+                            attributes=bind.attributes,
+                        )
+                    )
+            else:
+                new_binds.append(bind)
+        return new_binds
+
+    def _get_source_node_type(self, path: str) -> str:
+        try:
+            return str(self._yt_client.get_attribute(path, "type"))
+        except YtResolveError as e:
+            raise TractorunConfigurationError(f"Source path for path {path} doesn't exist") from e
+
+    def _expand_nested_nodes(self, bind: BindCypress) -> Iterable[str]:
+        nested_nodes = self._yt_client.list(bind.source)
+        for nested_node in nested_nodes:
+            nested_node_path = f"{bind.source}/{nested_node}"
+            nested_node_type = self._get_source_node_type(nested_node_path)
+            if nested_node_type != "file":
+                warnings.warn(f"Skip {nested_node_path} because it is not a file, but {nested_node_type}")
+                continue
+            yield str(nested_node_path)

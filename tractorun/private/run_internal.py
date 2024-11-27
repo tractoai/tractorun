@@ -36,6 +36,7 @@ from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
 from tractorun.private import constants as const
 from tractorun.private.bind import (
+    BindsCypressProcessor,
     BindsLibPacker,
     BindsPacker,
 )
@@ -328,7 +329,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         [yt.LocalFile(packed_bind.local_path, packed_bind.yt_path) for packed_bind in packed_binds],
     )
 
-    for bind in params.binds_cypress:
+    for bind in BindsCypressProcessor(binds=params.binds_cypress, yt_client=yt_client).process():
         attributes = {
             "file_name": bind.destination,
         }

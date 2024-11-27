@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.47.0 (2024-11-27)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.46.0...0.47.0)
+
+### Changes
+
+- NYT-794: fix destinations in bulk cypress binds (#138). [dd5a2b9](https://github.com/tractoai/tractorun/commit/dd5a2b9de590983de574a9b27260a2a828c90197)
+    
+- Add bulk cypress binds (#137). [58d7d49](https://github.com/tractoai/tractorun/commit/58d7d491b792b653306c97b47bdd0df56578364f)
+    
+- Make torch config error a bit better (#136). [0252960](https://github.com/tractoai/tractorun/commit/02529604dacb57b1cf3a5dc1481d747d9c326516)
+    
+- Remove wandb from examples image (#135). [79fe17a](https://github.com/tractoai/tractorun/commit/79fe17a7eb143e649a83cb4086aef774faa7b2f6)
+    
+- NYT-757: add run tests for jax (#134). [e2c709d](https://github.com/tractoai/tractorun/commit/e2c709d3636cbf2de4b66b2f79bfbd3f296e5e2a)
+    
+- NYT-757: extract backend-specific tests (#133). [0c1b8df](https://github.com/tractoai/tractorun/commit/0c1b8dfb7f7ce31f1cc01a4843ef445ec2866673)
+    
+- Delete requirements_lightning.txt (#132). [74a2625](https://github.com/tractoai/tractorun/commit/74a262535840a508adf818cfcd038ca590494383)
+    
+- NYT-757: remove skip for jax tests (#131). [cdc298f](https://github.com/tractoai/tractorun/commit/cdc298f678d70d66d134090851e1e266ef912a58)
+    
+- NYT-757: update examples, add tests for examples (#129). [024ac93](https://github.com/tractoai/tractorun/commit/024ac9385768e8d3d9b262860eff69de6ca31b29)
+    
+- NYT-757: move infiniband speed test to internal repo (#130). [fd8c8ff](https://github.com/tractoai/tractorun/commit/fd8c8ff5ce4b7cbeabb10f75a7f722abd71b6fcd)
+    
+- NYT-784: fix help for bind cypress (#128). [d5b91b5](https://github.com/tractoai/tractorun/commit/d5b91b58bded04ce6a49276eee2465dff0d82805)
+    
+
 ## 0.46.0 (2024-11-19)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.45.0...0.46.0)

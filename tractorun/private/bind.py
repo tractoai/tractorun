@@ -147,11 +147,11 @@ class BindsCypressProcessor:
         for bind in self._binds:
             node_type = self._get_source_node_type(bind.source)
             if node_type == "map_node":
-                for nested_node in self._expand_nested_nodes(bind):
+                for file_name, yt_path in self._expand_nested_nodes(bind):
                     new_binds.append(
                         BindCypress(
-                            source=nested_node,
-                            destination=bind.destination,
+                            source=yt_path,
+                            destination=f"{bind.destination}/{file_name}",
                             attributes=bind.attributes,
                         )
                     )
@@ -165,7 +165,7 @@ class BindsCypressProcessor:
         except YtResolveError as e:
             raise TractorunConfigurationError(f"Source path for path {path} doesn't exist") from e
 
-    def _expand_nested_nodes(self, bind: BindCypress) -> Iterable[str]:
+    def _expand_nested_nodes(self, bind: BindCypress) -> Iterable[tuple[str, str]]:
         nested_nodes = self._yt_client.list(bind.source)
         for nested_node in nested_nodes:
             nested_node_path = f"{bind.source}/{nested_node}"
@@ -173,4 +173,4 @@ class BindsCypressProcessor:
             if nested_node_type != "file":
                 warnings.warn(f"Skip {nested_node_path} because it is not a file, but {nested_node_type}")
                 continue
-            yield str(nested_node_path)
+            yield str(nested_node), str(nested_node_path)

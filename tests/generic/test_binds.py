@@ -255,7 +255,7 @@ def test_cypress_bind_map_node_spec(yt_instance: YtInstance, yt_path: str) -> No
     yt_client.create("map_node", yt_map_path)
 
     # test warning for non-file nodes
-    yt.create("document", f"{yt_map_path}/document")
+    yt_client.create("document", f"{yt_map_path}/document")
 
     file_names = ["foo", "bar", "baz"]
     for file_name in file_names:

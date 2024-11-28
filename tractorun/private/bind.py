@@ -173,14 +173,7 @@ class BindsCypressProcessor:
                 new_binds.append(bind)
         return new_binds
 
-    def _get_files(self, path: str, prefix: str = "", passed_paths: set[str] | None = None) -> Iterable[_YtNode]:
-        if passed_paths is None:
-            passed_paths = set()
-
-        if path in passed_paths:
-            return []
-        passed_paths.add(path)
-
+    def _get_files(self, path: str, prefix: str = "") -> Iterable[_YtNode]:
         nodes: list[_YtNode] = []
         for node_name in self._yt_client.list(path):
             node_path = f"{path}/{node_name}"
@@ -190,7 +183,6 @@ class BindsCypressProcessor:
                     nested_nodes = self._get_files(
                         node_path,
                         prefix=str(PosixPath(prefix) / node_name),
-                        passed_paths=passed_paths,
                     )
                     nodes.extend(nested_nodes)
                 case "file":

@@ -324,8 +324,11 @@ def test_cypress_bind_map_node_symlinks(yt_instance: YtInstance, yt_path: str) -
             file_path = f"{base_folder}/{file_suffix}"
             yt_client.write_file(file_path, b"hello")
 
+    def checker(_: Toolbox) -> None:
+        pass
+
     run_info = run(
-        get_file_checker(file_suffixes, check_executable=True),
+        checker,
         backend=GenericBackend(),
         yt_path=yt_path,
         binds_cypress=[
@@ -345,10 +348,10 @@ def test_cypress_bind_map_node_symlinks(yt_instance: YtInstance, yt_path: str) -
     ]
     attached_files = list(sorted(attached_files))
     assert attached_files == [
-        f'{yt_path}/some_dir/1/bar',
-        f'{yt_path}/some_dir/1/foo',
-        f'{yt_path}/some_dir/1/link_to_2/bar',
-        f'{yt_path}/some_dir/1/link_to_2/foo',
+        f"{yt_path}/some_dir/1/bar",
+        f"{yt_path}/some_dir/1/foo",
+        f"{yt_path}/some_dir/1/link_to_2/bar",
+        f"{yt_path}/some_dir/1/link_to_2/foo",
     ]
 
 

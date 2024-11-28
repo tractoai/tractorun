@@ -304,6 +304,54 @@ def test_cypress_bind_map_node_spec(yt_instance: YtInstance, yt_path: str) -> No
         }
 
 
+def test_cypress_bind_map_node_symlinks(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    yt_map_path = f"{yt_path}/some_dir"
+    yt_map_path_1 = f"{yt_map_path}/1"
+    yt_map_path_2 = f"{yt_map_path}/2"
+
+    yt_client.create("map_node", yt_map_path)
+    yt_client.create("map_node", yt_map_path_1)
+    yt_client.create("map_node", yt_map_path_2)
+    yt_client.link(link_path=f"{yt_map_path_1}/link_to_2", target_path=yt_map_path_2)
+
+    destination = "some_local_dir"
+
+    file_suffixes = ["foo", "bar"]
+    for base_folder in [yt_map_path_1, yt_map_path_2]:
+        for file_suffix in file_suffixes:
+            file_path = f"{base_folder}/{file_suffix}"
+            yt_client.write_file(file_path, b"hello")
+
+    run_info = run(
+        get_file_checker(file_suffixes, check_executable=True),
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        binds_cypress=[
+            BindCypress(
+                source=yt_map_path_1,
+                destination=destination,
+            ),
+        ],
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=GENERIC_DOCKER_IMAGE,
+        dry_run=True,
+    )
+    attached_files = run_info.operation_spec["tasks"]["task"]["file_paths"]
+    attached_files = [
+        str(attach) for attach in attached_files if isinstance(attach, yt.ypath.FilePath)  # skip yt wrapper files
+    ]
+    attached_files = list(sorted(attached_files))
+    assert attached_files == [
+        f'{yt_path}/some_dir/1/bar',
+        f'{yt_path}/some_dir/1/foo',
+        f'{yt_path}/some_dir/1/link_to_2/bar',
+        f'{yt_path}/some_dir/1/link_to_2/foo',
+    ]
+
+
 def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:
     yt_client = yt_instance.get_client()
 

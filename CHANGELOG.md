@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.48.0 (2024-11-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.47.0...0.48.0)
+
+### Changes
+
+- NYT-794: make bind_cypress_path recursive (#139). [4fe4aae](https://github.com/tractoai/tractorun/commit/4fe4aaec488753dfb47b1a985427b38baab7862f)
+    
+
 ## 0.47.0 (2024-11-27)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.46.0...0.47.0)

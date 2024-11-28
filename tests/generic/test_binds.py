@@ -220,18 +220,19 @@ def test_cypress_bind_map_node(yt_instance: YtInstance, yt_path: str) -> None:
 
     yt_map_path = f"{yt_path}/some_dir"
     yt_client.create("map_node", yt_map_path)
+    yt_client.create("map_node", f"{yt_map_path}/nested")
 
     destination = "some_folder"
 
-    file_names = ["foo", "bar", "baz"]
-    for file_name in file_names:
-        file_path = f"{yt_map_path}/{file_name}"
+    file_suffixes = ["foo", "bar", "nested/some", "nested/another"]
+    for file_suffix in file_suffixes:
+        file_path = f"{yt_map_path}/{file_suffix}"
         yt_client.write_file(file_path, b"hello")
         yt_client.set_attribute(file_path, "executable", True)
 
     run(
         get_file_checker(
-            file_paths=[f"{destination}/{file_name}" for file_name in file_names],
+            file_paths=[f"{destination}/{file_suffix}" for file_suffix in file_suffixes],
             check_executable=True,
         ),
         backend=GenericBackend(),
@@ -253,21 +254,22 @@ def test_cypress_bind_map_node_spec(yt_instance: YtInstance, yt_path: str) -> No
 
     yt_map_path = f"{yt_path}/some_dir"
     yt_client.create("map_node", yt_map_path)
+    yt_client.create("map_node", f"{yt_map_path}/nested")
 
     # test warning for non-file nodes
     yt_client.create("document", f"{yt_map_path}/document")
 
-    file_names = ["foo", "bar", "baz"]
-    for file_name in file_names:
-        file_path = f"{yt_map_path}/{file_name}"
+    destination = "some_local_dir"
+
+    file_suffixes = ["foo", "bar", "nested/some", "nested/another"]
+    for file_suffix in file_suffixes:
+        file_path = f"{yt_map_path}/{file_suffix}"
         yt_client.write_file(file_path, b"hello")
         yt_client.set_attribute(file_path, "executable", True)
 
-    destination = "some_local_dir"
-
     with pytest.warns(UserWarning, match="Skip .*/document because it is not a file, but document"):
         run_info = run(
-            get_file_checker(file_names, check_executable=True),
+            get_file_checker(file_suffixes, check_executable=True),
             backend=GenericBackend(),
             yt_path=yt_path,
             binds_cypress=[
@@ -291,15 +293,66 @@ def test_cypress_bind_map_node_spec(yt_instance: YtInstance, yt_path: str) -> No
         attach for attach in attached_files if isinstance(attach, yt.ypath.FilePath)  # skip yt wrapper files
     ]
     attached_files = list(sorted(attached_files, key=str))
-    file_names = list(sorted(file_names))
-    for file_name, attached_file in zip(file_names, attached_files):
-        assert str(attached_file) == f"{yt_map_path}/{file_name}"
+    file_suffixes = list(sorted(file_suffixes))
+    for file_suffix, attached_file in zip(file_suffixes, attached_files):
+        assert str(attached_file) == f"{yt_map_path}/{file_suffix}"
         assert attached_file.attributes == {
             "executable": False,
-            "file_name": f"{destination}/{file_name}",
+            "file_name": f"{destination}/{file_suffix}",
             "bypass_artifact_cache": True,
             "format": "dummy",
         }
+
+
+def test_cypress_bind_map_node_symlinks(yt_instance: YtInstance, yt_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    yt_map_path = f"{yt_path}/some_dir"
+    yt_map_path_1 = f"{yt_map_path}/1"
+    yt_map_path_2 = f"{yt_map_path}/2"
+
+    yt_client.create("map_node", yt_map_path)
+    yt_client.create("map_node", yt_map_path_1)
+    yt_client.create("map_node", yt_map_path_2)
+    yt_client.link(link_path=f"{yt_map_path_1}/link_to_2", target_path=yt_map_path_2)
+
+    destination = "some_local_dir"
+
+    file_suffixes = ["foo", "bar"]
+    for base_folder in [yt_map_path_1, yt_map_path_2]:
+        for file_suffix in file_suffixes:
+            file_path = f"{base_folder}/{file_suffix}"
+            yt_client.write_file(file_path, b"hello")
+
+    def checker(_: Toolbox) -> None:
+        pass
+
+    run_info = run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        binds_cypress=[
+            BindCypress(
+                source=yt_map_path_1,
+                destination=destination,
+            ),
+        ],
+        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+        yt_client=yt_client,
+        docker_image=GENERIC_DOCKER_IMAGE,
+        dry_run=True,
+    )
+    attached_files = run_info.operation_spec["tasks"]["task"]["file_paths"]
+    attached_files = [
+        str(attach) for attach in attached_files if isinstance(attach, yt.ypath.FilePath)  # skip yt wrapper files
+    ]
+    attached_files = list(sorted(attached_files))
+    assert attached_files == [
+        f"{yt_path}/some_dir/1/bar",
+        f"{yt_path}/some_dir/1/foo",
+        f"{yt_path}/some_dir/1/link_to_2/bar",
+        f"{yt_path}/some_dir/1/link_to_2/foo",
+    ]
 
 
 def test_cypress_bind_from_run_config(yt_instance: YtInstance, yt_path: str, cypress_file: str) -> None:

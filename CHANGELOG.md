@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.49.0 (2024-11-28)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.48.0...0.49.0)
+
+### Changes
+
+- NYT-794: fix attributes for bind cypress in cli mode (#140). [7c0cf38](https://github.com/tractoai/tractorun/commit/7c0cf382e500ab716d9c28004224dfda4cf2cad8)
+    
+
 ## 0.48.0 (2024-11-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.47.0...0.48.0)

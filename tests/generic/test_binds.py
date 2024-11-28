@@ -47,9 +47,34 @@ def test_configuration_cypress() -> None:
     assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
 
     _, _, config = make_configuration(
-        make_cli_args("--bind-cypress", json.dumps({"source": "//tmp/cli", "destination": "cli"}), "command"),
+        make_cli_args(
+            "--bind-cypress",
+            json.dumps(
+                {
+                    "source": "//tmp/cli",
+                    "destination": "cli",
+                }
+            ),
+            "command",
+        ),
     )
-    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+    assert config.bind_cypress == [
+        BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes())]
+
+    _, _, config = make_configuration(
+        make_cli_args(
+            "--bind-cypress",
+            json.dumps(
+                {
+                    "source": "//tmp/cli",
+                    "destination": "cli",
+                    "attributes": {"format": "cli"},
+                }
+            ),
+            "command",
+        ),
+    )
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))]
 
     run_config = make_run_config(
         {
@@ -57,19 +82,30 @@ def test_configuration_cypress() -> None:
                 {
                     "source": "//tmp/config",
                     "destination": "config",
+                    "attributes": {"format": "config"},
                 }
             ],
         },
     )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
-    assert config.bind_cypress == [BindCypress(source="//tmp/config", destination="config")]
+    assert config.bind_cypress == [BindCypress(source="//tmp/config", destination="config", attributes=BindAttributes(format="config"))]
 
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(
-            make_cli_args("--run-config-path", run_config_path, "--bind-cypress", "//tmp/cli:cli"),
+            make_cli_args(
+                "--bind-cypress",
+                json.dumps(
+                    {
+                        "source": "//tmp/cli",
+                        "destination": "cli",
+                        "attributes": {"format": "cli"},
+                    }
+                ),
+                "command",
+            ),
         )
-    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli")]
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))]
 
 
 def test_configuration_local() -> None:

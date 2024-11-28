@@ -311,7 +311,11 @@ def _parse_bind_cypress_arg(value: str | None) -> BindCypress | None:
     if value is None:
         return None
     if value.startswith("{"):
-        return BindCypress(**json.loads(value))
+        converter = create_attrs_converter()
+        try:
+            return converter.structure(json.loads(value), BindCypress)
+        except ClassValidationError as e:
+            raise TractorunConfigError from e
     source, destination = value.split(":")
     return BindCypress(source=source, destination=destination)
 

@@ -58,8 +58,7 @@ def test_configuration_cypress() -> None:
             "command",
         ),
     )
-    assert config.bind_cypress == [
-        BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes())]
+    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes())]
 
     _, _, config = make_configuration(
         make_cli_args(
@@ -74,7 +73,9 @@ def test_configuration_cypress() -> None:
             "command",
         ),
     )
-    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))]
+    assert config.bind_cypress == [
+        BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))
+    ]
 
     run_config = make_run_config(
         {
@@ -89,7 +90,9 @@ def test_configuration_cypress() -> None:
     )
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(["--run-config-path", run_config_path])
-    assert config.bind_cypress == [BindCypress(source="//tmp/config", destination="config", attributes=BindAttributes(format="config"))]
+    assert config.bind_cypress == [
+        BindCypress(source="//tmp/config", destination="config", attributes=BindAttributes(format="config"))
+    ]
 
     with run_config_file(run_config) as run_config_path:
         _, _, config = make_configuration(
@@ -105,7 +108,9 @@ def test_configuration_cypress() -> None:
                 "command",
             ),
         )
-    assert config.bind_cypress == [BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))]
+    assert config.bind_cypress == [
+        BindCypress(source="//tmp/cli", destination="cli", attributes=BindAttributes(format="cli"))
+    ]
 
 
 def test_configuration_local() -> None:

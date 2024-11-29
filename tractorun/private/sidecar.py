@@ -44,6 +44,7 @@ class SidecarRun:
             bufsize=1,
             universal_newlines=True,
             env=env,
+            errors="replace",
         )
         if TYPE_CHECKING:
             assert isinstance(process.stdout, io.TextIOWrapper)

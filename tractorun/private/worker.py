@@ -86,6 +86,7 @@ class WorkerRun:
                 "YT_TOKEN": yt_config["token"],
                 **env,
             },
+            errors="replace",
         )
         if TYPE_CHECKING:
             assert isinstance(process.stdout, io.TextIOWrapper)

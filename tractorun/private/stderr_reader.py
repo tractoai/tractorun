@@ -154,7 +154,7 @@ class StderrReaderWorker:
                 try:
                     data = next(output_stream)
                     if data:
-                        print(data.decode("unicode_escape"), end="")
+                        print(data.decode("utf-8", errors="replace"), end="")
                 except Exception:
                     # TODO: add debug logs
                     pass

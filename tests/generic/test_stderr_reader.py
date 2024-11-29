@@ -274,3 +274,27 @@ def test_read_two_operations(yt_path: str, yt_instance: YtInstance, capsys: Capt
     )
     captured = capsys.readouterr()
     assert "message 2" in captured.out, captured.err
+
+
+def test_special_literals(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    unicode_string = "Downloading shards: 100%|██████████| 2/2 [02:14<00:00, 57.68s/it]🎉"
+    invalid_unicode = b"\xff\xfe\xfa"
+
+    def checker(toolbox: Toolbox) -> None:
+        print(unicode_string)
+        sys.stdout.buffer.write(invalid_unicode)
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        docker_image=GENERIC_DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+    )
+    captured = capsys.readouterr()
+    assert unicode_string in captured.out
+    assert "���" in captured.out

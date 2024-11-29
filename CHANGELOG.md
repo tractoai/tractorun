@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.50.0 (2024-11-29)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.49.0...0.50.0)
+
+### Changes
+
+- NYT-691: fix encoding non-unicode chars in bootstrap and stderr reader (#141). [4b28e86](https://github.com/tractoai/tractorun/commit/4b28e86bf6492c843f18957f2f6373cb8ead4b18)
+    
+
 ## 0.49.0 (2024-11-28)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.48.0...0.49.0)

@@ -3,7 +3,7 @@ on: [pull_request]
 
 jobs:
   black:
-    runs-on: tractoai-runners
+    runs-on: tractoai-runners-default
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4

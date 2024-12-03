@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-and-upload:
-    runs-on: tractoai-runners
+    runs-on: tractoai-no-underlay
     environment:
       name: pypi
       url: https://pypi.org/p/tractorun

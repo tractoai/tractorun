@@ -37,7 +37,7 @@ def get_data_path(filename: str | Path) -> Path:
 
 
 def get_random_string(length: int) -> str:
-    return "".join(random.choice(string.ascii_letters) for _ in range(length))
+    return str(int(time.time())) + "_" + "".join(random.choice(string.ascii_letters) for _ in range(length))
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

@@ -1,5 +1,3 @@
-from scipy.fftpack import tilbert
-
 # Tractorun
 
 `tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform.

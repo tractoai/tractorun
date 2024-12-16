@@ -2,6 +2,13 @@
 
 `tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform.
 
+TODO:
+1. minimal changes
+2. binds, stderr-reader
+3. torch and jax
+4. example config
+5. example script
+
 # Getting start
 
 Install tractorun into your python3 environment:
@@ -9,10 +16,6 @@ Install tractorun into your python3 environment:
 `pip install --upgrade tractorun`
 
 # How to try
-
-Install tractorun into your python3 environment:
-
-`pip install --upgrade tractorun`
 
 Run example script:
 
@@ -179,7 +182,7 @@ resources:
 ```
 
 ## user-config
-JSON config to be passed to training process. To read configs inside a process use `get_user_config` method of `toolbox`:
+A JSON config to be passed to container. To read the config inside a process use `get_user_config` method of `toolbox`:
 
 ```python
 user_config = toolbox.get_user_config()
@@ -187,7 +190,7 @@ print(user_config["a"])
 ```
 
 ### cli
-`tractorun --user-config "{"a": "b"}`
+`tractorun --user-config '{"a": "b"}'`
 
 ### yaml
 ```yaml
@@ -211,7 +214,7 @@ bind_local:
 ```
 
 ## bind-local-lib
-The path to a local Python library to bind it to the remote container and set the remote `PYTHONPATH` is useful for runs during development. In the production environment, prepare the environment in docker images.
+The path to a local Python library to bind it to the remote container and set the remote `PYTHONPATH`. Useful for development purposes. In the production environment, prepare the environment using docker images.
 
 Warning: 
 * works only for pure-python libraries

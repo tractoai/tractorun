@@ -124,12 +124,14 @@ def main(toolbox: Toolbox):
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
 
-    transform=transforms.Compose([
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
-        ])
-    dataset1 = YtTensorDataset(toolbox=toolbox, path='//home/samples/train', columns=['data', 'labels'])
-    dataset2 = YtTensorDataset(toolbox=toolbox, path='//home/samples/test', columns=['data', 'labels'])
+    ])
+    dataset1 = datasets.MNIST('../data', train=True, download=True,
+                              transform=transform)
+    dataset2 = datasets.MNIST('../data', train=False,
+                              transform=transform)
 
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
@@ -148,10 +150,17 @@ def main(toolbox: Toolbox):
         toolbox.save_model(ts.serialize(model.state_dict()))
 
 
+def _get_training_dir() -> str:
+    import random
+    import string
+    rnm = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    return f"//tmp/tractorun_examples/{rnm}"
+
+
 run(
     main,
     backend=Tractorch(),
-    yt_path=training_dir,
+    yt_path=_get_training_dir(),
     mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
     resources=Resources(
         cpu_limit=8,

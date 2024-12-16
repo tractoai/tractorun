@@ -61,14 +61,14 @@ WARNING: your local environment should be equals to remote docker image on Tract
 1. Wrap all training/inference code to a function.
 2. Initiate environment and Toolbox by `from tractorun.run.prepare_and_get_toolbox`
 
-An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/cli
+An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/mnist_simple/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/mnist_simple/cli
 
 ## SDK
 
 1. Wrap all training/inference code to a function with a `toolbox: tractorun.toolbox.Toolbox` parameter.
 2. Run this function by `tractorun.run.run`.
 
-An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/sdk
+An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/mnist_simple/sdk
 
 # Features
 

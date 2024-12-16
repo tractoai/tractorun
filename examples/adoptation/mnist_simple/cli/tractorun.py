@@ -6,7 +6,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
-from tractorun.backend.tractorch import YtTensorDataset, Tractorch
+from tractorun.backend.tractorch import Tractorch
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.run import prepare_and_get_toolbox
 
@@ -74,7 +74,6 @@ def test(model, device, test_loader):
 
 def main():
     toolbox = prepare_and_get_toolbox(backend=Tractorch())
-    user_config = toolbox.get_user_config()
 
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -122,12 +121,14 @@ def main():
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
 
-    transform=transforms.Compose([
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
-        ])
-    dataset1 = YtTensorDataset(toolbox=toolbox, path=user_config["dataset_train_path"], columns=['data', 'labels'])
-    dataset2 = YtTensorDataset(toolbox=toolbox, path=user_config["dataset_test_path"], columns=['data', 'labels'])
+    ])
+    dataset1 = datasets.MNIST('../data', train=True, download=True,
+                              transform=transform)
+    dataset2 = datasets.MNIST('../data', train=False,
+                              transform=transform)
 
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)

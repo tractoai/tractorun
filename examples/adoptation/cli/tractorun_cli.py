@@ -6,7 +6,6 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 
-import sys
 from tractorun.backend.tractorch import YtTensorDataset, Tractorch
 from tractorun.backend.tractorch.serializer import TensorSerializer
 from tractorun.run import prepare_and_get_toolbox
@@ -49,7 +48,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()), file=sys.stderr)
+                100. * batch_idx / len(train_loader), loss.item()))
             if args.dry_run:
                 break
 
@@ -70,7 +69,7 @@ def test(model, device, test_loader):
 
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)), file=sys.stderr)
+        100. * correct / len(test_loader.dataset)))
 
 
 def main():
@@ -123,6 +122,10 @@ def main():
         train_kwargs.update(cuda_kwargs)
         test_kwargs.update(cuda_kwargs)
 
+    transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+        ])
     dataset1 = YtTensorDataset(toolbox=toolbox, path=user_config["dataset_train_path"], columns=['data', 'labels'])
     dataset2 = YtTensorDataset(toolbox=toolbox, path=user_config["dataset_test_path"], columns=['data', 'labels'])
 
@@ -140,7 +143,7 @@ def main():
 
     if args.save_model:
         ts = TensorSerializer()
-        toolbox.save_model(ts.serialize(model.state_dict()), dataset_train_path, metadata={})
+        toolbox.save_model(ts.serialize(model.state_dict()))
 
 
 if __name__ == "__main__":

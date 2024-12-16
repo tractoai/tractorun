@@ -1,14 +1,17 @@
-import os
+import pathlib
 
 import attrs
 
 
+def _to_abs_local(path: str) -> str:
+    return str(pathlib.Path(path).absolute())
+
+
+def _to_abs_posix(path: str) -> str:
+    return str(pathlib.PosixPath(path).absolute())
+
+
 __all__ = ["BindLocal", "BindCypress", "BindAttributes"]
-
-
-def _to_abs_path(path: str) -> str:
-    # mypy workaround
-    return os.path.abspath(path)
 
 
 @attrs.define(kw_only=True, slots=True)
@@ -21,8 +24,8 @@ class BindAttributes:
 @attrs.define(kw_only=True, slots=True)
 class BindLocal:
     # TODO: just use pathlib
-    source: str = attrs.field(converter=_to_abs_path)
-    destination: str = attrs.field(converter=_to_abs_path)
+    source: str = attrs.field(converter=_to_abs_local)
+    destination: str = attrs.field(converter=_to_abs_posix)
 
 
 @attrs.define(kw_only=True, slots=True)

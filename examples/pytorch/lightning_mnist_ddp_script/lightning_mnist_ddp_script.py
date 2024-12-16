@@ -47,7 +47,7 @@ class MNISTModel(LightningModule):
 
 if __name__ == "__main__":
     toolbox = prepare_and_get_toolbox(backend=Tractorch())
-    dataset_path = toolbox.get_user_config()["dataset_path"]
+    dataset_path = toolbox.get_user_config().get("dataset_path", "//home/samples/mnist-torch-train")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Running on device:", device, file=sys.stderr)
 

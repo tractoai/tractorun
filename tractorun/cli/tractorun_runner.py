@@ -430,14 +430,14 @@ def make_cli_parser() -> argparse.ArgumentParser:
         type=StderrMode,
         help="proxy jobs stderr to terminal. Mode: "
         + ", ".join(m for m in StderrMode)
-        + f"Default: {PROXY_STDERR_MODE_DEFAULT}",
+        + f". Default: {PROXY_STDERR_MODE_DEFAULT}",
     )
     parser.add_argument(
         "--operation-log-mode",
         type=OperationLogMode,
         help="store operation log mode. Mode: "
         + ", ".join(m for m in OperationLogMode)
-        + f"Default: {OPERATION_LOG_MODE_DEFAULT}",
+        + f". Default: {OPERATION_LOG_MODE_DEFAULT}",
     )
     parser.add_argument(
         "--no-wait",
@@ -450,13 +450,17 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         type=EnvVariable.from_args,
         help="set env variable by value or from cypress node. JSON message like {} or {}".format(
-            EnvVariable(
-                name="placeholder",
-                value="placeholder",
+            attrs.asdict(
+                EnvVariable(
+                    name="placeholder",
+                    value="placeholder",
+                ),
             ),
-            EnvVariable(
-                name="placeholder",
-                cypress_path="placeholder",
+            attrs.asdict(
+                EnvVariable(
+                    name="placeholder",
+                    cypress_path="placeholder",
+                ),
             ),
         ),
     )

@@ -379,7 +379,7 @@ run(
 Specify a sidecar in JSON format.
 
 
-The `sidecar` option in `tractorun` is conceptually similar to the [sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) in k8s. It lets set up extra processes that run next to the main processes on each node in the same environment. Use cases:
+The `sidecar` option in `tractorun` is conceptually similar to the [sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) in k8s. It allows set up extra processes that run next to the main processes on each node in the same environment. Use cases:
 
 * A sidecar can send logs to systems like Victoria Metrics for monitoring.
 * A sidecar can run tensorproxy for jax-based trainings.

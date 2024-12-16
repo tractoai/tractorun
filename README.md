@@ -11,7 +11,7 @@ TODO:
 4. example config
 5. example script
 
-# Getting start
+# Getting started
 
 Install tractorun into your python3 environment:
 
@@ -36,9 +36,12 @@ tractorun \
 
 TODO
 
-# Options
+# Options and arguments
 
-[Documentation](https://github.com/tractoai/tractorun/blob/main/docs/options.md)
+[Options](https://github.com/tractoai/tractorun/blob/main/docs/options.md) page provides an overview of all available options for `tractorun`, explaining their purpose and usage. Options can be defined by:
+* cli parameters
+* yaml config
+* python options
 
 # Development
 

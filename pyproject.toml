@@ -50,7 +50,7 @@ sections = [
   "FIRSTPARTY",
   "LOCALFOLDER"
 ]
-skip = ["examples/adoptation"]
+skip = ["examples/adoptation", "build/lib/examples/adoptation"]
 
 [tool.mypy]
 disallow_untyped_defs = true

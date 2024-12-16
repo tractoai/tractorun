@@ -2,13 +2,19 @@
 
 set -x
 
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+TRACTORUN_PATH=$(realpath "$SCRIPT_DIR/..")
+DOCKER_IMAGE=${DOCKER_IMAGE:-"cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"}
+
+
 exec docker run -it \
-  --mount type=bind,source=.,target=/source \
+  --mount type=bind,source=$TRACTORUN_PATH,target=$TRACTORUN_PATH \
   --network=host \
+  -e DOCKER_IMAGE=$DOCKER_IMAGE \
   -e YT_MODE=external \
   -e YT_PROXY="${YT_PROXY}" \
   -e YT_TOKEN="${YT_TOKEN}" \
   -e WANDB_API_KEY="${WANDB_API_KEY}" \
-  -e PYTHONPATH="/source:$PYTHONPATH" \
+  -e PYTHONPATH="$TRACTORUN_PATH:$PYTHONPATH" \
   cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05 \
-  python3 $1 ${@:2}
+  python3 "$(realpath "$1")" ${@:2}

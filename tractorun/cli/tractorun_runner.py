@@ -5,11 +5,14 @@ import json
 import sys
 import traceback
 from typing import (
+    TYPE_CHECKING,
     Any,
     TypeVar,
+    cast,
     overload,
 )
 
+from attr import AttrsInstance
 import attrs
 from cattrs import ClassValidationError
 import yaml
@@ -323,6 +326,12 @@ def _parse_bind_cypress_arg(value: str | None) -> BindCypress | None:
     return BindCypress(source=source, destination=destination)
 
 
+def _attr_to_json(value: object) -> str:
+    if TYPE_CHECKING:
+        value = cast(AttrsInstance, value)
+    return json.dumps(attrs.asdict(value))
+
+
 def make_cli_parser() -> argparse.ArgumentParser:
     # Defaults shouldn't be set in argparse
     # because it interferes with merging with configs.
@@ -338,7 +347,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         type=str,
         help="path to the cypress node with format {}".format(
             json.dumps(
-                attrs.asdict(DockerAuthInternal(username="placeholder", password="placeholder", auth="placeholder")),  # type: ignore
+                _attr_to_json(DockerAuthInternal(username="placeholder", password="placeholder", auth="placeholder")),  # type: ignore
             ),
         ),
         default=None,
@@ -386,7 +395,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         help="bind local file or folder to be passed to the docker container. Format: `local_path:remote_path` or {}".format(
-            attrs.asdict(
+            _attr_to_json(
                 BindLocal(
                     source="placeholder",
                     destination="placeholder",
@@ -407,7 +416,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path` or {0}".format(
-            attrs.asdict(
+            _attr_to_json(
                 BindCypress(
                     source="yt path",
                     destination="path inside job",
@@ -422,7 +431,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         type=Sidecar.from_args,
         help="sidecar in json format `{example}`. Restart policy: {policy}".format(
             policy=", ".join(p for p in RestartPolicy),
-            example=json.dumps(attrs.asdict(Sidecar(command=["placeholder"], restart_policy=RestartPolicy.ALWAYS))),
+            example=_attr_to_json(Sidecar(command=["placeholder"], restart_policy=RestartPolicy.ALWAYS)),
         ),
     )
     parser.add_argument(
@@ -450,13 +459,13 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         type=EnvVariable.from_args,
         help="set env variable by value or from cypress node. JSON message like {} or {}".format(
-            attrs.asdict(
+            _attr_to_json(
                 EnvVariable(
                     name="placeholder",
                     value="placeholder",
                 ),
             ),
-            attrs.asdict(
+            _attr_to_json(
                 EnvVariable(
                     name="placeholder",
                     cypress_path="placeholder",

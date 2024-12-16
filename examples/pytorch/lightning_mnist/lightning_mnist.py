@@ -1,6 +1,8 @@
 import argparse
 import os
 from pathlib import Path
+import random
+import string
 import sys
 from typing import (
     Any,
@@ -62,10 +64,15 @@ def train(toolbox: Toolbox) -> None:
     trainer.fit(mnist_model, train_loader)
 
 
+def _default_home_dir() -> str:
+    rnm = "".join(random.choices(string.ascii_letters + string.digits, k=8))
+    return f"//tmp/tractorun_examples/{rnm}"
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--yt-home-dir", type=str, required=True)
-    parser.add_argument("--pool-tree", type=str, required=True)
+    parser.add_argument("--yt-home-dir", type=str, default=_default_home_dir())
+    parser.add_argument("--pool-tree", type=str, default="default")
     parser.add_argument("--dataset-path", type=str, default="//home/samples/mnist-torch-train")
     parser.add_argument("--docker-image", type=str, default=os.environ.get("DOCKER_IMAGE"))
     parser.add_argument("--gpu-per-process", type=int, default=0)

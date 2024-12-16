@@ -17,6 +17,8 @@ Install tractorun into your python3 environment:
 
 `pip install --upgrade tractorun`
 
+Configure client to work with your cluster: 
+
 # How to try
 
 Run example script:
@@ -30,15 +32,63 @@ tractorun \
     python3 /lightning_mnist_ddp_script.py
 ```
 
+# How to run
+
+## CLI
+
+`tractorun --help`
+
+or with yaml config
+
+`tractorun --run-config-path config.yaml`
+
+You can find a relevant example in [this repository](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist_ddp_script).
+
+## Python SDK
+
+SDK is convenient to use from Jupyter notebooks for development purposes.
+
+You can find a relevant example in [this repository](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist).
+
+WARNING: your local environment should be equals to remote docker image on TractoAI platform to use SDK.
+* This requirement is met in Jupyter Notebook on Tracto.ai platform.
+* For local use, it is recommended to run the code locally in the same container as specified in the docker_image parameter in `tractorun`
+
 # How to adapt code for tractorun
 
-# Backends
+## CLI
 
-TODO
+1. Wrap all training/inference code to a function.
+2. Initiate environment and Toolbox by `from tractorun.run.prepare_and_get_toolbox`
+
+An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/mnist_simple/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/mnist_simple/cli
+
+## SDK
+
+1. Wrap all training/inference code to a function with a `toolbox: tractorun.toolbox.Toolbox` parameter.
+2. Run this function by `tractorun.run.run`.
+
+An example of adapting the mnist training from the [PyTorch repository](https://github.com/pytorch/examples/blob/cdef4d43fb1a2c6c4349daa5080e4e8731c34569/mnist/main.py): https://github.com/tractoai/tractorun/tree/main/examples/adoptation/mnist_simple/sdk
+
+# Features
+
+## Toolbox
+
+## Backends
+
+Backends configure `tractorun` to work with a specific ML framework.
+
+Tractorun supports multiple backends:
+* [Tractorch](https://github.com/tractoai/tractorun/tree/main/tractorun/backend/tractorch) for PyTorch
+  * [examples](https://github.com/tractoai/tractorun/tree/main/examples/pytorch)
+* [Tractorax](https://github.com/tractoai/tractorun/tree/main/tractorun/backend/tractorax) for Jax
+  * [examples](https://github.com/tractoai/tractorun/tree/main/examples/jax)
+* [Generic](https://github.com/tractoai/tractorun/tree/main/tractorun/backend/generic)
+  * non-specialized backend, can be used as a basis for other backends
 
 # Options and arguments
 
-[Options](https://github.com/tractoai/tractorun/blob/main/docs/options.md) page provides an overview of all available options for `tractorun`, explaining their purpose and usage. Options can be defined by:
+[Options reference](https://github.com/tractoai/tractorun/blob/main/docs/options.md) page provides an overview of all available options for `tractorun`, explaining their purpose and usage. Options can be defined by:
 * cli parameters
 * yaml config
 * python options
@@ -48,7 +98,7 @@ TODO
 ## Install local environment
 1. Install [pyenv](https://github.com/pyenv/pyenv)
 2. Create and activate new env `pyenv virtualenv 3.10 tractorun && pyenv activate tractorun`
-3. Install all dependencies: `pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple ."[all]`
+3. Install all dependencies: `pip install ."[all]`
 
 
 ## Build new image for tests

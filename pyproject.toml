@@ -32,6 +32,9 @@ yt_stderr_reader = "tractorun.cli.yt_stderr_reader:main"
 
 [tool.black]
 line-length = 120
+extend-exclude = '''
+(^|/)examples/adoptation/
+'''
 
 [tool.isort]
 line_length = 120
@@ -47,10 +50,12 @@ sections = [
   "FIRSTPARTY",
   "LOCALFOLDER"
 ]
+skip = ["examples/adoptation", "build/lib/examples/adoptation"]
 
 [tool.mypy]
 disallow_untyped_defs = true
 check_untyped_defs = true
+exclude = "(^|/)examples/adoptation/"
 
 [[tool.mypy.overrides]]
 module = "yt.*"
@@ -93,3 +98,6 @@ search = "Unreleased"
 filename = "CHANGELOG.md"
 search = "{current_version}...HEAD"
 replace = "{current_version}...{new_version}"
+
+[tool.ruff]
+exclude = ["examples/adoptation"]

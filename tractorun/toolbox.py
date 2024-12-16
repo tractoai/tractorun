@@ -31,7 +31,7 @@ class Toolbox:
     def get_user_config() -> dict[Any, Any]:
         return json.loads(os.environ[_constants.YT_USER_CONFIG_ENV_VAR])
 
-    def save_model(self, data: bytes, dataset_path: str, metadata: dict[str, str]) -> str:
+    def save_model(self, data: bytes, dataset_path: str | None = None, metadata: dict[str, str] | None = None) -> str:
         incarnation_id = self.coordinator.get_incarnation_id()
         path = self._training_dir.models_path + f"/{incarnation_id}"
 
@@ -44,7 +44,7 @@ class Toolbox:
             "operation_id": self._training_metadata.operation_id,
             "job_id": self._training_metadata.job_id,
             "incarnation_id": incarnation_id,
-            "metadata": metadata,
+            "metadata": metadata or {},
             "user_config": self.get_user_config(),
             "mesh": attrs.asdict(self.mesh),  # type: ignore
         }

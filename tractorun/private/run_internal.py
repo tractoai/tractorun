@@ -377,7 +377,10 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     operation_spec = task_spec.end_task()
     additional_operation_spec = copy.deepcopy(params.yt_operation_spec)
 
-    operation_spec = operation_spec.title(params.title)
+    title = params.title
+    if title is None:
+        title = f"Tractorun {params.yt_path}"
+    operation_spec = operation_spec.title(title)
 
     if params.mesh.pool_trees is not None:
         operation_spec = operation_spec.pool_trees(params.mesh.pool_trees)

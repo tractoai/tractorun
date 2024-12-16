@@ -66,8 +66,8 @@ def test_run(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
         mesh=mesh,
         yt_client=yt_client,
         docker_image=GENERIC_DOCKER_IMAGE,
+        title=operation_title,
         yt_task_spec={"title": task_title},
-        yt_operation_spec={"title": operation_title},
     )
 
     operations = yt_client.list_operations(filter=operation_title)["operations"]

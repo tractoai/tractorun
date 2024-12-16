@@ -15,6 +15,7 @@ from cattrs import ClassValidationError
 import yaml
 
 from tractorun.bind import (
+    BindAttributes,
     BindCypress,
     BindLocal,
 )
@@ -43,9 +44,11 @@ from tractorun.stderr_reader import StderrMode
 from tractorun.tensorproxy import TensorproxySidecar
 
 
-MESH_NODE_COUNT_DEFAULT = 1
-MESH_PROCESS_PER_NODE_DEFAULT = 1
-MESH_GPU_PER_PROCESS_DEFAULT = 0
+__default_mesh = Mesh()
+
+MESH_NODE_COUNT_DEFAULT = __default_mesh.node_count
+MESH_PROCESS_PER_NODE_DEFAULT = __default_mesh.process_per_node
+MESH_GPU_PER_PROCESS_DEFAULT = __default_mesh.gpu_per_process
 TENSORPROXY_ENABLED_DEFAULT = False
 TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
 CLUSTER_CONFIG_PATH_DEFAULT = DEFAULT_CLUSTER_CONFIG_PATH
@@ -382,14 +385,21 @@ def make_cli_parser() -> argparse.ArgumentParser:
         type=_parse_bind_local_arg,
         action="append",
         default=None,
-        help="bind local file or folder to be passed to the docker container. Format: `local_path:remote_path`",
+        help="bind local file or folder to be passed to the docker container. Format: `local_path:remote_path` or {}".format(
+            attrs.asdict(
+                BindLocal(
+                    source="placeholder",
+                    destination="placeholder",
+                ),
+            ),
+        ),
     )
     parser.add_argument(
         "--bind-local-lib",
         type=str,
         action="append",
         default=None,
-        help="bind local python libraries to the docker container and remote PYTHONPATH",
+        help="path to local python library to bind it to the remote container and remote PYTHONPATH",
     )
     parser.add_argument(
         "--bind-cypress",
@@ -397,15 +407,23 @@ def make_cli_parser() -> argparse.ArgumentParser:
         action="append",
         default=None,
         help="bind cypress file to be passed to the docker container. Format: `local_path:remote_path` or {0}".format(
-            attrs.asdict(BindCypress(source="yt path", destination="path inside job")),
+            attrs.asdict(
+                BindCypress(
+                    source="yt path",
+                    destination="path inside job",
+                    attributes=BindAttributes(),
+                ),
+            ),
         ),
     )
     parser.add_argument(
         "--sidecar",
         action="append",
         type=Sidecar.from_args,
-        help='sidecar in json format `{"command": ["command"], "restart_policy: "always"}`. Restart policy: '
-        + ", ".join(p for p in RestartPolicy),
+        help="sidecar in json format `{example}`. Restart policy: {policy}".format(
+            policy=", ".join(p for p in RestartPolicy),
+            example=json.dumps(attrs.asdict(Sidecar(command=["placeholder"], restart_policy=RestartPolicy.ALWAYS))),
+        ),
     )
     parser.add_argument(
         "--proxy-stderr-mode",

@@ -93,7 +93,7 @@ Tractorun supports multiple backends:
 * [Generic](https://github.com/tractoai/tractorun/tree/main/tractorun/backend/generic)
   * non-specialized backend, can be used as a basis for other backends
 
-# Options and arguments
+# Options and settings
 
 [Options reference](https://github.com/tractoai/tractorun/blob/main/docs/options.md) page provides an overview of all available options for `tractorun`, explaining their purpose and usage. Options can be defined by:
 * cli parameters

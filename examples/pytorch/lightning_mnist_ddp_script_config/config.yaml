@@ -1,0 +1,12 @@
+command: ["python3", "/lightning_mnist_ddp_script_config.py"]
+mesh:
+  mode_count: 1
+  process_per_node: 4
+  gpu_per_process: 0
+resources:
+  memory_limit: 8076021002
+user_config:
+  dataset_path: "//home/samples/mnist-torch-train"
+bind_local:
+  - source: "./lightning_mnist_ddp_script_config.py"
+    destination: "/lightning_mnist_ddp_script_config.py"

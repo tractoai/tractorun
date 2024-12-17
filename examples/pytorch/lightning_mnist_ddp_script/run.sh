@@ -9,7 +9,7 @@ tractorun \
     --resources.memory-limit 8076021002 \
     --yt-path "//tmp/$USER/$RANDOM}" \
     --user-config '{"dataset_path": "//home/samples/mnist-torch-train"}' \
-    --bind-local './lightning_mnist_ddp_script.py:/lightning_mnist_ddp_script.py' \
+    --bind-local './lightning_mnist_ddp_script_config.py:/lightning_mnist_ddp_script_config.py' \
     --bind-local-lib $TRACTORUN_PATH \
     --docker-image $DOCKER_IMAGE \
-    python3 /lightning_mnist_ddp_script.py
+    python3 /lightning_mnist_ddp_script_config.py

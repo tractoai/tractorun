@@ -73,7 +73,7 @@ def run_example_script(path: Path, yt_path: str, dataset_path: str) -> None:
     assert op_run.is_exitcode_valid()
 
 
-@pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="tractorch"))
+@pytest.mark.parametrize("example_path", get_examples_pickle_path(example_type="pytorch"))
 def test_pytorch_pickle_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
     run_example_pickle(
         path=example_path,
@@ -97,7 +97,7 @@ def test_jax_pickle_examples(
     )
 
 
-@pytest.mark.parametrize("example_path", get_examples_script_path(example_type="tractorch"))
+@pytest.mark.parametrize("example_path", get_examples_script_path(example_type="pytorch"))
 def test_pytorch_script_examples(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str, example_path: Path) -> None:
     run_example_script(
         path=example_path,

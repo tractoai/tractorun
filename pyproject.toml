@@ -4,7 +4,7 @@ description = "Run distributed training in TractoAI"
 authors = [{name = "TractoAI team"}]
 requires-python = ">=3.10"
 dynamic = ["version", "dependencies", "optional-dependencies"]
-readme = {file = "package_description.md", content-type = "text/markdown"}
+readme = {file = "README.md", content-type = "text/markdown"}
 
 [tool.setuptools.packages.find]
 where = ["."]

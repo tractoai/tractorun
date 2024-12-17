@@ -3,7 +3,7 @@
 ## yt-path
 Base directory on the cluster where `tractorun` stores its metadata. For `tractorch` backend, it also stores checkpoints used during operation.
 
-It is highly recommended to use the same path for all iterations of training or inference for a particular model.
+It is highly recommended that the same path be used for all iterations of training or inference for a particular model.
 
 ### cli
 `tractorun --yt-path '//tmp/path'`
@@ -46,7 +46,7 @@ run(docker_image="my-docker-image")
 ```
 
 ## title
-Set the title for the operation. By default `tractorun` set `Tractorun {yt-path}`.
+Set the title for the operation. By default `tractorun` sets `Tractorun {yt-path}`.
 
 ### cli: `tractorun --title 'Operation Title'`
 
@@ -123,7 +123,7 @@ run(mesh=Mesh(gpu_per_process=1))
 ```
 
 ### mesh.pool-trees
-Typically, the default pool tree contains only CPU resources. To use GPU, you need to specify the pool tree name.
+Typically, the default pool tree contains only CPU resources. You need to specify the pool tree name to use GPU resources.
 
 cli: `tractorun --mesh.pool-trees "gpu_h100"`
 
@@ -246,7 +246,7 @@ run(
 ```
 
 ## user-config
-A JSON config to be passed to container. To read the config inside a process use `get_user_config` method of `toolbox`:
+A JSON config to be passed to a container. To read the config inside a process use `get_user_config` method of `toolbox`:
 
 ```python
 user_config = toolbox.get_user_config()
@@ -379,7 +379,7 @@ run(
 Specify a sidecar in JSON format.
 
 
-The `sidecar` option in `tractorun` is conceptually similar to the [sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) in k8s. It allows set up extra processes that run next to the main processes on each node in the same environment. Use cases:
+The `sidecar` option in `tractorun` is conceptually similar to the [sidecar container](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) in k8s. It allows to set up extra processes that run next to the main processes on each node in the same environment. Use cases:
 
 * A sidecar can send logs to systems like Victoria Metrics for monitoring.
 * A sidecar can run tensorproxy for jax-based trainings.
@@ -509,7 +509,7 @@ run(
 ```
 
 ## docker-auth-secret.cypress-path
-Required for authenticating with private Docker registries. To write document and set the appropriate acl use:
+Required for authenticating with private Docker registries. To write a document and set the appropriate ACL use:
 
 ```python
 import yt.wrapper as yt
@@ -628,7 +628,7 @@ run(
 ## local
 Beta.
 
-Run code on local host, without creation operation on Tracto.ai platform. Useful for debugging.
+Run code on a local host, without creation operation on Tracto.ai platform. Useful for debugging.
 
 ### cli
 `tractorun --local True`

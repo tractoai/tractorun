@@ -1,4 +1,4 @@
-![img.png](docs/_static/img.png)
+![logo.png](https://raw.githubusercontent.com/tractoai/tractorun/refs/heads/main/docs/_static/img.png)
 
 # 🚜 Tractorun
 

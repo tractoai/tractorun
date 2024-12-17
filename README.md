@@ -1,4 +1,6 @@
-# Tractorun
+![img.png](docs/_static/img.png)
+
+# 🚜 Tractorun
 
 `tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform.
 

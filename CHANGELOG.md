@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.51.0 (2024-12-17)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.50.0...0.51.0)
+
+### Changes
+
+- NYT-489: change pypi description (#160). [c3feedd](https://github.com/tractoai/tractorun/commit/c3feeddab9309cf3a8e6711e80c4f4f883f303ea)
+    
+- NYT-489: fix grammar, add config example (#159). [a8df4d8](https://github.com/tractoai/tractorun/commit/a8df4d8425b11f0edb4b98644c6870c8d2f33d9f)
+    
+- NYT-489: extend introduction and tooling description (#158). [9318b2a](https://github.com/tractoai/tractorun/commit/9318b2a6b6d762799db46cdd0841c2da9630ca0f)
+    
+- NYT-489: add logo (#157). [da465ea](https://github.com/tractoai/tractorun/commit/da465eaf739efdeef3a176b5d7ce02c6228f4d5e)
+    
+- NYT-489: fix gramma in options (#156). [b7d0d32](https://github.com/tractoai/tractorun/commit/b7d0d32bbbc48032f2a647642d22562c5ab38584)
+    
+- NYT-489: remove double license (#155). [83d381f](https://github.com/tractoai/tractorun/commit/83d381f128be963fa243194c3189dab84fbcc5e2)
+    
+- NYT-489: add examples for adoptation (#154). [ca9ebaf](https://github.com/tractoai/tractorun/commit/ca9ebaf716a4de721ef4b6f4f317a335c67ffa50)
+    
+- NYT-813: move options to separate page (#153). [393cc63](https://github.com/tractoai/tractorun/commit/393cc634a8aa6a45be98fafc8118e26927369f12)
+    
+- NYT-813: add python examples to readme, fix help (#152). [5e526a8](https://github.com/tractoai/tractorun/commit/5e526a8469937ea959b95d122e5da5b4f402abf5)
+    
+- NYT-813: improve readme a bit (#151). [5f24566](https://github.com/tractoai/tractorun/commit/5f245669ee9e05cd21193115d59c9bd0da4aff49)
+    
+- NYT-813: fix examples (#150). [952953b](https://github.com/tractoai/tractorun/commit/952953bef303214880b534413eeb18afe8ad5173)
+    
+- NYT-813: add basic README, fix help again (#149). [24b37f3](https://github.com/tractoai/tractorun/commit/24b37f30009569c51845001d7f06a17a7b51c0bb)
+    
+- NYT-813: update defaults and help (#148). [b9ce8aa](https://github.com/tractoai/tractorun/commit/b9ce8aadf6b98bbbf262b2ef33ddd6db891e87ad)
+    
+- NYT-813: actualize readme (#147). [dc972eb](https://github.com/tractoai/tractorun/commit/dc972eb8399fb2c0d18f406d45e06bfd34e2e7c6)
+    
+- NYT-811: remove uploading to nebius pypi (#146). [6760367](https://github.com/tractoai/tractorun/commit/6760367f378477c4f177d1c91fa35e7e62a8a2a7)
+    
+- Add timestamp to tmp folders to make them ordered (#145). [b736177](https://github.com/tractoai/tractorun/commit/b73617777c68da974a0ce406a9e90fb929fdc061)
+    
+- Run tests on runners without underlay access (#144). [3be7edf](https://github.com/tractoai/tractorun/commit/3be7edf06954c03b9f7644c0631aa3de2f9d3ef8)
+    
+- Make tractorun pep 561 compatible (#143). [a1b2f75](https://github.com/tractoai/tractorun/commit/a1b2f7592d5c0c8d4b5c6f4a1b2422a5a8e29328)
+    
+- Use new runners for tests (#142). [75284eb](https://github.com/tractoai/tractorun/commit/75284eb2fc25c4049281afaf35373680e2b19684)
+    
+
 ## 0.50.0 (2024-11-29)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.49.0...0.50.0)

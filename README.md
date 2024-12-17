@@ -2,16 +2,15 @@
 
 # 🚜 Tractorun
 
-`tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform.
+`tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform. It helps manage and run workflows across multiple nodes with minimal changes in the user's code.
 
-Also, `tractorun` can be used to run arbitrary [gang operations](https://en.wikipedia.org/wiki/Gang_scheduling) on the Tracto.ai platform.
+Besides machine learning, tractorun can also run arbitrary [gang operations](https://en.wikipedia.org/wiki/Gang_scheduling) on the Tracto.ai
 
-TODO:
-1. minimal changes
-2. binds, stderr-reader
-3. torch and jax
-4. example config
-5. example script
+## Core features
+
+* Simple distributed training setup on JAX and PyTorch with minimal code changes
+* Convenient ways to run and configure: CLI, YAML config, and Python SDK
+* Integration with the Tracto.ai platform
 
 # Getting started
 
@@ -75,6 +74,12 @@ An example of adapting the mnist training from the [PyTorch repository](https://
 # Features
 
 ## Toolbox
+
+`tractorun.toolbox.Toolbox` provides extra integrations with Tracto.ai platform:
+* Preconfigured client by `toolbox.yt_client`
+* Basic checkpoints by `toolbox.checkpoint_manager`
+* Control over the operation description in the UI by `toolbox.description_manager`
+* Access to coordination information by `toolbox.coordinator`
 
 ## Backends
 

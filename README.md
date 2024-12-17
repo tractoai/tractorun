@@ -18,11 +18,22 @@ Install tractorun into your python3 environment:
 
 `pip install --upgrade tractorun`
 
-Configure client to work with your cluster: 
+Configure the client to work with your cluster:
+```shell
+mkdir ~/.yt
+cat <<EOF > ~/.yt
+"proxy"={
+  "url"="$YT_PROXY";
+};
+"token"="$YT_TOKEN";
+EOF
+```
+
+Please put your actual Tracto.ai cluster address to `$YT_PROXY` and your token to `$YT_TOKEN`.
 
 # How to try
 
-Run example script:
+Run an example script:
 
 ```
 tractorun \
@@ -43,16 +54,18 @@ or with yaml config
 
 `tractorun --run-config-path config.yaml`
 
-You can find a relevant example in [this repository](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist_ddp_script).
+You can find a relevant examples:
+* CLI arguments [example](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist_ddp_script).
+* YAML config [example](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist_ddp_script_config).
 
 ## Python SDK
 
 SDK is convenient to use from Jupyter notebooks for development purposes.
 
-You can find a relevant example in [this repository](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist).
+You can find a relevant example in [the repository](https://github.com/tractoai/tractorun/tree/main/examples/pytorch/lightning_mnist).
 
-WARNING: your local environment should be equals to remote docker image on TractoAI platform to use SDK.
-* This requirement is met in Jupyter Notebook on Tracto.ai platform.
+WARNING: the local environment should be equal to the remote docker image on the TractoAI platform to use SDK.
+* This requirement is met in Jupyter Notebook on the Tracto.ai platform.
 * For local use, it is recommended to run the code locally in the same container as specified in the docker_image parameter in `tractorun`
 
 # How to adapt code for tractorun
@@ -75,7 +88,7 @@ An example of adapting the mnist training from the [PyTorch repository](https://
 
 ## Toolbox
 
-`tractorun.toolbox.Toolbox` provides extra integrations with Tracto.ai platform:
+`tractorun.toolbox.Toolbox` provides extra integrations with the Tracto.ai platform:
 * Preconfigured client by `toolbox.yt_client`
 * Basic checkpoints by `toolbox.checkpoint_manager`
 * Control over the operation description in the UI by `toolbox.description_manager`
@@ -96,7 +109,7 @@ Tractorun supports multiple backends:
 # Options and settings
 
 [Options reference](https://github.com/tractoai/tractorun/blob/main/docs/options.md) page provides an overview of all available options for `tractorun`, explaining their purpose and usage. Options can be defined by:
-* cli parameters
+* CLI parameters
 * yaml config
 * python options
 
@@ -117,13 +130,13 @@ Tractorun supports multiple backends:
 ```
 and update images in `./run_tests` and `tests/utils.py`
 
-## Build and push new image for examples
+## Build and push a new image for examples
 
 ```shell
 ./run_build examples_runtime --push
 ```
 
-and update image in `./examples/run_example`
+and update the image in `./examples/run_example`
 
 ### Run tests
 

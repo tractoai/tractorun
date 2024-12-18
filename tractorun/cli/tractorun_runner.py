@@ -30,7 +30,7 @@ from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
-from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH
+from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH, DEFAULT_TENSORPROXY_PATH
 from tractorun.private.docker_auth import DockerAuthInternal
 from tractorun.private.helpers import (
     create_attrs_converter,
@@ -53,7 +53,6 @@ MESH_NODE_COUNT_DEFAULT = __default_mesh.node_count
 MESH_PROCESS_PER_NODE_DEFAULT = __default_mesh.process_per_node
 MESH_GPU_PER_PROCESS_DEFAULT = __default_mesh.gpu_per_process
 TENSORPROXY_ENABLED_DEFAULT = False
-TENSORPROXY_YT_PATH_DEFAULT = "//home/tractorun/tensorproxy"
 CLUSTER_CONFIG_PATH_DEFAULT = DEFAULT_CLUSTER_CONFIG_PATH
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
 LOCAL_DEFAULT = False
@@ -272,7 +271,7 @@ class EffectiveConfig:
                 yt_path=_choose_value(
                     args_value=args["tensorproxy.yt_path"],
                     config_value=config.tensorproxy.yt_path,
-                    default=TENSORPROXY_YT_PATH_DEFAULT,
+                    default=DEFAULT_TENSORPROXY_PATH,
                 ),
                 restart_policy=_choose_value(
                     args_value=args["tensorproxy.restart_policy"],

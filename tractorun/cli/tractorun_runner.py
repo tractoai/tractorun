@@ -30,7 +30,10 @@ from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigError
 from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
-from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH, DEFAULT_TENSORPROXY_PATH
+from tractorun.private.constants import (
+    DEFAULT_CLUSTER_CONFIG_PATH,
+    DEFAULT_TENSORPROXY_PATH,
+)
 from tractorun.private.docker_auth import DockerAuthInternal
 from tractorun.private.helpers import (
     create_attrs_converter,
@@ -377,7 +380,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--tensorproxy.yt_path",
         type=str,
-        help=f"YTsaurus path to tensorproxy binary. Default {TENSORPROXY_YT_PATH_DEFAULT}",
+        help=f"YTsaurus path to tensorproxy binary. Default {DEFAULT_TENSORPROXY_PATH}",
     )
     parser.add_argument(
         "--tensorproxy.restart_policy",

@@ -2,11 +2,12 @@
 
 set -x
 
-IMAGE_GENERIC="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-19-18-49-57"
-IMAGE_TRACTORCH="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-21-19-36-24"
-IMAGE_TRACTORAX="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_tests:2024-11-19-19-46-05"
-IMAGE_TENSORPROXY="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
-IMAGE_EXAMPLES="cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
+_CURRENT_DOCKER_TAG="2024-12-20-20-10-01"
+IMAGE_GENERIC="ghcr.io/tractoai/tractorun-generic-tests:$_CURRENT_DOCKER_TAG"
+IMAGE_TRACTORCH="ghcr.io/tractoai/tractorun-tractorch-tests:$_CURRENT_DOCKER_TAG"
+IMAGE_TRACTORAX="ghcr.io/tractoai/tractorun-tractorax-tests:$_CURRENT_DOCKER_TAG"
+IMAGE_TENSORPROXY="ghcr.io/tractoai/tractorun-tensorproxy-runtime:$_CURRENT_DOCKER_TAG"
+IMAGE_EXAMPLES="ghcr.io/tractoai/tractorun-examples-tests:$_CURRENT_DOCKER_TAG"
 
 PATH_GENERIC="/src/tests/generic"
 PATH_TRACTORCH="/src/tests/tractorch"

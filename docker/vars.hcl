@@ -3,7 +3,7 @@ variable PROJECT_ROOT {
 }
 
 variable DOCKER_REPO {
-  default = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun"
+  default = "ghcr.io/tractoai"
 }
 
 variable DOCKER_TAG {}

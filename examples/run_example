@@ -4,7 +4,7 @@ set -x
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 TRACTORUN_PATH=$(realpath "$SCRIPT_DIR/..")
-DOCKER_IMAGE=${DOCKER_IMAGE:-"cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"}
+DOCKER_IMAGE=${DOCKER_IMAGE:-"ghcr.io/tractoai/tractorun-examples-runtime:2024-12-20-20-10-01"}
 
 
 exec docker run -it \
@@ -16,5 +16,5 @@ exec docker run -it \
   -e YT_TOKEN="${YT_TOKEN}" \
   -e WANDB_API_KEY="${WANDB_API_KEY}" \
   -e PYTHONPATH="$TRACTORUN_PATH:$PYTHONPATH" \
-  cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05 \
+  $DOCKER_IMAGE \
   python3 "$(realpath "$1")" ${@:2}

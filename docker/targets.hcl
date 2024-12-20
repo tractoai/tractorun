@@ -2,7 +2,7 @@ target "jammy_python_sys" {
   platforms = ["linux/amd64"]
   dockerfile-inline = <<EOT
 FROM ubuntu:22.04
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y python3 python3-pip && \
     python3 -m pip install --upgrade pip
@@ -16,7 +16,7 @@ target "generic_tests" {
   }
   context           = "${PROJECT_ROOT}"
   tags = [
-    "${DOCKER_REPO}/generic_tests:${DOCKER_TAG}"
+    "${DOCKER_REPO}/tractorun-generic-tests:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
 FROM base_image
@@ -34,7 +34,7 @@ target "tractorch_tests" {
   }
   context           = "${PROJECT_ROOT}"
   tags = [
-    "${DOCKER_REPO}/tractorch_tests:${DOCKER_TAG}"
+    "${DOCKER_REPO}/tractorun-tractorch-tests:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
 FROM base_image
@@ -53,7 +53,7 @@ target "tractorax_tests" {
   }
   context           = "${PROJECT_ROOT}"
   tags = [
-    "${DOCKER_REPO}/tractorax_tests:${DOCKER_TAG}"
+    "${DOCKER_REPO}/tractorun-tractorax-tests:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
 FROM base_image
@@ -72,7 +72,7 @@ target "tensorproxy_tests" {
   }
   context           = "${PROJECT_ROOT}"
   tags = [
-    "${DOCKER_REPO}/tensorproxy_tests:${DOCKER_TAG}"
+    "${DOCKER_REPO}/tractorun-tensorproxy-tests:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
 FROM base_image
@@ -92,7 +92,7 @@ target "examples_runtime" {
   }
   context           = "${PROJECT_ROOT}"
   tags = [
-    "${DOCKER_REPO}/examples_runtime:${DOCKER_TAG}"
+    "${DOCKER_REPO}/tractorun-examples-runtime:${DOCKER_TAG}"
   ]
   dockerfile-inline = <<EOT
 FROM base_image

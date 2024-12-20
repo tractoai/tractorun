@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.52.0 (2024-12-18)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.51.0...0.52.0)
+
+### Changes
+
+- NYT-819: move tractorun common dir to sys (#166). [c1f2ef5](https://github.com/tractoai/tractorun/commit/c1f2ef5fe88b8c554f4cbd5d374251973c98eb4c)
+    
+- Remove specific pypi (#165). [f9e17c7](https://github.com/tractoai/tractorun/commit/f9e17c78a78020fe3924f989a7e9f59e7b1c7eec)
+    
+- Delete old package_description.md (#164). [f7965d1](https://github.com/tractoai/tractorun/commit/f7965d1d61098686b0f61967cb1bdc0881be2d77)
+    
+- Revert "NYT-489: fix link to logo (#162)" (#163). [0f8b0d0](https://github.com/tractoai/tractorun/commit/0f8b0d0f9d45668bd5643965b0f3e5f7973d783d)
+    
+  This reverts commit dfb36a52dfd5332b6be4ab2184bb8be59579a5d3.
+- NYT-489: fix link to logo (#162). [dfb36a5](https://github.com/tractoai/tractorun/commit/dfb36a52dfd5332b6be4ab2184bb8be59579a5d3)
+    
+- Fix github runner's name (#161). [a7cdffc](https://github.com/tractoai/tractorun/commit/a7cdffce48a1604b818c4d801e0ae31f006126aa)
+    
+
 ## 0.51.0 (2024-12-17)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.50.0...0.51.0)

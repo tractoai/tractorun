@@ -20,13 +20,12 @@ import yaml
 from yt import wrapper as yt
 
 
-TRACTORCH_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorch_tests:2024-11-21-19-36-24"
-TRACTORAX_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tractorax_tests:2024-11-19-19-46-05"
-GENERIC_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/generic_tests:2024-11-19-19-45-03"
-EXAMPLES_DOCKER_IMAGE: str = "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/examples_runtime:2024-11-20-20-00-05"
-TENSORPROXY_DOCKER_IMAGE: str = (
-    "cr.ai.nebius.cloud/crnf2coti090683j5ssi/tractorun/tensorproxy_tests:2024-10-14-15-02-56"
-)
+_CURRENT_DOCKER_TAG = "2024-12-20-20-10-01"
+TRACTORCH_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tractorch-tests:{_CURRENT_DOCKER_TAG}"
+TRACTORAX_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tractorax-tests:{_CURRENT_DOCKER_TAG}"
+GENERIC_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-generic-tests:{_CURRENT_DOCKER_TAG}"
+EXAMPLES_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-examples-runtime:{_CURRENT_DOCKER_TAG}"
+TENSORPROXY_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tensorproxy-tests:{_CURRENT_DOCKER_TAG}"
 
 OPERATION_INFO_RETRIES = 5
 OPERATION_INFO_TIMEOUT = 2

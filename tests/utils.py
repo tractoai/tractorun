@@ -19,6 +19,7 @@ import attrs
 import yaml
 from yt import wrapper as yt
 
+
 _CURRENT_DOCKER_TAG = "2024-12-20-20-10-01"
 TRACTORCH_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tractorch-tests:{_CURRENT_DOCKER_TAG}"
 TRACTORAX_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tractorax-tests:{_CURRENT_DOCKER_TAG}"

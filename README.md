@@ -138,7 +138,13 @@ and update images in `./run_tests` and `tests/utils.py`
 
 and update the image in `./examples/run_example`
 
-### Run tests
+## Update current image tag for tests and examples
+
+```shell
+./run_update_tag.sh new_tag
+```
+
+## Run tests
 
 To run tests on local YT run `pytest`
 ```shell

@@ -40,7 +40,7 @@ tractorun \
     --yt-path "//tmp/$USER/tractorun_getting_started" \
     --bind-local './examples/pytorch/lightning_mnist_ddp_script/lightning_mnist_ddp_script.py:/lightning_mnist_ddp_script.py' \
     --bind-local-lib ./tractorun \
-    --docker-image ghcr.io/tractoai/tractorun-tensorproxy-runtime:2024-12-20-20-10-01 \
+    --docker-image ghcr.io/tractoai/tractorun-examples-runtime:2024-12-20-20-10-01 \
     python3 /lightning_mnist_ddp_script.py
 ```
 
@@ -123,17 +123,17 @@ Tractorun supports multiple backends:
 
 ## Build new image for tests
 ```shell
-./run_build generic
-./run_build tractorch_tests
-./run_build tractorax_tests
-./run_build tensorproxy_tests
+./run_build.sh generic
+./run_build.sh tractorch_tests
+./run_build.sh tractorax_tests
+./run_build.sh tensorproxy_tests
 ```
 and update images in `./run_tests` and `tests/utils.py`
 
 ## Build and push a new image for examples
 
 ```shell
-./run_build examples_runtime --push
+./run_build.sh examples_runtime --push
 ```
 
 and update the image in `./examples/run_example`
@@ -142,19 +142,19 @@ and update the image in `./examples/run_example`
 
 To run tests on local YT run `pytest`
 ```shell
-./run_tests all . -s
+./run_tests.sh all . -s
 ```
 
 To run tests on remote cluster
 ```shell
-./run_tests general . -s
-./run_tests tensorproxy . -s
+./run_tests.sh general . -s
+./run_tests.sh tensorproxy . -s
 ```
 
 It is possible to provide extra `pytest` options
 ```shell
-./run_tests generic test_sidecars.py
-./run_tests generic test_sidecars.py::test_sidecar_run
+./run_tests.sh generic test_sidecars.py
+./run_tests.sh generic test_sidecars.py::test_sidecar_run
 ```
 
 ## Build and upload

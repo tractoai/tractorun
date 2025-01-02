@@ -1,6 +1,7 @@
 import json
 import sys
 import threading
+import time
 
 from _pytest.capture import CaptureFixture
 import attrs
@@ -25,6 +26,10 @@ from tractorun.private.stderr_reader import (
     YtStderrReader,
 )
 from tractorun.run import run
+from tractorun.sidecar import (
+    RestartPolicy,
+    Sidecar,
+)
 from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
@@ -298,3 +303,34 @@ def test_special_literals(yt_path: str, yt_instance: YtInstance, capsys: Capture
     captured = capsys.readouterr()
     assert unicode_string in captured.out
     assert "���" in captured.out
+
+
+def test_failed_sidecar(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    message = "sidecar test message"
+
+    def checker(toolbox: Toolbox) -> None:
+        time.sleep(60)
+
+    yt_client = yt_instance.get_client()
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    try:
+        run(
+            checker,
+            backend=GenericBackend(),
+            yt_path=yt_path,
+            mesh=mesh,
+            yt_client=yt_client,
+            sidecars=[
+                Sidecar(
+                    command=["python3", "-c", f"raise Exception('{message}')"],
+                    restart_policy=RestartPolicy.FAIL,
+                ),
+            ],
+            docker_image=GENERIC_DOCKER_IMAGE,
+            proxy_stderr_mode=StderrMode.primary,
+        )
+    except Exception:
+        # it should be failed
+        pass
+    captured = capsys.readouterr()
+    assert message in captured.out

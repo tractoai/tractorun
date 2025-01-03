@@ -63,19 +63,63 @@ def create_yt_secret(yt_client: yt.YtClient, secret: dict, yt_path: str) -> str:
     return secret_path
 
 
-@pytest.mark.parametrize(
-    "secret",
-    [
+TEST_DATA = [
+    # old format
+    (
         {
             "username": "user1",
             "password": "password1",
         },
         {
-            "auth": "sasdsa",
+            "username": "user1",
+            "password": "password1",
         },
-    ],
+    ),
+    (
+        {
+            "auth": "auth_1",
+        },
+        {
+            "auth": "auth_1",
+        },
+    ),
+    # new format
+    (
+        {
+            "secrets": {
+                "username": {
+                    "value": "user2",
+                },
+                "password": {
+                    "value": "password2",
+                },
+            },
+        },
+        {
+            "username": "user2",
+            "password": "password2",
+        },
+    ),
+    (
+        {
+            "secrets": {
+                "auth": {
+                    "value": "auth_2",
+                },
+            },
+        },
+        {
+            "auth": "auth_2",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "secret,expected",
+    TEST_DATA,
 )
-def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> None:
+def test_spec_pickle(secret: dict, expected: dict, yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
@@ -97,13 +141,16 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
         dry_run=True,
         docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
     )
-    assert run_info.operation_spec["secure_vault"]["docker_auth"] == secret
+    assert run_info.operation_spec["secure_vault"]["docker_auth"] == expected
 
 
-def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+@pytest.mark.parametrize(
+    "secret,expected",
+    TEST_DATA,
+)
+def test_run_cli(yt_instance: YtInstance, secret: dict, expected: dict, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 
-    secret = {"auth": "123"}
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
 
     tracto_cli = TractoCli(
@@ -124,7 +171,7 @@ def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> N
         ],
     )
     run_info = tracto_cli.dry_run()
-    assert run_info["run_info"]["operation_spec"]["secure_vault"]["docker_auth"] == secret
+    assert run_info["run_info"]["operation_spec"]["secure_vault"]["docker_auth"] == expected
 
 
 @pytest.mark.parametrize(
@@ -138,6 +185,14 @@ def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> N
         },
         {
             "auth_data": "sasdsa",
+        },
+        {
+            "secrets": {},
+        },
+        {
+            "secrets": {
+                "auth": {"123": "123"},
+            },
         },
     ],
 )

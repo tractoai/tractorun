@@ -1,3 +1,8 @@
+from contextlib import nullcontext
+from typing import (
+    TYPE_CHECKING,
+    ContextManager,
+)
 import uuid
 
 import pytest
@@ -66,6 +71,7 @@ def create_yt_secret(yt_client: yt.YtClient, secret: dict, yt_path: str) -> str:
 TEST_DATA = [
     # old format
     (
+        "old",
         {
             "username": "user1",
             "password": "password1",
@@ -76,6 +82,7 @@ TEST_DATA = [
         },
     ),
     (
+        "old",
         {
             "auth": "auth_1",
         },
@@ -85,6 +92,7 @@ TEST_DATA = [
     ),
     # new format
     (
+        "new",
         {
             "secrets": {
                 "username": {
@@ -101,6 +109,7 @@ TEST_DATA = [
         },
     ),
     (
+        "new",
         {
             "secrets": {
                 "auth": {
@@ -116,10 +125,10 @@ TEST_DATA = [
 
 
 @pytest.mark.parametrize(
-    "secret,expected",
+    "sec_format,secret,expected",
     TEST_DATA,
 )
-def test_spec_pickle(secret: dict, expected: dict, yt_instance: YtInstance, yt_path: str) -> None:
+def test_spec_pickle(sec_format: str, secret: dict, expected: dict, yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
@@ -129,26 +138,36 @@ def test_spec_pickle(secret: dict, expected: dict, yt_instance: YtInstance, yt_p
 
     operation_title = f"test operation {uuid.uuid4()}"
 
-    run_info = run(
-        checker,
-        backend=GenericBackend(),
-        yt_path=yt_path,
-        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
-        yt_client=yt_client,
-        docker_image=GENERIC_DOCKER_IMAGE,
-        title=operation_title,
-        local=False,
-        dry_run=True,
-        docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
+    warn_checker = (
+        pytest.warns(UserWarning, match="Please use new docker secret format.*")
+        if sec_format == "old"
+        else nullcontext()
     )
+    if TYPE_CHECKING:
+        assert isinstance(warn_checker, ContextManager)
+    with warn_checker:
+        run_info = run(
+            checker,
+            backend=GenericBackend(),
+            yt_path=yt_path,
+            mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+            yt_client=yt_client,
+            docker_image=GENERIC_DOCKER_IMAGE,
+            title=operation_title,
+            local=False,
+            dry_run=True,
+            docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
+        )
     assert run_info.operation_spec["secure_vault"]["docker_auth"] == expected
 
 
 @pytest.mark.parametrize(
-    "secret,expected",
+    "sec_format,secret,expected",
     TEST_DATA,
 )
-def test_run_cli(yt_instance: YtInstance, secret: dict, expected: dict, yt_path: str, mnist_ds_path: str) -> None:
+def test_run_cli(
+    sec_format: str, yt_instance: YtInstance, secret: dict, expected: dict, yt_path: str, mnist_ds_path: str
+) -> None:
     yt_client = yt_instance.get_client()
 
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)

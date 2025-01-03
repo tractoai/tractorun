@@ -539,9 +539,18 @@ yt.create(
     "//tmp/sec_path",
     attributes={"acl": acl},
 )
+yt.set(
+    "//tmp/sec_path",
+    {
+        "secrets": {
+            "username": "username",
+            "password": "password",
+        },
+    },
+)
 ```
 
-Path to Cypress document with authentication secret [formatted as](https://ytsaurus.tech/docs/en/user-guide/data-processing/layers/layer-paths#docker_auth) `{"username": "placeholder", "password": "placeholder", "auth": "placeholder"}`.
+Path to Cypress secret with [docker auth](https://ytsaurus.tech/docs/en/user-guide/data-processing/layers/layer-paths#docker_auth) `{"username": "placeholder", "password": "placeholder", "auth": "placeholder"}`.
 
 ### cli
 `tractorun --docker-auth-secret.cypress-path //path/to/secret`

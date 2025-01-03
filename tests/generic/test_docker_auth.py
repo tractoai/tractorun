@@ -1,3 +1,8 @@
+from contextlib import nullcontext
+from typing import (
+    TYPE_CHECKING,
+    ContextManager,
+)
 import uuid
 
 import pytest
@@ -63,19 +68,67 @@ def create_yt_secret(yt_client: yt.YtClient, secret: dict, yt_path: str) -> str:
     return secret_path
 
 
-@pytest.mark.parametrize(
-    "secret",
-    [
+TEST_DATA = [
+    # old format
+    (
+        "old",
         {
             "username": "user1",
             "password": "password1",
         },
         {
-            "auth": "sasdsa",
+            "username": "user1",
+            "password": "password1",
         },
-    ],
+    ),
+    (
+        "old",
+        {
+            "auth": "auth_1",
+        },
+        {
+            "auth": "auth_1",
+        },
+    ),
+    # new format
+    (
+        "new",
+        {
+            "secrets": {
+                "username": {
+                    "value": "user2",
+                },
+                "password": {
+                    "value": "password2",
+                },
+            },
+        },
+        {
+            "username": "user2",
+            "password": "password2",
+        },
+    ),
+    (
+        "new",
+        {
+            "secrets": {
+                "auth": {
+                    "value": "auth_2",
+                },
+            },
+        },
+        {
+            "auth": "auth_2",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "sec_format,secret,expected",
+    TEST_DATA,
 )
-def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> None:
+def test_spec_pickle(sec_format: str, secret: dict, expected: dict, yt_instance: YtInstance, yt_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
@@ -85,25 +138,38 @@ def test_spec_pickle(secret: dict, yt_instance: YtInstance, yt_path: str) -> Non
 
     operation_title = f"test operation {uuid.uuid4()}"
 
-    run_info = run(
-        checker,
-        backend=GenericBackend(),
-        yt_path=yt_path,
-        mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
-        yt_client=yt_client,
-        docker_image=GENERIC_DOCKER_IMAGE,
-        title=operation_title,
-        local=False,
-        dry_run=True,
-        docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
+    warn_checker = (
+        pytest.warns(UserWarning, match="Please use new docker secret format.*")
+        if sec_format == "old"
+        else nullcontext()
     )
-    assert run_info.operation_spec["secure_vault"]["docker_auth"] == secret
+    if TYPE_CHECKING:
+        assert isinstance(warn_checker, ContextManager)
+    with warn_checker:
+        run_info = run(
+            checker,
+            backend=GenericBackend(),
+            yt_path=yt_path,
+            mesh=Mesh(node_count=1, process_per_node=1, gpu_per_process=0),
+            yt_client=yt_client,
+            docker_image=GENERIC_DOCKER_IMAGE,
+            title=operation_title,
+            local=False,
+            dry_run=True,
+            docker_auth=DockerAuthSecret(cypress_path=yt_secret_path),
+        )
+    assert run_info.operation_spec["secure_vault"]["docker_auth"] == expected
 
 
-def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+@pytest.mark.parametrize(
+    "sec_format,secret,expected",
+    TEST_DATA,
+)
+def test_run_cli(
+    sec_format: str, yt_instance: YtInstance, secret: dict, expected: dict, yt_path: str, mnist_ds_path: str
+) -> None:
     yt_client = yt_instance.get_client()
 
-    secret = {"auth": "123"}
     yt_secret_path = create_yt_secret(yt_client, secret, yt_path)
 
     tracto_cli = TractoCli(
@@ -124,7 +190,7 @@ def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> N
         ],
     )
     run_info = tracto_cli.dry_run()
-    assert run_info["run_info"]["operation_spec"]["secure_vault"]["docker_auth"] == secret
+    assert run_info["run_info"]["operation_spec"]["secure_vault"]["docker_auth"] == expected
 
 
 @pytest.mark.parametrize(
@@ -138,6 +204,14 @@ def test_run_cli(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> N
         },
         {
             "auth_data": "sasdsa",
+        },
+        {
+            "secrets": {},
+        },
+        {
+            "secrets": {
+                "auth": {"123": "123"},
+            },
         },
     ],
 )

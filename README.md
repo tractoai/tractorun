@@ -14,7 +14,7 @@ Besides machine learning, tractorun can also run arbitrary [gang operations](htt
 
 # Getting started
 
-To use these examples, you'll need a Tracto account. If you don't have one yet, please sign up at [tracto.ai/](https://tracto.ai/).
+To use these examples, you'll need a Tracto account. If you don't have one yet, please sign up at [tracto.ai](https://tracto.ai/).
 
 Install tractorun into your python3 environment:
 

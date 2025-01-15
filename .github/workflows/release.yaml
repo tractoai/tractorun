@@ -5,7 +5,7 @@ on:
 
 jobs:
   create-release:
-    runs-on: tractoai-runners-no-underlay
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
@@ -39,19 +39,6 @@ jobs:
 
       - name: "Remove the tag"
         run: git tag -d ${{ steps.tag.outputs.tag }}
-
-      # - name: "Create Pull Request"
-      #   id: cpr
-      #   uses: peter-evans/create-pull-request@v6
-      #   with:
-      #     title: "New version is coming: ${{ steps.tag.outputs.tag }}"
-      #     branch: "new-version-${{ steps.tag.outputs.tag }}"
-      #     body: ""
-
-      # - name: "Merge Pull Request"
-      #   run: gh pr merge --squash --admin ${{ steps.cpr.outputs.pull-request-number }}
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Push"  # TODO: delete after pr creation is allowed
         run: git push

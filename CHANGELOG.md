@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.53.0 (2025-01-15)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.52.0...0.53.0)
+
+### Changes
+
+- Fix log image link (#168). [74f35a7](https://github.com/tractoai/tractorun/commit/74f35a7f042cf22bd1b0d9bf6b529448b82956f3)
+    
+- NYT-843: support new secret's format (#171). [ec10863](https://github.com/tractoai/tractorun/commit/ec10863ac391430fb58b5d5d1e90f4943ffe540b)
+    
+- NYT-842: add test for stderr of failed sidecar (#170). [d26a524](https://github.com/tractoai/tractorun/commit/d26a5244eb8f4df6c27a8ebca6d58c952b6fe2a2)
+    
+- Use github public runners, update test images (#174). [99c3e58](https://github.com/tractoai/tractorun/commit/99c3e5823002d759e49b03641a6ee59556bfb0cd)
+    
+- Fix url in README (#173). [4eb657a](https://github.com/tractoai/tractorun/commit/4eb657af2b8c7f6001901f76c9c311d29d641d6d)
+    
+- Update getting started in README (#172). [ea77abd](https://github.com/tractoai/tractorun/commit/ea77abd4ccfcc6369e3ae75e4e6dfa3c076dd1a2)
+    
+- NYT-814: move docker images to github (#167). [f8d7b99](https://github.com/tractoai/tractorun/commit/f8d7b9926ffb725883038e7a43f72d1286a16b6a)
+    
+
 ## 0.52.0 (2024-12-18)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.51.0...0.52.0)

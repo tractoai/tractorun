@@ -3,11 +3,11 @@ on: [pull_request]
 
 jobs:
   build:
-    runs-on: tractoai-runners-default
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
       with:
         python-version: "3.10"
-    - run: pip install --extra-index-url https://artifactory.nebius.dev/artifactory/api/pypi/nyt/simple .[all]
+    - run: pip install .[all]
     - run: make mypy-check

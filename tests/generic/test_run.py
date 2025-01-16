@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 
 from _pytest.monkeypatch import MonkeyPatch
@@ -256,9 +257,11 @@ def test_script_debug_info(yt_instance: YtInstance, yt_path: str, mnist_ds_path:
     assert run_info.run_info.operation_id is not None
 
 
-def test_change_work_dirs(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+def test_change_working_dirs(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     def checker(toolbox: Toolbox) -> None:
-        pass
+        assert os.environ["HOME"] == "/tmp"
+        assert os.environ["PWD"] == "/tmp"
+        assert os.environ["TMPDIR"] == "/tmp"
 
     yt_client = yt_instance.get_client()
 

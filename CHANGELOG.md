@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.56.0 (2025-01-16)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.55.0...0.56.0)
+
+### Changes
+
+- NYT-861: add test for custom workdir (#178). [ccb367f](https://github.com/tractoai/tractorun/commit/ccb367fbc4c1cf40b509cd2907b8ec2dbe5bac6b)
+    
+
 ## 0.55.0 (2025-01-16)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.54.0...0.55.0)

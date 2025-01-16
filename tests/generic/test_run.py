@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 
 from _pytest.monkeypatch import MonkeyPatch
@@ -13,6 +14,7 @@ from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
 from tractorun.bind import BindLocal
 from tractorun.cli.tractorun_runner import CliRunInfo
+from tractorun.env import EnvVariable
 from tractorun.exception import TractorunConfigurationError
 from tractorun.mesh import Mesh
 from tractorun.private.helpers import AttrSerializer
@@ -253,3 +255,42 @@ def test_script_debug_info(yt_instance: YtInstance, yt_path: str, mnist_ds_path:
     run_info = serializer.deserialize(op_run.stdout.decode("utf-8"))
     assert run_info.run_info is not None
     assert run_info.run_info.operation_id is not None
+
+
+def test_change_working_dirs(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    def checker(toolbox: Toolbox) -> None:
+        assert os.environ["HOME"] == "/tmp"
+        assert os.environ["PWD"] == "/tmp"
+        assert os.environ["TMPDIR"] == "/tmp"
+
+    yt_client = yt_instance.get_client()
+
+    operation_title = f"test operation {uuid.uuid4()}"
+    task_title = f"test operation's task {uuid.uuid4()}"
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        env=[
+            EnvVariable(
+                name="HOME",
+                value="/tmp",
+            ),
+            EnvVariable(
+                name="PWD",
+                value="/tmp",
+            ),
+            EnvVariable(
+                name="TMPDIR",
+                value="/tmp",
+            ),
+        ],
+        docker_image=GENERIC_DOCKER_IMAGE,
+        title=operation_title,
+        yt_task_spec={"title": task_title},
+    )

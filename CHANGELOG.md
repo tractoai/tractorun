@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.54.0 (2025-01-16)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.53.0...0.54.0)
+
+### Changes
+
+- NYT-859: don't send *.so to YT (#176). [c038eb2](https://github.com/tractoai/tractorun/commit/c038eb28a5a8caab27d8360ed5fa47de8811c486)
+    
+- NYT-858: fix logs for restarting sidecars (#175). [2c2f549](https://github.com/tractoai/tractorun/commit/2c2f5495778e14b6edb0ddde3bae3c077ed4e2e8)
+    
+
 ## 0.53.0 (2025-01-15)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.52.0...0.53.0)

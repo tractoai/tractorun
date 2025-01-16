@@ -285,7 +285,7 @@ def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: 
         yt_client=yt_client,
         sidecars=[
             Sidecar(
-                command=["python3", "restarting_sidecar_script.py"],
+                command=["python3", "/tractorun_tests/restarting_sidecar_script.py"],
                 restart_policy=RestartPolicy.ALWAYS,
             ),
         ],

@@ -277,29 +277,25 @@ def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: 
             time.sleep(0.5)
 
     mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
-    try:
-        run(
-            checker,
-            backend=GenericBackend(),
-            yt_path=yt_path,
-            mesh=mesh,
-            yt_client=yt_client,
-            sidecars=[
-                Sidecar(
-                    command=["python3", "restarting_sidecar_script.py"],
-                    restart_policy=RestartPolicy.ALWAYS,
-                ),
-            ],
-            binds_local=[
-                BindLocal(
-                    source=f"{get_data_path('../data/restarting_sidecar_script.py')}",
-                    destination="/tractorun_tests/restarting_sidecar_script.py",
-                ),
-            ],
-            docker_image=GENERIC_DOCKER_IMAGE,
-            proxy_stderr_mode=StderrMode.primary,
-        )
-    except Exception:
-        # it should be failed
-        pass
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        sidecars=[
+            Sidecar(
+                command=["python3", "restarting_sidecar_script.py"],
+                restart_policy=RestartPolicy.ALWAYS,
+            ),
+        ],
+        binds_local=[
+            BindLocal(
+                source=f"{get_data_path('../data/restarting_sidecar_script.py')}",
+                destination="/tractorun_tests/restarting_sidecar_script.py",
+            ),
+        ],
+        docker_image=GENERIC_DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+    )
     # captured = capsys.readouterr()

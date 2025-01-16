@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.55.0 (2025-01-16)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.54.0...0.55.0)
+
+### Changes
+
+- NYT-861: use abs paths in bootstrap (#177). [11d2edf](https://github.com/tractoai/tractorun/commit/11d2edf572e12e8b3a70896025af6b35b4fe03a0)
+    
+
 ## 0.54.0 (2025-01-16)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.53.0...0.54.0)

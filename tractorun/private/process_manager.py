@@ -234,34 +234,37 @@ class ProcessManager:
             )
 
     def poll(self) -> ProcessManagerPollStatus:
-        status = self._poll_processes()
+        status, sidecars_to_restart = self._poll_processes()
         self._process_logs()
+        for sidecar_index in sidecars_to_restart:
+            self._restart_sidecar(sidecar_index)
         return status
 
-    def _poll_processes(self) -> ProcessManagerPollStatus:
+    def _poll_processes(self) -> tuple[ProcessManagerPollStatus, list[SidecarIndex]]:
         exit_codes = [worker_run.poll() for worker_run in self._worker_runs.values()]
         match check_status(exit_codes):
             case PoolStatus.failed:
-                return ProcessManagerPollStatus.fail
+                return ProcessManagerPollStatus.fail, []
             case PoolStatus.success:
-                return ProcessManagerPollStatus.success
+                return ProcessManagerPollStatus.success, []
 
+        sidecars_to_restart: list[SidecarIndex] = []
         for sidecar_index, sidecar_run_meta in self._sidecar_runs.items():
             sidecar_run = sidecar_run_meta.sidecar_run
             match sidecar_run.need_restart():
                 case RestartVerdict.restart:
                     print(f"Restart sidecar {sidecar_run.command}", file=sys.stderr)
-                    self._restart_sidecar(sidecar_index)
+                    sidecars_to_restart.append(sidecar_index)
                 case RestartVerdict.fail:
                     print(f"Sidecar {sidecar_run.command} has been failed", file=sys.stderr)
-                    return ProcessManagerPollStatus.fail
+                    return ProcessManagerPollStatus.fail, []
                 case RestartVerdict.skip:
                     pass
                 case RestartVerdict.unknown:
                     print(f"Warning: unknown restart policy for {sidecar_run.command}", file=sys.stderr)
                 case _:
                     print(f"Warning: unknown restart verdict for {sidecar_run.command}", file=sys.stderr)
-        return ProcessManagerPollStatus.running
+        return ProcessManagerPollStatus.running, sidecars_to_restart
 
     def _process_logs(self) -> None:
         for key, _ in self._io_selector.select(timeout=-1):

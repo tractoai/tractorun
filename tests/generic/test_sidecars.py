@@ -1,5 +1,7 @@
 import json
+import time
 
+from _pytest.capture import CaptureFixture
 import pytest
 import yt.wrapper as yt
 
@@ -13,6 +15,7 @@ from tests.utils import (
 )
 from tests.yt_instances import YtInstance
 from tractorun.backend.generic import GenericBackend
+from tractorun.bind import BindLocal
 from tractorun.cli.tractorun_runner import make_configuration
 from tractorun.mesh import Mesh
 from tractorun.private.sidecar import (
@@ -24,6 +27,7 @@ from tractorun.sidecar import (
     RestartPolicy,
     Sidecar,
 )
+from tractorun.stderr_reader import StderrMode
 from tractorun.toolbox import Toolbox
 
 
@@ -256,3 +260,46 @@ def test_sidecar_run() -> None:
     sidecar_run.wait()
     sidecar_run = sidecar_run.restart()
     sidecar_run.terminate()
+
+
+def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: CaptureFixture[str]) -> None:
+    yt_client = yt_instance.get_client()
+
+    attr_key = "test_key"
+    path = f"{yt_path}/@{attr_key}"
+
+    yt_client.set(path, 0)
+
+    def checker(toolbox: Toolbox) -> None:
+        client = toolbox.yt_client
+        value = 0
+        while value < 10:
+            value = client.get(path)
+            print(f"main process read {value}")
+            time.sleep(0.5)
+
+    mesh = Mesh(node_count=1, process_per_node=1, gpu_per_process=0)
+    run(
+        checker,
+        backend=GenericBackend(),
+        yt_path=yt_path,
+        mesh=mesh,
+        yt_client=yt_client,
+        sidecars=[
+            Sidecar(
+                command=["python3", "/tractorun_tests/restarting_sidecar_script.py", path],
+                restart_policy=RestartPolicy.ALWAYS,
+            ),
+        ],
+        binds_local=[
+            BindLocal(
+                source=f"{get_data_path('../data/restarting_sidecar_script.py')}",
+                destination="/tractorun_tests/restarting_sidecar_script.py",
+            ),
+        ],
+        docker_image=GENERIC_DOCKER_IMAGE,
+        proxy_stderr_mode=StderrMode.primary,
+    )
+    captured = capsys.readouterr()
+    for i in range(10):
+        assert f"sidecar reads {i}" in captured.out

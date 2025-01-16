@@ -269,6 +269,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = False if params.attach_external_libs else True
+    yt_client.config["pickling"]["dynamic_libraries"]["enable_auto_collection"] = True if params.attach_external_libs else False
 
     # we store it explicitly since locally it could have been read from ~/.yt/token
     yt_client.config["token"] = yt.http_helpers.get_token(client=yt_client) or ""

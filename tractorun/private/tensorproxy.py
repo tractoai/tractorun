@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import shutil
 from typing import Optional
 
@@ -17,16 +18,21 @@ class TensorproxyBootstrap:
     restart_policy: RestartPolicy
     ports_count: int
 
-    def prepare_and_get_sidecars(self, yt_proxy: str, grpc_port: int, monitoring_port: int) -> list[Sidecar]:
-        path = "__tensorproxy_config.yson"
+    def prepare_and_get_sidecars(
+        self, yt_proxy: str, grpc_port: int, monitoring_port: int, sandbox_path: Path
+    ) -> list[Sidecar]:
+        path = sandbox_path / "__tensorproxy_config.yson"
         with open(path, "wb") as f:
             config_content = get_config(proxy=yt_proxy, grpc_port=grpc_port, monitoring_port=monitoring_port)
             f.write(yson.dumps(config_content))
-        shutil.copy("./tensorproxy", "./tensorproxy_fix_perm")
-        os.chmod("./tensorproxy_fix_perm", 0o755)
-        # TODO: customize binary's name
+        new_tensorproxy_path = sandbox_path / "tensorproxy_fix_perm"
+        shutil.copy(sandbox_path / "tensorproxy", new_tensorproxy_path)
+        os.chmod(new_tensorproxy_path, 0o755)
         return [
-            Sidecar(command=["./tensorproxy_fix_perm", "--config", path], restart_policy=self.restart_policy),
+            Sidecar(
+                command=[str(new_tensorproxy_path.absolute()), "--config", str(path.absolute())],
+                restart_policy=self.restart_policy,
+            ),
         ]
 
     def get_environment(self, grpc_port: int) -> dict:

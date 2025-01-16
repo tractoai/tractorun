@@ -3,6 +3,10 @@ import base64
 import copy
 import json
 import os
+from pathlib import (
+    Path,
+    PosixPath,
+)
 import pickle
 import random
 import shlex
@@ -50,6 +54,7 @@ from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
+    JOB_SANDBOX_PATH,
 )
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
@@ -146,6 +151,7 @@ class CliCommand(Runnable):
                 lib_versions=lib_versions,
                 cluster_config=cluster_config,
                 operation_log_mode=operation_log_mode,
+                sandbox_path=Path("."),
             )
 
         return wrapped
@@ -198,6 +204,7 @@ class UserFunction(Runnable):
                     lib_versions=config.lib_versions,
                     cluster_config=config.cluster_config,
                     operation_log_mode=config.operation_log_mode,
+                    sandbox_path=PosixPath(JOB_SANDBOX_PATH),
                 )
 
         return wrapped
@@ -231,6 +238,7 @@ class UserFunction(Runnable):
                     lib_versions=lib_versions,
                     cluster_config=cluster_config,
                     operation_log_mode=operation_log_mode,
+                    sandbox_path=Path("."),
                 )
 
         return wrapped
@@ -313,7 +321,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         operation_log_mode=params.operation_log_mode,
     )
 
-    bootstrap_config_path = os.path.join(tmp_dir.name, BOOTSTRAP_CONFIG_NAME)
+    bootstrap_config_path = Path(tmp_dir.name) / BOOTSTRAP_CONFIG_NAME
     with open(bootstrap_config_path, "w") as f:
         f.write(AttrSerializer(BootstrapConfig).serialize(bootstrap_config))
 
@@ -371,7 +379,9 @@ def run_tracto(params: TractorunParams) -> RunInfo:
                 "PYTHONDONTWRITEBYTECODE": "1",
                 BIND_PATHS_ENV_VAR: binds_packer.to_env(),
                 "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
-                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: BOOTSTRAP_CONFIG_NAME,
+                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str(
+                    (PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()
+                ),
             },
         )
     )

@@ -2,6 +2,7 @@ import base64
 import contextlib
 import datetime
 import enum
+from pathlib import Path
 import pickle
 import selectors
 import sys
@@ -80,6 +81,7 @@ class ProcessManager:
         tp_env: dict,
         spec_env: dict,
         log_handler_factories: list[LogHandlerFactory],
+        sandbox_path: Path,
     ) -> Generator["ProcessManager", None, None]:
         pm = ProcessManager._start(
             command=command,
@@ -93,6 +95,7 @@ class ProcessManager:
             tp_env=tp_env,
             spec_env=spec_env,
             log_handler_factories=log_handler_factories,
+            sandbox_path=sandbox_path,
         )
         yield pm
         pm._stop()
@@ -111,6 +114,7 @@ class ProcessManager:
         tp_env: dict,
         spec_env: dict,
         log_handler_factories: list[LogHandlerFactory],
+        sandbox_path: Path,
     ) -> "ProcessManager":
         worker_runs: dict[WorkerIndex, WorkerRun] = {}
         sidecar_runs: dict[SidecarIndex, SidecarRun] = {}
@@ -144,6 +148,7 @@ class ProcessManager:
                     **tp_env,
                     **spec_env,
                 },
+                sandbox_path=sandbox_path,
             )
             worker_index = WorkerIndex(self_index)
             worker_runs[worker_index] = worker_run

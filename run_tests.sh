@@ -6,7 +6,7 @@ _CURRENT_DOCKER_TAG="2025-01-15-20-21-21"
 IMAGE_GENERIC="ghcr.io/tractoai/tractorun-generic-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORCH="ghcr.io/tractoai/tractorun-tractorch-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORAX="ghcr.io/tractoai/tractorun-tractorax-tests:$_CURRENT_DOCKER_TAG"
-IMAGE_TENSORPROXY="ghcr.io/tractoai/tractorun-tensorproxy-runtime:$_CURRENT_DOCKER_TAG"
+IMAGE_TENSORPROXY="ghcr.io/tractoai/tractorun-tensorproxy-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_EXAMPLES="ghcr.io/tractoai/tractorun-examples-tests:$_CURRENT_DOCKER_TAG"
 
 PATH_GENERIC="/src/tests/generic"

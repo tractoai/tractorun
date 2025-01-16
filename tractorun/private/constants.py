@@ -4,7 +4,7 @@ BIND_PATHS_ENV_VAR: str = "BIND_PATHS"
 BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str = "BOOTSTRAP_CONFIG_FILENAME"
 DEFAULT_CLUSTER_CONFIG_PATH: str = "//sys/tractorun/config"
 DEFAULT_TENSORPROXY_PATH = "//sys/tractorun/tensorproxy"
-DEFAULT_OPERATION_TITLE: str = "Tractorun operation"
+JOB_SANDBOX_PATH: str = "/slot/sandbox"
 
 BOOTSTRAP_CONFIG_NAME: str = "__bootstrap_config"
 

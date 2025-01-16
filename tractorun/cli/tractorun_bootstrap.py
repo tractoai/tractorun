@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from pathlib import Path
 import sys
 
 import cattrs
@@ -13,6 +14,7 @@ from tractorun.private.bootstrapper import (
 from tractorun.private.constants import (
     BIND_PATHS_ENV_VAR,
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
+    JOB_SANDBOX_PATH,
 )
 from tractorun.private.helpers import (
     AttrSerializer,
@@ -48,6 +50,7 @@ def main() -> None:
         lib_versions=config.lib_versions,
         cluster_config=config.cluster_config,
         operation_log_mode=config.operation_log_mode,
+        sandbox_path=Path(JOB_SANDBOX_PATH),
     )
 
 

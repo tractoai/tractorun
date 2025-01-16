@@ -1,5 +1,6 @@
 import base64
 import os
+from pathlib import Path
 import pickle
 import sys
 import time
@@ -85,6 +86,7 @@ def bootstrap(
     lib_versions: LibVersions,
     cluster_config: TractorunClusterConfig,
     operation_log_mode: OperationLogMode,
+    sandbox_path: Path,
 ) -> None:
     # Runs inside a job
 
@@ -102,6 +104,7 @@ def bootstrap(
             yt_proxy=yt_config["proxy"]["url"],
             grpc_port=tp_grpc_port,
             monitoring_port=tp_mon_port,
+            sandbox_path=sandbox_path,
         )
         tp_env = tensorproxy.get_environment(grpc_port=tp_grpc_port)
 
@@ -133,6 +136,7 @@ def bootstrap(
         tp_env=tp_env,
         spec_env=spec_env,
         log_handler_factories=log_handlers,
+        sandbox_path=sandbox_path,
     ) as process_manager:
         while status == ProcessManagerPollStatus.running:
             time.sleep(PROCESSES_POLL_TIMEOUT)

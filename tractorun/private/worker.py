@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import os
+from pathlib import Path
 import pickle
 import subprocess
 from typing import (
@@ -53,6 +54,7 @@ class WorkerRun:
         cluster_config: TractorunClusterConfig,
         yt_config: dict,
         env: dict,
+        sandbox_path: Path,
     ) -> "WorkerRun":
         worker_config = WorkerConfig(
             mesh=mesh,
@@ -67,7 +69,8 @@ class WorkerRun:
             job_id=env["YT_JOB_ID"],
         )
         config_name = f"config_{proc_index}.json"
-        with open(config_name, "w") as f:
+        config_path = sandbox_path / config_name
+        with open(config_path, "w") as f:
             serializer = AttrSerializer(WorkerConfig)
             json.dump(serializer.serialize(worker_config), f)
 
@@ -81,7 +84,7 @@ class WorkerRun:
             bufsize=1,
             universal_newlines=True,
             env={
-                TRACTO_CONFIG_ENV_VAR: config_name,
+                TRACTO_CONFIG_ENV_VAR: str(config_path),
                 "YT_PROXY": yt_config["proxy"]["url"],
                 "YT_TOKEN": yt_config["token"],
                 **env,

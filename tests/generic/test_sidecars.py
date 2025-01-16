@@ -1,9 +1,9 @@
 import json
 import time
 
+from _pytest.capture import CaptureFixture
 import pytest
 import yt.wrapper as yt
-from _pytest.capture import CaptureFixture
 
 from tests.utils import (
     GENERIC_DOCKER_IMAGE,
@@ -272,7 +272,9 @@ def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: 
 
     def checker(toolbox: Toolbox) -> None:
         client = toolbox.yt_client
-        while value := client.get(path) < 10:
+        value = 0
+        while value < 10:
+            value = client.get(path)
             print(f"main process read {value}")
             time.sleep(0.5)
 
@@ -285,7 +287,7 @@ def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: 
         yt_client=yt_client,
         sidecars=[
             Sidecar(
-                command=["python3", "/tractorun_tests/restarting_sidecar_script.py"],
+                command=["python3", "/tractorun_tests/restarting_sidecar_script.py", path],
                 restart_policy=RestartPolicy.ALWAYS,
             ),
         ],
@@ -298,4 +300,6 @@ def test_restarting_sidecar_logs(yt_path: str, yt_instance: YtInstance, capsys: 
         docker_image=GENERIC_DOCKER_IMAGE,
         proxy_stderr_mode=StderrMode.primary,
     )
-    # captured = capsys.readouterr()
+    captured = capsys.readouterr()
+    for i in range(10):
+        assert f"sidecar reads {i}" in captured.out

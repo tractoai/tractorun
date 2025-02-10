@@ -115,7 +115,7 @@ Tractorun supports multiple backends:
 * yaml config
 * python options
 
-# More Information
+# More information
 
 * [Examples](https://github.com/tractoai/tractorun/tree/main/examples)
 * [More examples in Jupyter Notebooks](https://github.com/tractoai/tracto-examples)

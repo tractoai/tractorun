@@ -4,7 +4,7 @@ set -x
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 TRACTORUN_PATH=$(realpath "$SCRIPT_DIR/..")
-_CURRENT_DOCKER_TAG="2025-01-15-20-21-21"
+_CURRENT_DOCKER_TAG="2025-02-10-16-14-27"
 DOCKER_IMAGE=${DOCKER_IMAGE:-"ghcr.io/tractoai/tractorun-examples-runtime:$_CURRENT_DOCKER_TAG"}
 
 

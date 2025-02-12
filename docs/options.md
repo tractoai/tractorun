@@ -1,4 +1,31 @@
+from tractorun.toolbox import Toolbox
+
 # Options
+
+## command
+
+### cli
+The command that will be executed by each worker on Tracto.
+
+`tractorun python3 main.py`
+
+### yaml
+The command that will be executed by each worker on Tracto.
+```yaml
+command: ["python3", "main.py"]
+```
+
+### python
+Callable python object, that will be pickled and executed by each worker on Tracto.
+```python
+from tractorun.run import run
+from tractorun.toolbox import Toolbox
+
+def train(toolbox: Toolbox):
+  pass
+
+run(train, yt_path="//tmp/path")
+```
 
 ## yt-path
 Base directory on the cluster where `tractorun` stores its metadata. For `tractorch` backend, it also stores checkpoints used during operation.

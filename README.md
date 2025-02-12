@@ -2,15 +2,23 @@
 
 # 🚜 Tractorun
 
-`tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform. It helps manage and run workflows across multiple nodes with minimal changes in the user's code.
+`Tractorun` is a powerful tool for distributed ML operations on the [Tracto.ai](https://tracto.ai/) platform. It helps manage and run workflows across multiple nodes with minimal changes in the user's code:
+* Training and fine-tuning models. Use Tractorun to train models across multiple compute nodes efficiently.
+* Offline batch inference. Perform fast and scalable model inference.
+* Running arbitrary GPU operations, ideal for any computational tasks that require distributed GPU resources.
 
-Besides machine learning, tractorun can also run arbitrary [gang operations](https://en.wikipedia.org/wiki/Gang_scheduling) on the Tracto.ai
+## How it works
 
-## Core features
+Tractorun is built on top of [Tracto.ai](https://tracto.ai/) and is responsible for coordinating the execution of distributed machine learning tasks, and it has out-of-the-box integrations with PyTorch and Jax, also it can be easily used for any other training or inference framework.
 
-* Simple distributed training setup on JAX and PyTorch with minimal code changes
-* Convenient ways to run and configure: CLI, YAML config, and Python SDK
-* Integration with the Tracto.ai platform
+Key advantages:
+* No need to manage your cloud infrastructure, such as configuring Kubernetes cluster, or managing GPU and Infiniband drivers. Tracto.ai  solves all these infrastructure problems for you.
+* No need to coordinate distributed processes. Tractorun handles it based on the training configuration: the number of nodes and GPUs used.
+
+Key features:
+* Simple distributed task setup, just specify the number of nodes and GPUs.
+* Convenient ways to run and configure: CLI, YAML config, and Python SDK.
+* Integration with the Tracto.ai platform: use datasets and checkpoints stored in the Tracto.ai storage, build pipelines with Tractorun, MapReduce, Clickhouse, Spark, and more.
 
 # Getting started
 

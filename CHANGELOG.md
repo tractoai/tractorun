@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.57.0 (2025-02-13)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.56.0...0.57.0)
+
+### Changes
+
+- NYT-943: move dev doc to README_DEV.md (#185). [3a7b808](https://github.com/tractoai/tractorun/commit/3a7b808f046562326f65bd738d8497556fa4a12f)
+    
+- NYT-943: add doc about backends and coordination (#184). [0e4162f](https://github.com/tractoai/tractorun/commit/0e4162f3bf5265db8449bbe81f57aeac96e10c6b)
+    
+- [NYT-943] update logo, add doc about toolbox (#183). [f30d501](https://github.com/tractoai/tractorun/commit/f30d5016ffa4ad55dcfe0ba4b400d1bdc823b8be)
+    
+- [NYT-930] update readme according to blog post (#182). [2aded89](https://github.com/tractoai/tractorun/commit/2aded89c713b769187755b9b2e3a7d9245f27e65)
+    
+- Add links to examples (#180). [a38dc71](https://github.com/tractoai/tractorun/commit/a38dc715c8306aeb8bec085546b6382baf1450ea)
+    
+- Update docker images (#181). [479ff95](https://github.com/tractoai/tractorun/commit/479ff95b82ba45ca727cac0c09fed45941a8a7ce)
+    
+- Add LICENSE file (#179). [7cc6de2](https://github.com/tractoai/tractorun/commit/7cc6de20461329023c37b02b4dd15f7ab2fdfb10)
+    
+
 ## 0.56.0 (2025-01-16)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.55.0...0.56.0)

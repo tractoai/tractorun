@@ -9,7 +9,7 @@
 
 ## How it works
 
-Tractorun is built on top of [Tracto.ai](https://tracto.ai/) and is responsible for coordinating the execution of distributed machine learning tasks, and it has out-of-the-box integrations with PyTorch and Jax, also it can be easily used for any other training or inference framework.
+Built on top of [Tracto.ai](https://tracto.ai/), `Tractorun` is responsible for managing distributed machine learning tasks. It has out-of-the-box integrations with PyTorch and Jax, also it can be easily used for any other training or inference framework.
 
 Key advantages:
 * No need to manage your cloud infrastructure, such as configuring Kubernetes cluster, or managing GPU and Infiniband drivers. Tracto.ai  solves all these infrastructure problems for you.
@@ -18,6 +18,7 @@ Key advantages:
 Key features:
 * Simple distributed task setup, just specify the number of nodes and GPUs.
 * Convenient ways to run and configure: CLI, YAML config, and Python SDK.
+* A range of powerful capabilities, including [sidecars](https://github.com/tractoai/tractorun/blob/main/docs/options.md#sidecar) for auxiliary tasks and transparent [mounting](https://github.com/tractoai/tractorun/blob/main/docs/options.md#bind-local) of local files directly into distributed operations.
 * Integration with the Tracto.ai platform: use datasets and checkpoints stored in the Tracto.ai storage, build pipelines with Tractorun, MapReduce, Clickhouse, Spark, and more.
 
 # Getting started

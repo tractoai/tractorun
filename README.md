@@ -106,7 +106,17 @@ An example of adapting the mnist training from the [PyTorch repository](https://
 
 [Toolbox page](https://github.com/tractoai/tractorun/blob/main/docs/toolbox.md) provides an overview of all available toolbox components.
 
-## Backends
+## Coordination
+
+Tractorun always sets following environment variables in each process:
+* `MASTER_ADDR` - the address of the master node
+* `MASTER_PORT` - the port of the master node
+* `WORLD_SIZE` - the total number of processes
+* `NODE_RANK` - the unique id of the current node (job in terms of Tracto.ai)
+* `LOCAL_RANK` - the unique id of the current process on the current node
+* `RANK` - the unique id of the current process across all nodes
+
+### Backends
 
 Backends configure `tractorun` to work with a specific ML framework.
 
@@ -117,6 +127,8 @@ Tractorun supports multiple backends:
   * [examples](https://github.com/tractoai/tractorun/tree/main/examples/jax)
 * [Generic](https://github.com/tractoai/tractorun/tree/main/tractorun/backend/generic)
   * non-specialized backend, can be used as a basis for other backends
+
+[Backend page](https://github.com/tractoai/tractorun/blob/main/docs/backend.md) provides an overview of all available backends.
 
 # Options and settings
 

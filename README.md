@@ -104,6 +104,8 @@ An example of adapting the mnist training from the [PyTorch repository](https://
 * Control over the operation description in the UI by `toolbox.description_manager`
 * Access to coordination information by `toolbox.coordinator`
 
+[Toolbox page](https://github.com/tractoai/tractorun/blob/main/docs/toolbox.md) provides an overview of all available toolbox components.
+
 ## Backends
 
 Backends configure `tractorun` to work with a specific ML framework.

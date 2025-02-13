@@ -57,7 +57,7 @@ Returns uniq index of the current process in the current node. It can be useful 
 
 ## Toolbox.checkpoint_manager
 
-*Beta* version of the checkpoint manager. You can find an example on [Github](https://github.com/tractoai/tractorun/blob/main/examples/pytorch/torch_mnist_checkpoints/torch_mnist_checkpoints.py).
+*Beta* version of the checkpoint manager. You can find an example on [GitHub](https://github.com/tractoai/tractorun/blob/main/examples/pytorch/torch_mnist_checkpoints/torch_mnist_checkpoints.py).
 
 ### Toolbox.checkpoint_manager.get_last_checkpoint
 
@@ -67,6 +67,6 @@ Find and read the last checkpoint for the current `yt_path`.
 
 Save a checkpoint as binary file on YTSaurus.
 
-### Toolbox.mesh
+## Toolbox.mesh
 
 Provides the information about current [Mesh configuration](https://github.com/tractoai/tractorun/blob/main/docs/options.md#meshnode-count).

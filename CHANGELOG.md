@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.58.0 (2025-02-14)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.57.0...0.58.0)
+
+### Changes
+
+- Fix primary endpoint host due to nebius network configuration (#187). [0c8cf77](https://github.com/tractoai/tractorun/commit/0c8cf7715b1f39c41f1333013971d2cf539b0e10)
+    
+- NYT-943: simplify introduction (#186). [6fce41f](https://github.com/tractoai/tractorun/commit/6fce41f683e23f726203dc08f4890e592c006279)
+    
+
 ## 0.57.0 (2025-02-13)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.56.0...0.57.0)

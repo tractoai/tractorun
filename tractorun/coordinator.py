@@ -1,3 +1,5 @@
+import sys
+
 import attrs
 
 from tractorun.mesh import Mesh
@@ -28,6 +30,10 @@ class Coordinator:
         return self._self_index == 0
 
     def get_primary_endpoint(self) -> str:
+        if self.is_primary():
+            port = self._primary_endpoint.split(":")[1]
+            print("original primary address {0} was changed to {127.0.0.1}", file=sys.stderr)
+            return f"127.0.0.1:{port}"
         return self._primary_endpoint
 
     def get_process_index(self) -> int:

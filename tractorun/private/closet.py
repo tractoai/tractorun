@@ -61,7 +61,7 @@ def get_closet() -> Closet:
     coordinator = CoordinatorFactory(
         yt_client=yt_client,
         training_dir=config.training_dir,
-        self_endpoint=get_hostname(),
+        self_endpoint=f"{get_hostname()}:{config.port}",
         mesh=config.mesh,
         process_index=config.proc_index,
         node_index=config.node_index,

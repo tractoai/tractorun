@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.60.0 (2025-02-17)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.59.0...0.60.0)
+
+### Changes
+
+- NYT-946: add barrier after torch init (#191). [7933d3b](https://github.com/tractoai/tractorun/commit/7933d3b786db47b37ca6e6cb32884a7b2244de27)
+    
+- NYT-946: add get_self_endpoint to coordinator, fix getting hostname (#190). [9b1b067](https://github.com/tractoai/tractorun/commit/9b1b0678bb5b90eac76e7daa06a876b1ebd6ba40)
+    
+
 ## 0.59.0 (2025-02-17)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.58.0...0.59.0)

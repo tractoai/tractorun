@@ -59,7 +59,7 @@ def make_description(closet: Closet) -> TractorunDescription:
     )
     return TractorunDescription(
         training_dir=Link(value=training_dir),
-        primary_address=closet.coordinator._primary_endpoint,
+        primary_address=closet.coordinator.get_primary_endpoint(),
         incarnation=closet.coordinator.get_incarnation_id(),
         mesh=closet.mesh,
         primary_stderr=Link(value=job_stderr_link),

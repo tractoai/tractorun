@@ -55,6 +55,10 @@ Returns the address of the primary process in the distributed operation.
 
 Returns uniq index of the current process in the current node. It can be useful if a library or framework requires explicitly specifying the id of the GPU being used.
 
+### Toolbox.coordinator.get_self_endpoint
+
+Returns the hostname of the current job.
+
 ## Toolbox.checkpoint_manager
 
 *Beta* version of the checkpoint manager. You can find an example on [GitHub](https://github.com/tractoai/tractorun/blob/main/examples/pytorch/torch_mnist_checkpoints/torch_mnist_checkpoints.py).

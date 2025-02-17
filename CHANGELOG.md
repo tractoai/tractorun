@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.59.0 (2025-02-17)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.58.0...0.59.0)
+
+### Changes
+
+- Revert fix primary endpoint host due to nebius network configuration (#189). [9d6d9a9](https://github.com/tractoai/tractorun/commit/9d6d9a9a2ba770378a1021a78ac325b08aae9691)
+    
+  This reverts commit 0c8cf7715b1f39c41f1333013971d2cf539b0e10.
+
 ## 0.58.0 (2025-02-14)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.57.0...0.58.0)

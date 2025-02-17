@@ -44,7 +44,6 @@ def get_closet() -> Closet:
         deserializer = AttrSerializer(WorkerConfig)
         config: WorkerConfig = deserializer.deserialize(json.load(ff))
 
-    self_endpoint = socket.gethostname() + ":" + str(config.port)
     yt_client = YtClient(
         config=pickle.loads(
             base64.b64decode(config.yt_client_config),
@@ -62,7 +61,7 @@ def get_closet() -> Closet:
     coordinator = CoordinatorFactory(
         yt_client=yt_client,
         training_dir=config.training_dir,
-        self_endpoint=self_endpoint,
+        self_endpoint=f"{get_hostname()}:{config.port}",
         mesh=config.mesh,
         process_index=config.proc_index,
         node_index=config.node_index,
@@ -85,3 +84,7 @@ def get_closet() -> Closet:
         cluster_config=config.cluster_config,
         description_manager=description_manager,
     )
+
+
+def get_hostname() -> str:
+    return socket.getaddrinfo(socket.gethostname(), 0, flags=socket.AI_CANONNAME)[0][3]

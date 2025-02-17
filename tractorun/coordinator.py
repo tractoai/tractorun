@@ -32,3 +32,6 @@ class Coordinator:
 
     def get_process_index(self) -> int:
         return self._process_index
+
+    def get_self_endpoint(self) -> str:
+        return self._self_endpoint

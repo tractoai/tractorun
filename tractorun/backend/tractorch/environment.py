@@ -1,4 +1,3 @@
-import socket
 import sys
 from urllib.parse import urlparse
 
@@ -29,7 +28,7 @@ class Environment(EnvironmentBase):
         print("old coordinator address: {}".format(coordinator_address), file=sys.stderr)
         parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
         # because of overlay problems
-        if parsed_coordinator_address.hostname == socket.gethostname():
+        if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint():
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
             print("new coordinator address: {}".format(coordinator_address), file=sys.stderr)
 

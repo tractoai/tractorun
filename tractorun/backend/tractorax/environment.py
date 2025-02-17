@@ -22,7 +22,7 @@ class Environment(EnvironmentBase):
         print("old coordinator address: {}".format(coordinator_address), file=sys.stderr)
         parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
         # because of overlay problems
-        if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint():
+        if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint().split(":")[0]:
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
             print("new coordinator address: {}".format(coordinator_address), file=sys.stderr)
 

@@ -63,6 +63,8 @@ def run_script(
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> RunInfo:
+    setup_logging()
+
     docker_image = _get_docker_image(docker_image)
 
     sidecars = sidecars or []
@@ -135,6 +137,8 @@ def run(
     attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> RunInfo:
+    setup_logging()
+
     if attach_external_libs:
         warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use it in production.")
     docker_image = _get_docker_image(docker_image)

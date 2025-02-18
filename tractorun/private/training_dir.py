@@ -4,6 +4,9 @@ import attrs
 import yt.wrapper as yt
 
 
+DEFAULT_TMP_WORKING_DIR = "/tmp/tractorun"
+
+
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TrainingDir:
     base_path: str
@@ -16,7 +19,9 @@ class TrainingDir:
     sidecar_logs_path: str
 
     @classmethod
-    def create(cls, path: str) -> "TrainingDir":
+    def create(cls, path: str | None) -> "TrainingDir":
+        if path is None:
+            path = f"{DEFAULT_TMP_WORKING_DIR}/{uuid.uuid4()}"
         return TrainingDir(
             base_path=path,
             primary_lock_path=path + "/primary_lock",

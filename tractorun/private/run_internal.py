@@ -248,7 +248,7 @@ class UserFunction(Runnable):
 class TractorunParams:
     runnable: Runnable
     docker_image: str
-    yt_path: str
+    yt_path: str | None
     mesh: Mesh
     proxy_stderr_mode: StderrMode
     operation_log_mode: OperationLogMode

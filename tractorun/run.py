@@ -1,3 +1,5 @@
+import logging
+import os
 from typing import (
     Any,
     Callable,
@@ -38,8 +40,8 @@ __all__ = ["run", "run_script", "prepare_and_get_toolbox"]
 def run_script(
     user_command: list[str],
     *,
-    yt_path: str,
     mesh: Mesh,
+    yt_path: str | None = None,
     title: str | None = None,
     user_config: dict[Any, Any] | None = None,
     cluster_config_path: str = _DEFAULT_CLUSTER_CONFIG_PATH,
@@ -70,6 +72,7 @@ def run_script(
     env = env or []
     user_config = user_config or {}
     resources = resources or Resources()
+    mesh = mesh or Mesh()
     yt_operation_spec = yt_operation_spec or {}
     yt_task_spec = yt_task_spec or {}
 
@@ -108,8 +111,8 @@ def run(
     user_command: Callable,
     *,
     backend: BackendBase,
-    yt_path: str,
-    mesh: Mesh,
+    yt_path: str | None = None,
+    mesh: Mesh | None = None,
     title: str | None = None,
     user_config: dict[Any, Any] | None = None,
     cluster_config_path: str = _DEFAULT_CLUSTER_CONFIG_PATH,
@@ -142,6 +145,7 @@ def run(
     binds_cypress = binds_cypress or []
     env = env or []
     user_config = user_config or {}
+    mesh = mesh or Mesh()
     resources = resources or Resources()
     yt_operation_spec = yt_operation_spec or {}
     yt_task_spec = yt_task_spec or {}
@@ -188,3 +192,13 @@ def _get_docker_image(docker_image: str | None) -> str:
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     return _prepare_and_get_toolbox(backend)
+
+
+def setup_logging() -> None:
+    log_level = os.environ.get("TRACTO_LOG_LEVEL") or os.environ.get("YT_LOG_LEVEL")
+    if log_level:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[logging.StreamHandler()],
+        )

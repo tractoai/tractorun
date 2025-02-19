@@ -18,12 +18,12 @@ Callable python object, that will be pickled and executed by each worker on Trac
 ```python
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
-from tractorun.backend.tractorch import Tractorch
+from tractorun.backend.generic import GenericBackend
 
 def train(toolbox: Toolbox):
   pass
 
-run(train, backend=Tractorch())
+run(train, backend=GenericBackend())
 ```
 
 ## yt-path

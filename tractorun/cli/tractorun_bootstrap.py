@@ -51,7 +51,6 @@ def main() -> None:
         cluster_config=config.cluster_config,
         operation_log_mode=config.operation_log_mode,
         sandbox_path=Path(JOB_SANDBOX_PATH),
-        log_level=config.log_level,
     )
 
 

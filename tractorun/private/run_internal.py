@@ -67,10 +67,7 @@ from tractorun.private.helpers import (
     AttrSerializer,
     create_attrs_converter,
 )
-from tractorun.private.logging import (
-    get_log_level_id,
-    setup_logging,
-)
+from tractorun.private.logging import setup_logging
 from tractorun.private.stderr_reader import StderrReaderWorker
 from tractorun.private.tensorproxy import (
     TensorproxyBootstrap,
@@ -114,7 +111,6 @@ class Runnable(abc.ABC):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
-        log_level: int | None,
     ) -> Callable:
         pass
 
@@ -144,7 +140,6 @@ class CliCommand(Runnable):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
-        log_level: int | None,
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -159,7 +154,6 @@ class CliCommand(Runnable):
                 cluster_config=cluster_config,
                 operation_log_mode=operation_log_mode,
                 sandbox_path=Path("."),
-                log_level=log_level,
             )
 
         return wrapped
@@ -213,7 +207,6 @@ class UserFunction(Runnable):
                     cluster_config=config.cluster_config,
                     operation_log_mode=config.operation_log_mode,
                     sandbox_path=PosixPath(JOB_SANDBOX_PATH),
-                    log_level=config.log_level,
                 )
 
         return wrapped
@@ -229,7 +222,6 @@ class UserFunction(Runnable):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
-        log_level: int | None,
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -249,7 +241,6 @@ class UserFunction(Runnable):
                     cluster_config=cluster_config,
                     operation_log_mode=operation_log_mode,
                     sandbox_path=Path("."),
-                    log_level=get_log_level_id(log_level),
                 )
 
         return wrapped
@@ -331,9 +322,6 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         lib_versions=LibVersions.create(),
         cluster_config=cluster_config,
         operation_log_mode=params.operation_log_mode,
-        # force set log level inside job to default
-        # overwise it will be inherited from the parent process
-        log_level=get_log_level_id(params.log_level) if params.log_level is not None else LOG_LEVEL_INSIDE_JOB,
     )
 
     bootstrap_config_path = Path(tmp_dir.name) / BOOTSTRAP_CONFIG_NAME
@@ -382,7 +370,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         BIND_PATHS_ENV_VAR: binds_packer.to_env(),
         "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
         BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str((PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()),
-        "YT_LOG_LEVEL": params.log_level or "INFO",
+        "YT_LOG_LEVEL": params.log_level or LOG_LEVEL_INSIDE_JOB,
     }
 
     # prepare task spec
@@ -501,7 +489,6 @@ def run_local(
         ),
         cluster_config=cluster_config,
         operation_log_mode=params.operation_log_mode,
-        log_level=None,
     )
     if not params.dry_run:
         prepare_training_dir(training_dir, yt_client)

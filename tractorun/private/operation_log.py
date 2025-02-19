@@ -1,13 +1,13 @@
 import abc
 import base64
 import datetime
+import logging
 from multiprocessing import (
     Process,
     Queue,
 )
 import pickle
 import queue
-import sys
 import time
 
 import attrs
@@ -30,6 +30,9 @@ WAIT_LOG_RECORDS_TIMEOUT = 5
 IO_QUEUE_MAXSIZE = 10000
 YT_LOG_WRITER_JOIN_TIMEOUT = 10
 QUEUE_TIMEOUT = 0.01
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class _NoMessages:
@@ -110,7 +113,7 @@ class YTLogHandler(LogHandler):
         try:
             self._queue.put(record, timeout=QUEUE_TIMEOUT)
         except queue.Full:
-            print("io queue is full, can't write data to the table", file=sys.stderr)
+            _LOGGER.warning("io queue is full, can't write data to the table")
 
     def stop(self) -> None:
         self._queue.put(_LastMessage())

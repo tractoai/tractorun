@@ -1,4 +1,4 @@
-import sys
+import logging
 from urllib.parse import urlparse
 
 import jax
@@ -10,6 +10,9 @@ from tractorun.private.closet import Closet as _Closet
 __all__ = ["Environment"]
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 class Environment(EnvironmentBase):
     def prepare(self, closet: _Closet) -> None:
         local_device_ids = None
@@ -19,12 +22,12 @@ class Environment(EnvironmentBase):
             local_device_ids = list(range(first_device_index, first_device_index + closet.mesh.gpu_per_process))
 
         coordinator_address = closet.coordinator.get_primary_endpoint()
-        print("old coordinator address: {}".format(coordinator_address), file=sys.stderr)
+        _LOGGER.info("coordinator address: %s", coordinator_address)
         parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
         # because of overlay problems
         if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint().split(":")[0]:
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
-            print("new coordinator address: {}".format(coordinator_address), file=sys.stderr)
+            _LOGGER.info("new coordinator address: %s", coordinator_address)
 
         jax.distributed.initialize(
             coordinator_address=coordinator_address,

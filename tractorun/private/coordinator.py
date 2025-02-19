@@ -1,5 +1,5 @@
 import datetime
-import sys
+import logging
 import time
 
 import attrs
@@ -11,6 +11,9 @@ from tractorun.mesh import Mesh
 from tractorun.private.helpers import create_prerequisite_client
 from tractorun.private.training_dir import TrainingDir
 from tractorun.private.training_dir import TrainingDir as _TrainingDir
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_incarnation_id(yt_client: yt.YtClient, training_dir: TrainingDir, raise_if_not_exists: bool = False) -> int:
@@ -41,15 +44,15 @@ class CoordinatorFactory:
             return self._make_subordinate(self_index=self._self_index)
 
     def _wait_for_gang_barrier(self, incarnation_path: str) -> None:
-        print("Waiting for all peers to start", file=sys.stderr)
+        _LOGGER.info("Waiting for all peers to start")
         while True:
             try:
                 topology = self._yt_client.get(incarnation_path + "/@topology")
                 if all(peer["address"] != "" for peer in topology):
-                    print("All peers started", file=sys.stderr)
+                    _LOGGER.info("All peers started")
                     break
             except Exception as e:
-                print(f"_wait_for_gang_barrier raised exception {e}", file=sys.stderr)
+                _LOGGER.exception("_wait_for_gang_barrier raised exception", exc_info=e)
             time.sleep(1.0)
 
     def _make_primary(self, self_index: int) -> "Coordinator":

@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 from pathlib import Path
 import pickle
@@ -56,6 +57,7 @@ class BootstrapConfig:
     lib_versions: LibVersions
     cluster_config: TractorunClusterConfig
     operation_log_mode: OperationLogMode
+    log_level: int | None = attrs.field(default=None)  # default is for backward compatibility
 
 
 def check_lib_versions(local_lib_versions: LibVersions) -> None:
@@ -75,6 +77,17 @@ def check_lib_versions(local_lib_versions: LibVersions) -> None:
         warnings.warn(f"Local and remote libraries has different versions: {diff}")
 
 
+def setup_logging(log_level: int | None) -> None:
+    if log_level is not None:
+        logging.basicConfig(
+            format="%(asctime)s %(levelname)s: %(message)s",
+            level=log_level,
+            handlers=[
+                logging.StreamHandler(),
+            ],
+        )
+
+
 def bootstrap(
     mesh: Mesh,
     training_dir: TrainingDir,
@@ -87,10 +100,12 @@ def bootstrap(
     cluster_config: TractorunClusterConfig,
     operation_log_mode: OperationLogMode,
     sandbox_path: Path,
+    log_level: int | None,
 ) -> None:
     # Runs inside a job
 
     check_lib_versions(local_lib_versions=lib_versions)
+    setup_logging(log_level=log_level)
 
     yt_config = pickle.loads(base64.b64decode(yt_client_config))
     yt_client = yt.YtClient(config=yt_config)

@@ -18,6 +18,7 @@ from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
+from tractorun.private.logging import setup_logging as _setup_logging
 from tractorun.private.run_internal import CliCommand as _CliCommand
 from tractorun.private.run_internal import TractorunParams as _TractorunParams
 from tractorun.private.run_internal import UserFunction as _UserFunction
@@ -61,6 +62,8 @@ def run_script(
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> RunInfo:
+    log_level = _setup_logging()
+
     docker_image = _get_docker_image(docker_image)
 
     sidecars = sidecars or []
@@ -97,6 +100,7 @@ def run_script(
         docker_auth=docker_auth,
         dry_run=dry_run,
         attach_external_libs=False,
+        log_level=log_level,
     )
     if local:
         return _run_local(params=params)
@@ -132,6 +136,8 @@ def run(
     attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> RunInfo:
+    log_level = _setup_logging()
+
     if attach_external_libs:
         warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use it in production.")
     docker_image = _get_docker_image(docker_image)
@@ -170,6 +176,7 @@ def run(
         docker_auth=docker_auth,
         attach_external_libs=attach_external_libs,
         dry_run=dry_run,
+        log_level=log_level,
     )
     if local:
         return _run_local(params=params)

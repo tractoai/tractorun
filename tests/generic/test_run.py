@@ -294,3 +294,32 @@ def test_change_working_dirs(yt_instance: YtInstance, yt_path: str, mnist_ds_pat
         title=operation_title,
         yt_task_spec={"title": task_title},
     )
+
+
+def test_run_script_defaults_only(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    yt_client = yt_instance.get_client()
+
+    tracto_cli = TractoCli(
+        command=["python3", "/tractorun_tests/dummy_script.py"],
+        # ok, bind and docker image is necessary for test
+        docker_image=GENERIC_DOCKER_IMAGE,
+        args=[
+            "--bind-local",
+            f"{get_data_path('../data/dummy_script.py')}:/tractorun_tests/dummy_script.py",
+        ],
+    )
+    op_run = tracto_cli.run()
+    assert op_run.is_exitcode_valid()
+    assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
+
+
+def test_run_pickling_defaults_only(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+    def train_func(toolbox: Toolbox) -> None:
+        pass
+
+    # The operation did not fail => success!
+    run(
+        train_func,
+        backend=GenericBackend(),
+        docker_image=GENERIC_DOCKER_IMAGE,
+    )

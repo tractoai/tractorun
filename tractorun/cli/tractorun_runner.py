@@ -134,7 +134,7 @@ class Config:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class EffectiveConfig:
-    yt_path: str
+    yt_path: str | None
     docker_image: str
     title: str | None
     user_config: dict[str, Any]
@@ -176,8 +176,6 @@ class EffectiveConfig:
         if not command:
             raise TractorunConfigError("Command should be set in config or by cli param")
         yt_path = _choose_value(args["yt_path"], config.yt_path)
-        if yt_path is None:
-            raise TractorunConfigError("Command should be set in config or by cli param --yt-path")
         docker_image = _choose_value(
             args_value=args["docker_image"],
             config_value=config.docker_image,
@@ -341,7 +339,9 @@ def make_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Tractorun",
     )
-    parser.add_argument("--yt-path", help="YT workdir", type=str)
+    parser.add_argument(
+        "--yt-path", type=str, help="base directory for tractorun data. Default: //tmp/tractorun/{uuid}"
+    )
     parser.add_argument("--run-config-path", type=str, help="path to tractorun config")
     parser.add_argument("--docker-image", type=str, help=f"docker image name. Default: {get_default_docker_image()}")
     parser.add_argument(

@@ -4,6 +4,9 @@ import attrs
 import yt.wrapper as yt
 
 
+DEFAULT_TMP_WORKING_DIR = "//tmp/tractorun"
+
+
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TrainingDir:
     base_path: str

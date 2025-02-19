@@ -17,6 +17,7 @@ from typing import (
     Callable,
     Optional,
 )
+import uuid
 
 import attrs
 import cattrs.errors
@@ -55,6 +56,7 @@ from tractorun.private.constants import (
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
     JOB_SANDBOX_PATH,
+    LOG_LEVEL_INSIDE_JOB,
 )
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
@@ -66,12 +68,17 @@ from tractorun.private.helpers import (
     AttrSerializer,
     create_attrs_converter,
 )
+from tractorun.private.logging import (
+    get_log_level_id,
+    setup_logging,
+)
 from tractorun.private.stderr_reader import StderrReaderWorker
 from tractorun.private.tensorproxy import (
     TensorproxyBootstrap,
     TensorproxyConfigurator,
 )
 from tractorun.private.training_dir import (
+    DEFAULT_TMP_WORKING_DIR,
     TrainingDir,
     prepare_training_dir,
 )
@@ -109,6 +116,7 @@ class Runnable(abc.ABC):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
+        log_level: int | None,
     ) -> Callable:
         pass
 
@@ -138,6 +146,7 @@ class CliCommand(Runnable):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
+        log_level: int | None,
     ) -> Callable:
         def wrapped() -> None:
             bootstrap(
@@ -152,6 +161,7 @@ class CliCommand(Runnable):
                 cluster_config=cluster_config,
                 operation_log_mode=operation_log_mode,
                 sandbox_path=Path("."),
+                log_level=log_level,
             )
 
         return wrapped
@@ -205,6 +215,7 @@ class UserFunction(Runnable):
                     cluster_config=config.cluster_config,
                     operation_log_mode=config.operation_log_mode,
                     sandbox_path=PosixPath(JOB_SANDBOX_PATH),
+                    log_level=config.log_level,
                 )
 
         return wrapped
@@ -220,6 +231,7 @@ class UserFunction(Runnable):
         lib_versions: LibVersions,
         cluster_config: TractorunClusterConfig,
         operation_log_mode: OperationLogMode,
+        log_level: int | None,
     ) -> Callable:
         def wrapped() -> None:
             # run on YT
@@ -239,6 +251,7 @@ class UserFunction(Runnable):
                     cluster_config=cluster_config,
                     operation_log_mode=operation_log_mode,
                     sandbox_path=Path("."),
+                    log_level=get_log_level_id(log_level),
                 )
 
         return wrapped
@@ -268,12 +281,14 @@ class TractorunParams:
     yt_task_spec: dict[Any, Any]
     docker_auth: DockerAuthData | None
     attach_external_libs: bool
+    log_level: str | None
     dry_run: bool
 
 
 def run_tracto(params: TractorunParams) -> RunInfo:
-    # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
-    #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
+    yt_path = params.yt_path
+    if yt_path is None:
+        yt_path = f"{DEFAULT_TMP_WORKING_DIR}/{uuid.uuid4()}"
 
     yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = False if params.attach_external_libs else True
@@ -301,7 +316,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     yt_client.config["detached"] = True if params.no_wait else False
 
     tmp_dir = tempfile.TemporaryDirectory()
-    training_dir = TrainingDir.create(params.yt_path)
+    training_dir = TrainingDir.create(yt_path)
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(
         tensorproxy=params.tensorproxy
@@ -319,6 +334,9 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         lib_versions=LibVersions.create(),
         cluster_config=cluster_config,
         operation_log_mode=params.operation_log_mode,
+        # force set log level inside job to default
+        # overwise it will be inherited from the parent process
+        log_level=get_log_level_id(params.log_level) if params.log_level is not None else LOG_LEVEL_INSIDE_JOB,
     )
 
     bootstrap_config_path = Path(tmp_dir.name) / BOOTSTRAP_CONFIG_NAME
@@ -359,6 +377,17 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     yt_command = params.runnable.make_yt_command()
 
+    env = {
+        "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
+        const.YT_USER_CONFIG_ENV_VAR: json.dumps(params.user_config),
+        # Sometimes we can't read compiled bytecode in forks on yt.
+        "PYTHONDONTWRITEBYTECODE": "1",
+        BIND_PATHS_ENV_VAR: binds_packer.to_env(),
+        "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
+        BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str((PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()),
+        "YT_LOG_LEVEL": params.log_level or "INFO",
+    }
+
     # prepare task spec
     task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
     task_spec = (
@@ -371,19 +400,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         .docker_image(params.docker_image)
         .file_paths(yt_file_bindings + tp_yt_files)
         .spec(params.yt_task_spec)
-        .environment(
-            {
-                "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
-                const.YT_USER_CONFIG_ENV_VAR: json.dumps(params.user_config),
-                # Sometimes we can't read compiled bytecode in forks on yt.
-                "PYTHONDONTWRITEBYTECODE": "1",
-                BIND_PATHS_ENV_VAR: binds_packer.to_env(),
-                "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
-                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str(
-                    (PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()
-                ),
-            },
-        )
+        .environment(env)
     )
 
     # prepare operation spec
@@ -392,7 +409,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     title = params.title
     if title is None:
-        title = f"Tractorun {params.yt_path}"
+        title = f"Tractorun {yt_path}"
     operation_spec = operation_spec.title(title)
 
     if params.mesh.pool_trees is not None:
@@ -457,6 +474,10 @@ def run_local(
 
     yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
+    yt_path = params.yt_path
+    if yt_path is None:
+        yt_path = f"{DEFAULT_TMP_WORKING_DIR}/{uuid.uuid4()}"
+
     # TODO: respawn in docker
     # Fake YT job environment.
     os.environ["YT_OPERATION_ID"] = "1-2-3-4"
@@ -471,7 +492,7 @@ def run_local(
     for i in range(params.mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
-    training_dir = TrainingDir.create(params.yt_path)
+    training_dir = TrainingDir.create(yt_path)
     tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=params.tensorproxy).generate_configuration()
 
     wrapped = params.runnable.make_local_command(
@@ -487,6 +508,7 @@ def run_local(
         ),
         cluster_config=cluster_config,
         operation_log_mode=params.operation_log_mode,
+        log_level=None,
     )
     if not params.dry_run:
         prepare_training_dir(training_dir, yt_client)
@@ -496,6 +518,7 @@ def run_local(
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     # Runs in a job
+    setup_logging()
     closet = get_closet()
     prepare_environment(closet)
     backend.environment.prepare(closet)

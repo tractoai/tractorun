@@ -1,5 +1,3 @@
-import logging
-import os
 from typing import (
     Any,
     Callable,
@@ -20,6 +18,7 @@ from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
 from tractorun.private.constants import DEFAULT_CLUSTER_CONFIG_PATH as _DEFAULT_CLUSTER_CONFIG_PATH
 from tractorun.private.helpers import get_default_docker_image as _get_default_docker_image
+from tractorun.private.logging import setup_logging as _setup_logging
 from tractorun.private.run_internal import CliCommand as _CliCommand
 from tractorun.private.run_internal import TractorunParams as _TractorunParams
 from tractorun.private.run_internal import UserFunction as _UserFunction
@@ -63,7 +62,7 @@ def run_script(
     docker_auth: DockerAuthData | None = None,
     dry_run: bool = False,
 ) -> RunInfo:
-    setup_logging()
+    log_level = _setup_logging()
 
     docker_image = _get_docker_image(docker_image)
 
@@ -102,6 +101,7 @@ def run_script(
         docker_auth=docker_auth,
         dry_run=dry_run,
         attach_external_libs=False,
+        log_level=log_level,
     )
     if local:
         return _run_local(params=params)
@@ -137,7 +137,7 @@ def run(
     attach_external_libs: bool = False,
     dry_run: bool = False,
 ) -> RunInfo:
-    setup_logging()
+    log_level = _setup_logging()
 
     if attach_external_libs:
         warnings.warn("Use attach_external_libs=True only in adhoc scripts. Don't use it in production.")
@@ -178,6 +178,7 @@ def run(
         docker_auth=docker_auth,
         attach_external_libs=attach_external_libs,
         dry_run=dry_run,
+        log_level=log_level,
     )
     if local:
         return _run_local(params=params)
@@ -196,13 +197,3 @@ def _get_docker_image(docker_image: str | None) -> str:
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     return _prepare_and_get_toolbox(backend)
-
-
-def setup_logging() -> None:
-    log_level = os.environ.get("TRACTO_LOG_LEVEL") or os.environ.get("YT_LOG_LEVEL")
-    if log_level:
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.StreamHandler()],
-        )

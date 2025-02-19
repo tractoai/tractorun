@@ -138,6 +138,17 @@ Tractorun supports multiple backends:
 * yaml config
 * python options
 
+# How to enable logs
+
+To enable logs, you should to set the `YT_LOG_LEVEL` environment variable. The following levels are supported:
+* `DEBUG`
+* `INFO`
+* `WARNING`
+* `ERROR`
+* `CRITICAL`
+
+By default, `tractorun` doesn't write logs on a local host, but writes logs inside operation on Tracto.ai platform using `INFO` log level. If `YT_LOG_LEVEL` is set, logs will be written on a local host to stderr.
+
 # More information
 
 * [Examples](https://github.com/tractoai/tractorun/tree/main/examples)

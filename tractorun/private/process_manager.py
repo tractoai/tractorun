@@ -2,6 +2,7 @@ import base64
 import contextlib
 import datetime
 import enum
+import logging
 from pathlib import Path
 import pickle
 import selectors
@@ -34,6 +35,9 @@ from tractorun.private.worker import (
 )
 from tractorun.private.yt_cluster import TractorunClusterConfig
 from tractorun.sidecar import Sidecar
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OutputType(str, enum.Enum):
@@ -258,17 +262,17 @@ class ProcessManager:
             sidecar_run = sidecar_run_meta.sidecar_run
             match sidecar_run.need_restart():
                 case RestartVerdict.restart:
-                    print(f"Restart sidecar {sidecar_run.command}", file=sys.stderr)
+                    _LOGGER.info("Restart sidecar %s", sidecar_run.command)
                     sidecars_to_restart.append(sidecar_index)
                 case RestartVerdict.fail:
-                    print(f"Sidecar {sidecar_run.command} has been failed", file=sys.stderr)
+                    _LOGGER.info("Sidecar %s has been failed", sidecar_run.command)
                     return ProcessManagerPollStatus.fail, []
                 case RestartVerdict.skip:
                     pass
                 case RestartVerdict.unknown:
-                    print(f"Warning: unknown restart policy for {sidecar_run.command}", file=sys.stderr)
+                    _LOGGER.warning("Unknown restart policy for %s", sidecar_run.command)
                 case _:
-                    print(f"Warning: unknown restart verdict for {sidecar_run.command}", file=sys.stderr)
+                    _LOGGER.warning("Unknown restart verdict for %s", sidecar_run.command)
         return ProcessManagerPollStatus.running, sidecars_to_restart
 
     def _process_logs(self) -> None:

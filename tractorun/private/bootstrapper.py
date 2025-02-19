@@ -15,6 +15,7 @@ from tractorun.env import EnvVariable
 from tractorun.exception import TractorunBootstrapError
 from tractorun.mesh import Mesh
 from tractorun.operation_log import OperationLogMode
+from tractorun.private.logging import setup_logging
 from tractorun.private.operation_log import (
     LogHandlerFactory,
     YTLogHandlerFactory,
@@ -91,6 +92,7 @@ def bootstrap(
     # Runs inside a job
 
     check_lib_versions(local_lib_versions=lib_versions)
+    setup_logging()
 
     yt_config = pickle.loads(base64.b64decode(yt_client_config))
     yt_client = yt.YtClient(config=yt_config)

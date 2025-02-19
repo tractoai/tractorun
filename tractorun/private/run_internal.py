@@ -56,6 +56,7 @@ from tractorun.private.constants import (
     BOOTSTRAP_CONFIG_FILENAME_ENV_VAR,
     BOOTSTRAP_CONFIG_NAME,
     JOB_SANDBOX_PATH,
+    LOG_LEVEL_INSIDE_JOB,
 )
 from tractorun.private.coordinator import get_incarnation_id
 from tractorun.private.docker_auth import DockerAuthDataExtractor
@@ -67,6 +68,7 @@ from tractorun.private.helpers import (
     AttrSerializer,
     create_attrs_converter,
 )
+from tractorun.private.logging import setup_logging
 from tractorun.private.stderr_reader import StderrReaderWorker
 from tractorun.private.tensorproxy import (
     TensorproxyBootstrap,
@@ -270,6 +272,7 @@ class TractorunParams:
     yt_task_spec: dict[Any, Any]
     docker_auth: DockerAuthData | None
     attach_external_libs: bool
+    log_level: str | None
     dry_run: bool
 
 
@@ -362,6 +365,17 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     yt_command = params.runnable.make_yt_command()
 
+    env = {
+        "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
+        const.YT_USER_CONFIG_ENV_VAR: json.dumps(params.user_config),
+        # Sometimes we can't read compiled bytecode in forks on yt.
+        "PYTHONDONTWRITEBYTECODE": "1",
+        BIND_PATHS_ENV_VAR: binds_packer.to_env(),
+        "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
+        BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str((PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()),
+        "YT_LOG_LEVEL": params.log_level or LOG_LEVEL_INSIDE_JOB,
+    }
+
     # prepare task spec
     task_spec: TaskSpecBuilder = yt.VanillaSpecBuilder().begin_task("task")
     task_spec = (
@@ -374,19 +388,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         .docker_image(params.docker_image)
         .file_paths(yt_file_bindings + tp_yt_files)
         .spec(params.yt_task_spec)
-        .environment(
-            {
-                "YT_ALLOW_HTTP_REQUESTS_TO_YT_FROM_JOB": "1",
-                const.YT_USER_CONFIG_ENV_VAR: json.dumps(params.user_config),
-                # Sometimes we can't read compiled bytecode in forks on yt.
-                "PYTHONDONTWRITEBYTECODE": "1",
-                BIND_PATHS_ENV_VAR: binds_packer.to_env(),
-                "PYTHONPATH": f"$PYTHONPATH:{new_pythonpath}" if new_pythonpath else "$PYTHONPATH",
-                BOOTSTRAP_CONFIG_FILENAME_ENV_VAR: str(
-                    (PosixPath(JOB_SANDBOX_PATH) / BOOTSTRAP_CONFIG_NAME).absolute()
-                ),
-            },
-        )
+        .environment(env)
     )
 
     # prepare operation spec
@@ -503,6 +505,7 @@ def run_local(
 
 def prepare_and_get_toolbox(backend: BackendBase) -> Toolbox:
     # Runs in a job
+    setup_logging()
     closet = get_closet()
     prepare_environment(closet)
     backend.environment.prepare(closet)

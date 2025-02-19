@@ -17,6 +17,7 @@ from typing import (
     Callable,
     Optional,
 )
+import uuid
 
 import attrs
 import cattrs.errors
@@ -72,6 +73,7 @@ from tractorun.private.tensorproxy import (
     TensorproxyConfigurator,
 )
 from tractorun.private.training_dir import (
+    DEFAULT_TMP_WORKING_DIR,
     TrainingDir,
     prepare_training_dir,
 )
@@ -248,7 +250,7 @@ class UserFunction(Runnable):
 class TractorunParams:
     runnable: Runnable
     docker_image: str
-    yt_path: str
+    yt_path: str | None
     mesh: Mesh
     proxy_stderr_mode: StderrMode
     operation_log_mode: OperationLogMode
@@ -272,8 +274,9 @@ class TractorunParams:
 
 
 def run_tracto(params: TractorunParams) -> RunInfo:
-    # if mesh.node_count > 1 and mesh.gpu_per_process * mesh.process_per_node not in (0, 8):
-    #     raise exc.TractorunInvalidConfiguration("gpu per node can only be 0 or 8")
+    yt_path = params.yt_path
+    if yt_path is None:
+        yt_path = f"{DEFAULT_TMP_WORKING_DIR}/{uuid.uuid4()}"
 
     yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
     yt_client.config["pickling"]["ignore_system_modules"] = False if params.attach_external_libs else True
@@ -301,7 +304,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
     yt_client.config["detached"] = True if params.no_wait else False
 
     tmp_dir = tempfile.TemporaryDirectory()
-    training_dir = TrainingDir.create(params.yt_path)
+    training_dir = TrainingDir.create(yt_path)
 
     tp_bootstrap, tp_yt_files, tp_ports = TensorproxyConfigurator(
         tensorproxy=params.tensorproxy
@@ -392,7 +395,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     title = params.title
     if title is None:
-        title = f"Tractorun {params.yt_path}"
+        title = f"Tractorun {yt_path}"
     operation_spec = operation_spec.title(title)
 
     if params.mesh.pool_trees is not None:
@@ -457,6 +460,10 @@ def run_local(
 
     yt_client = params.yt_client or yt.YtClient(config=yt.default_config.get_config_from_env())
 
+    yt_path = params.yt_path
+    if yt_path is None:
+        yt_path = f"{DEFAULT_TMP_WORKING_DIR}/{uuid.uuid4()}"
+
     # TODO: respawn in docker
     # Fake YT job environment.
     os.environ["YT_OPERATION_ID"] = "1-2-3-4"
@@ -471,7 +478,7 @@ def run_local(
     for i in range(params.mesh.process_per_node):
         os.environ[f"YT_PORT_{i}"] = str(start_port + i)
 
-    training_dir = TrainingDir.create(params.yt_path)
+    training_dir = TrainingDir.create(yt_path)
     tp_bootstrap, _, _ = TensorproxyConfigurator(tensorproxy=params.tensorproxy).generate_configuration()
 
     wrapped = params.runnable.make_local_command(

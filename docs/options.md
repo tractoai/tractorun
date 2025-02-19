@@ -18,15 +18,18 @@ Callable python object, that will be pickled and executed by each worker on Trac
 ```python
 from tractorun.run import run
 from tractorun.toolbox import Toolbox
+from tractorun.backend.generic import GenericBackend
 
 def train(toolbox: Toolbox):
   pass
 
-run(train, yt_path="//tmp/path")
+run(train, backend=GenericBackend())
 ```
 
 ## yt-path
 Base directory on the cluster where `tractorun` stores its metadata. For `tractorch` backend, it also stores checkpoints used during operation.
+
+By default, tractorun generates uniq folder in `//tmp/tractorun` for each run.
 
 It is highly recommended that the same path be used for all iterations of training or inference for a particular model.
 

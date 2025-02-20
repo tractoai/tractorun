@@ -44,12 +44,12 @@ class CoordinatorFactory:
             return self._make_subordinate(self_index=self._self_index)
 
     def _wait_for_gang_barrier(self, incarnation_path: str) -> None:
-        _LOGGER.info("Waiting for all peers to start")
+        _LOGGER.debug("Waiting for all peers to start")
         while True:
             try:
                 topology = self._yt_client.get(incarnation_path + "/@topology")
                 if all(peer["address"] != "" for peer in topology):
-                    _LOGGER.info("All peers started")
+                    _LOGGER.debug("All peers started")
                     break
             except Exception as e:
                 _LOGGER.exception("_wait_for_gang_barrier raised exception", exc_info=e)
@@ -115,6 +115,7 @@ class CoordinatorFactory:
             )
 
         self._wait_for_gang_barrier(incarnation_path)
+        _LOGGER.debug("Primary coordinator started")
 
         return Coordinator(
             self_index=self_index,
@@ -165,6 +166,7 @@ class CoordinatorFactory:
             except Exception:
                 time.sleep(1.0)
                 continue
+            _LOGGER.debug("Subordinate coordinator started")
             return Coordinator(
                 self_index=self_index,
                 incarnation_id=incarnation_id,

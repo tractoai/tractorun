@@ -43,6 +43,8 @@ def get_random_string(length: int) -> str:
 class TractoCliRun:
     _process: subprocess.Popen
     _operation_title: str
+    _stdout: bytes
+    _stderr: bytes
 
     def is_exitcode_valid(self, exit_code: int = 0) -> bool:
         return self._process.returncode == exit_code
@@ -68,15 +70,11 @@ class TractoCliRun:
 
     @property
     def stdout(self) -> bytes:
-        assert self._process.stdout is not None
-        data = self._process.stdout.read()
-        return data
+        return self._stdout
 
     @property
     def stderr(self) -> bytes:
-        assert self._process.stderr is not None
-        data = self._process.stderr.read()
-        return data
+        return self._stderr
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
@@ -91,10 +89,14 @@ class TractoCli:
         command, operation_title, task_title = self._prepare_command()
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.wait()
+        stdout, stderr = process.communicate()
+        print(f"stdout: {stdout.decode()}")
+        print(f"stderr: {stderr.decode()}")
         return TractoCliRun(
             process=process,
             operation_title=operation_title,
+            stdout=stdout,
+            stderr=stderr,
         )
 
     def dry_run(self) -> dict:
@@ -102,10 +104,14 @@ class TractoCli:
         command.append("--dry-run")
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.wait()
+        stdout, stderr = process.communicate()
+        print(f"stdout: {stdout.decode()}")
+        print(f"stderr: {stderr.decode()}")
         run = TractoCliRun(
             process=process,
             operation_title=operation_title,
+            stdout=stdout,
+            stderr=stderr,
         )
         assert run.is_exitcode_valid()
         return json.loads(run.stdout)

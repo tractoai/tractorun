@@ -296,7 +296,7 @@ def test_change_working_dirs(yt_instance: YtInstance, yt_path: str, mnist_ds_pat
     )
 
 
-def test_run_script_defaults_only(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+def test_run_defaults_only_script(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     yt_client = yt_instance.get_client()
 
     tracto_cli = TractoCli(
@@ -313,11 +313,11 @@ def test_run_script_defaults_only(yt_instance: YtInstance, yt_path: str, mnist_d
     assert op_run.is_operation_state_valid(yt_client=yt_client, job_count=1)
 
 
-def test_run_pickling_defaults_only(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
+def test_run_defaults_only_pickling(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -> None:
     def train_func(toolbox: Toolbox) -> None:
         pass
 
-    # The operation did not fail => success!
+    # ok, docker image is necessary for test
     run(
         train_func,
         backend=GenericBackend(),

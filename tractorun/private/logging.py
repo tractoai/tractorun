@@ -7,6 +7,7 @@ from yt.logger import SimpleColorizedStreamHandler
 def setup_logging() -> str | None:
     log_level = os.environ.get("YT_LOG_LEVEL")
     if log_level:
+        log_level = log_level.upper()
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 

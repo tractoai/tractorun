@@ -165,7 +165,6 @@ class CoordinatorFactory:
             except Exception:
                 time.sleep(1.0)
                 continue
-
             return Coordinator(
                 self_index=self_index,
                 incarnation_id=incarnation_id,

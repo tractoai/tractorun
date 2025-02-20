@@ -137,6 +137,7 @@ class ProcessManager:
         for proc_index in range(mesh.process_per_node):
             port = int(os_environ[f"YT_PORT_{proc_index}"])
             self_index = node_index * mesh.process_per_node + proc_index
+            _LOGGER.info("Starting worker %s: %s", self_index, command)
             worker_run = WorkerRun.run(
                 command=command,
                 mesh=mesh,
@@ -154,11 +155,13 @@ class ProcessManager:
                 },
                 sandbox_path=sandbox_path,
             )
+            _LOGGER.debug("Worker %s started", self_index)
             worker_index = WorkerIndex(self_index)
             worker_runs[worker_index] = worker_run
 
         for local_index, sidecar in enumerate(sidecars):
             sidecar_index = SidecarIndex(node_index * len(sidecars) + local_index)
+            _LOGGER.info("Starting sidecar %s: %s", local_index, sidecar.command)
             sidecar_run = SidecarRun.run(
                 sidecar=sidecar,
                 env={
@@ -262,10 +265,10 @@ class ProcessManager:
             sidecar_run = sidecar_run_meta.sidecar_run
             match sidecar_run.need_restart():
                 case RestartVerdict.restart:
-                    _LOGGER.info("Restart sidecar %s", sidecar_run.command)
+                    _LOGGER.info("Restarting sidecar %s", sidecar_run.command)
                     sidecars_to_restart.append(sidecar_index)
                 case RestartVerdict.fail:
-                    _LOGGER.info("Sidecar %s has been failed", sidecar_run.command)
+                    _LOGGER.info("Sidecar %s failed", sidecar_run.command)
                     return ProcessManagerPollStatus.fail, []
                 case RestartVerdict.skip:
                     pass
@@ -295,13 +298,21 @@ class ProcessManager:
                     handler.process(record)
 
     def _stop(self) -> None:
-        for worker_run in self._worker_runs.values():
+        for worker_index, worker_run in self._worker_runs.items():
+            _LOGGER.info("Stopping worker %s: %s", worker_index, worker_run.config.command)
             worker_run.terminate()
-        for sidecar_run_meta in self._sidecar_runs.values():
+            _LOGGER.debug("Worker %s stopped", worker_index)
+        for sidecar_index, sidecar_run_meta in self._sidecar_runs.items():
+            _LOGGER.info("Stopping sidecar %s: %s", sidecar_index, sidecar_run_meta.sidecar_run.command)
             sidecar_run_meta.sidecar_run.terminate()
+            _LOGGER.debug("Sidecar %s stopped", sidecar_index)
+        _LOGGER.debug("Stopping _io_selector")
         self._io_selector.close()
+        _LOGGER.debug("_io_selector stopped")
         for handler in self._log_handlers:
+            _LOGGER.debug("Stopping log handler %s", handler)
             handler.stop()
+            _LOGGER.debug("Log handler %s stopped", handler)
 
 
 def has_failed(exit_codes: list[Optional[int]]) -> bool:

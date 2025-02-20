@@ -265,17 +265,17 @@ class ProcessManager:
             sidecar_run = sidecar_run_meta.sidecar_run
             match sidecar_run.need_restart():
                 case RestartVerdict.restart:
-                    _LOGGER.info("Restarting sidecar %s", sidecar_run.command)
+                    _LOGGER.info("restarting sidecar %s", sidecar_run.command)
                     sidecars_to_restart.append(sidecar_index)
                 case RestartVerdict.fail:
-                    _LOGGER.info("Sidecar %s failed", sidecar_run.command)
+                    _LOGGER.info("sidecar %s failed", sidecar_run.command)
                     return ProcessManagerPollStatus.fail, []
                 case RestartVerdict.skip:
                     pass
                 case RestartVerdict.unknown:
-                    _LOGGER.warning("Unknown restart policy for %s", sidecar_run.command)
+                    _LOGGER.warning("unknown restart policy for %s", sidecar_run.command)
                 case _:
-                    _LOGGER.warning("Unknown restart verdict for %s", sidecar_run.command)
+                    _LOGGER.warning("unknown restart verdict for %s", sidecar_run.command)
         return ProcessManagerPollStatus.running, sidecars_to_restart
 
     def _process_logs(self) -> None:
@@ -299,20 +299,20 @@ class ProcessManager:
 
     def _stop(self) -> None:
         for worker_index, worker_run in self._worker_runs.items():
-            _LOGGER.debug("Stopping worker %s: %s", worker_index, worker_run.config.command)
+            _LOGGER.debug("stopping worker %s: %s", worker_index, worker_run.config.command)
             worker_run.terminate()
-            _LOGGER.debug("Worker %s stopped", worker_index)
+            _LOGGER.debug("worker %s stopped", worker_index)
         for sidecar_index, sidecar_run_meta in self._sidecar_runs.items():
-            _LOGGER.debug("Stopping sidecar %s: %s", sidecar_index, sidecar_run_meta.sidecar_run.command)
+            _LOGGER.debug("stopping sidecar %s: %s", sidecar_index, sidecar_run_meta.sidecar_run.command)
             sidecar_run_meta.sidecar_run.terminate()
-            _LOGGER.debug("Sidecar %s stopped", sidecar_index)
-        _LOGGER.debug("Stopping _io_selector")
+            _LOGGER.debug("sidecar %s stopped", sidecar_index)
+        _LOGGER.debug("stopping _io_selector")
         self._io_selector.close()
         _LOGGER.debug("_io_selector stopped")
         for handler in self._log_handlers:
-            _LOGGER.debug("Stopping log handler %s", handler)
+            _LOGGER.debug("stopping log handler %s", handler)
             handler.stop()
-            _LOGGER.debug("Log handler %s stopped", handler)
+            _LOGGER.debug("log handler %s stopped", handler)
 
 
 def has_failed(exit_codes: list[Optional[int]]) -> bool:

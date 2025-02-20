@@ -22,12 +22,13 @@ class Environment(EnvironmentBase):
             local_device_ids = list(range(first_device_index, first_device_index + closet.mesh.gpu_per_process))
 
         coordinator_address = closet.coordinator.get_primary_endpoint()
-        _LOGGER.info("coordinator address: %s", coordinator_address)
+        _LOGGER.debug("coordinator address: %s", coordinator_address)
         parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
         # because of overlay problems
         if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint().split(":")[0]:
+            old_coordinator_address = coordinator_address
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
-            _LOGGER.info("new coordinator address: %s", coordinator_address)
+            logging.debug("replace coordinator address %s by %s", old_coordinator_address, coordinator_address)
 
         jax.distributed.initialize(
             coordinator_address=coordinator_address,

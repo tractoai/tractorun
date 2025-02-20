@@ -28,13 +28,13 @@ class Environment(EnvironmentBase):
             torch.cuda.set_device(closet.coordinator.get_process_index())
 
         coordinator_address = closet.coordinator.get_primary_endpoint()
-        logging.debug("coordinator address: %s", coordinator_address)
+        logging.debug("Coordinator address: %s", coordinator_address)
         parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
         # because of overlay problems
         if parsed_coordinator_address.hostname == closet.coordinator.get_self_endpoint().split(":")[0]:
             old_coordinator_address = coordinator_address
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
-            logging.debug("replace coordinator address %s by %s", old_coordinator_address, coordinator_address)
+            logging.debug("Replace coordinator address %s by %s", old_coordinator_address, coordinator_address)
 
         backend = "gloo" if closet.mesh.gpu_per_process == 0 else "nccl"
         torch.distributed.init_process_group(

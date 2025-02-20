@@ -137,7 +137,7 @@ class ProcessManager:
         for proc_index in range(mesh.process_per_node):
             port = int(os_environ[f"YT_PORT_{proc_index}"])
             self_index = node_index * mesh.process_per_node + proc_index
-            _LOGGER.info("Starting worker %s: %s", self_index, command)
+            _LOGGER.debug("Starting worker %s: %s", self_index, command)
             worker_run = WorkerRun.run(
                 command=command,
                 mesh=mesh,
@@ -161,7 +161,7 @@ class ProcessManager:
 
         for local_index, sidecar in enumerate(sidecars):
             sidecar_index = SidecarIndex(node_index * len(sidecars) + local_index)
-            _LOGGER.info("Starting sidecar %s: %s", local_index, sidecar.command)
+            _LOGGER.debug("Starting sidecar %s: %s", local_index, sidecar.command)
             sidecar_run = SidecarRun.run(
                 sidecar=sidecar,
                 env={
@@ -299,11 +299,11 @@ class ProcessManager:
 
     def _stop(self) -> None:
         for worker_index, worker_run in self._worker_runs.items():
-            _LOGGER.info("Stopping worker %s: %s", worker_index, worker_run.config.command)
+            _LOGGER.debug("Stopping worker %s: %s", worker_index, worker_run.config.command)
             worker_run.terminate()
             _LOGGER.debug("Worker %s stopped", worker_index)
         for sidecar_index, sidecar_run_meta in self._sidecar_runs.items():
-            _LOGGER.info("Stopping sidecar %s: %s", sidecar_index, sidecar_run_meta.sidecar_run.command)
+            _LOGGER.debug("Stopping sidecar %s: %s", sidecar_index, sidecar_run_meta.sidecar_run.command)
             sidecar_run_meta.sidecar_run.terminate()
             _LOGGER.debug("Sidecar %s stopped", sidecar_index)
         _LOGGER.debug("Stopping _io_selector")

@@ -6,12 +6,14 @@ _CURRENT_DOCKER_TAG="2025-02-10-16-14-27"
 IMAGE_GENERIC="ghcr.io/tractoai/tractorun-generic-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORCH="ghcr.io/tractoai/tractorun-tractorch-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORAX="ghcr.io/tractoai/tractorun-tractorax-tests:$_CURRENT_DOCKER_TAG"
+IMAGE_RAY="cr.eu-north1.nebius.cloud/e00faee7vas5hpsh3s/chiffa/tractorun-ray-tests:2025-02-21-20-53-21"
 IMAGE_TENSORPROXY="ghcr.io/tractoai/tractorun-tensorproxy-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_EXAMPLES="ghcr.io/tractoai/tractorun-examples-tests:$_CURRENT_DOCKER_TAG"
 
 PATH_GENERIC="/src/tests/generic"
 PATH_TRACTORCH="/src/tests/tractorch"
 PATH_TRACTORAX="/src/tests/tractorax"
+PATH_RAY="/src/tests/ray"
 PATH_TENSORPROXY="/src/tests/tensorproxy"
 PATH_EXAMPLES="/src/tests/examples"
 
@@ -32,6 +34,10 @@ case "$TEST_TYPE" in
   "tractorax")
     IMAGES=("$IMAGE_TRACTORAX")
     TEST_PATHS=("$PATH_TRACTORAX")
+    ;;
+  "ray")
+    IMAGES=("$IMAGE_RAY")
+    TEST_PATHS=("$PATH_RAY")
     ;;
   "tensorproxy")
     IMAGES=("$IMAGE_TENSORPROXY")

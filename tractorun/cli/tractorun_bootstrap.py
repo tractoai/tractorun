@@ -41,6 +41,7 @@ def main() -> None:
             ) from e
     bootstrap(
         mesh=config.mesh,
+        resources=config.resources,
         training_dir=config.training_dir,
         yt_client_config=config.yt_client_config,
         sidecars=config.sidecars,

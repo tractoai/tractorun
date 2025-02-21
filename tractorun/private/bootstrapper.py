@@ -27,6 +27,7 @@ from tractorun.private.process_manager import (
 from tractorun.private.tensorproxy import TensorproxyBootstrap
 from tractorun.private.training_dir import TrainingDir
 from tractorun.private.yt_cluster import TractorunClusterConfig
+from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
 
 
@@ -49,6 +50,7 @@ class LibVersions:
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class BootstrapConfig:
     mesh: Mesh
+    resources: Resources
     sidecars: list[Sidecar]
     env: list[EnvVariable]
     training_dir: TrainingDir
@@ -78,6 +80,7 @@ def check_lib_versions(local_lib_versions: LibVersions) -> None:
 
 def bootstrap(
     mesh: Mesh,
+    resources: Resources,
     training_dir: TrainingDir,
     yt_client_config: str,
     command: list[str],
@@ -133,6 +136,7 @@ def bootstrap(
         yt_client_config=yt_client_config,
         cluster_config=cluster_config,
         mesh=mesh,
+        resources=resources,
         node_index=int(os.environ["YT_JOB_COOKIE"]),
         os_environ=os.environ,
         tp_env=tp_env,

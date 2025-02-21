@@ -26,6 +26,7 @@ TRACTORAX_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tractorax-tests:{_CUR
 GENERIC_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-generic-tests:{_CURRENT_DOCKER_TAG}"
 EXAMPLES_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-examples-runtime:{_CURRENT_DOCKER_TAG}"
 TENSORPROXY_DOCKER_IMAGE: str = f"ghcr.io/tractoai/tractorun-tensorproxy-tests:{_CURRENT_DOCKER_TAG}"
+RAY_DOCKER_IMAGE: str = "cr.eu-north1.nebius.cloud/e00faee7vas5hpsh3s/chiffa/tractorun-ray-tests:2025-02-21-20-53-21"
 
 OPERATION_INFO_RETRIES = 5
 OPERATION_INFO_TIMEOUT = 2

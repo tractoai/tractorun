@@ -34,6 +34,7 @@ from tractorun.private.worker import (
     WorkerRun,
 )
 from tractorun.private.yt_cluster import TractorunClusterConfig
+from tractorun.resources import Resources
 from tractorun.sidecar import Sidecar
 
 
@@ -80,6 +81,7 @@ class ProcessManager:
         yt_client_config: str,
         cluster_config: TractorunClusterConfig,
         mesh: Mesh,
+        resources: Resources,
         node_index: int,
         os_environ: Mapping,
         tp_env: dict,
@@ -100,6 +102,7 @@ class ProcessManager:
             spec_env=spec_env,
             log_handler_factories=log_handler_factories,
             sandbox_path=sandbox_path,
+            resources=resources,
         )
         yield pm
         pm._stop()
@@ -113,6 +116,7 @@ class ProcessManager:
         yt_client_config: str,
         cluster_config: TractorunClusterConfig,
         mesh: Mesh,
+        resources: Resources,
         node_index: int,
         os_environ: Mapping,
         tp_env: dict,
@@ -141,6 +145,7 @@ class ProcessManager:
             worker_run = WorkerRun.run(
                 command=command,
                 mesh=mesh,
+                resources=resources,
                 self_index=self_index,
                 node_index=node_index,
                 proc_index=proc_index,

@@ -17,6 +17,7 @@ from tractorun.private.constants import TRACTO_CONFIG_ENV_VAR
 from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
 from tractorun.private.yt_cluster import TractorunClusterConfig
+from tractorun.resources import Resources
 
 
 WorkerIndex = NewType("WorkerIndex", int)
@@ -26,6 +27,7 @@ WorkerIndex = NewType("WorkerIndex", int)
 class WorkerConfig:
     command: list[str]
     mesh: Mesh
+    resources: Resources
     port: int
     node_index: int
     proc_index: int
@@ -47,6 +49,7 @@ class WorkerRun:
         cls,
         command: list[str],
         mesh: Mesh,
+        resources: Resources,
         self_index: int,
         node_index: int,
         proc_index: int,
@@ -60,6 +63,7 @@ class WorkerRun:
         worker_config = WorkerConfig(
             command=command,
             mesh=mesh,
+            resources=resources,
             node_index=node_index,
             proc_index=proc_index,
             self_index=self_index,

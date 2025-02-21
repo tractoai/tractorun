@@ -52,10 +52,12 @@ from tractorun.tensorproxy import TensorproxySidecar
 
 
 __default_mesh = Mesh()
+__default_resources = Resources()
 
 MESH_NODE_COUNT_DEFAULT = __default_mesh.node_count
 MESH_PROCESS_PER_NODE_DEFAULT = __default_mesh.process_per_node
 MESH_GPU_PER_PROCESS_DEFAULT = __default_mesh.gpu_per_process
+RESOURCES_CPU_LIMIT_DEFAULT = __default_resources.cpu_limit
 TENSORPROXY_ENABLED_DEFAULT = False
 CLUSTER_CONFIG_PATH_DEFAULT = DEFAULT_CLUSTER_CONFIG_PATH
 TENSORPROXY_RESTART_POLICY_DEFAULT = RestartPolicy.ALWAYS
@@ -258,6 +260,7 @@ class EffectiveConfig:
                 cpu_limit=_choose_value(
                     args_value=args["resources.cpu_limit"],
                     config_value=config.resources.cpu_limit,
+                    default=RESOURCES_CPU_LIMIT_DEFAULT,
                 ),
                 memory_limit=_choose_value(
                     args_value=args["resources.memory_limit"],
@@ -365,7 +368,9 @@ def make_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--mesh.pool-trees", help="mesh pool trees", action="append")
     parser.add_argument("--mesh.pool", help="mesh pool", type=str)
-    parser.add_argument("--resources.cpu-limit", type=int, help="cpu limit")
+    parser.add_argument(
+        "--resources.cpu-limit", type=int, help=f"cpu limit per node. Default: {RESOURCES_CPU_LIMIT_DEFAULT}"
+    )
     parser.add_argument("--resources.memory-limit", type=int, help="mem limit")
     parser.add_argument("--user-config", type=_load_json, help="json config that will be passed to the jobs")
     parser.add_argument(

@@ -158,8 +158,10 @@ class CoordinatorFactory:
                     {"address": self._self_endpoint, "job_id": self._job_id},
                 )
 
-                primary_endpoint = incarnation_yt_client.get(
-                    incarnation_path + "/@primary_endpoint",
+                primary_endpoint = str(
+                    incarnation_yt_client.get(
+                        incarnation_path + "/@primary_endpoint",
+                    )
                 )
 
                 self._wait_for_gang_barrier(incarnation_path)

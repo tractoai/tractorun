@@ -105,6 +105,7 @@ class Runnable(abc.ABC):
     def make_local_command(
         self,
         mesh: Mesh,
+        resources: Resources,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
         training_dir: TrainingDir,
@@ -134,6 +135,7 @@ class CliCommand(Runnable):
     def make_local_command(
         self,
         mesh: Mesh,
+        resources: Resources,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
         training_dir: TrainingDir,
@@ -146,6 +148,7 @@ class CliCommand(Runnable):
         def wrapped() -> None:
             bootstrap(
                 mesh=mesh,
+                resources=resources,
                 training_dir=training_dir,
                 yt_client_config=yt_client_config,
                 command=self.get_bootstrap_command(),
@@ -199,6 +202,7 @@ class UserFunction(Runnable):
                         ) from e
                 bootstrap(
                     mesh=config.mesh,
+                    resources=config.resources,
                     training_dir=config.training_dir,
                     yt_client_config=config.yt_client_config,
                     command=self.get_bootstrap_command(),
@@ -216,6 +220,7 @@ class UserFunction(Runnable):
     def make_local_command(
         self,
         mesh: Mesh,
+        resources: Resources,
         sidecars: list[Sidecar],
         env: list[EnvVariable],
         training_dir: TrainingDir,
@@ -233,6 +238,7 @@ class UserFunction(Runnable):
             else:
                 bootstrap(
                     mesh=mesh,
+                    resources=resources,
                     training_dir=training_dir,
                     yt_client_config=yt_client_config,
                     command=self.get_bootstrap_command(),
@@ -317,6 +323,7 @@ def run_tracto(params: TractorunParams) -> RunInfo:
 
     bootstrap_config = BootstrapConfig(
         mesh=params.mesh,
+        resources=params.resources,
         sidecars=params.sidecars,
         env=params.env,
         training_dir=training_dir,
@@ -382,7 +389,8 @@ def run_tracto(params: TractorunParams) -> RunInfo:
         task_spec.command(yt_command)
         .job_count(params.mesh.node_count)
         .gpu_limit(params.mesh.gpu_per_process * params.mesh.process_per_node)
-        .port_count(params.mesh.process_per_node + tp_ports)
+        # .port_count(params.mesh.process_per_node + tp_ports)
+        .port_count(50)
         .cpu_limit(params.resources.cpu_limit)
         .memory_limit(params.resources.memory_limit)
         .docker_image(params.docker_image)
@@ -485,6 +493,7 @@ def run_local(
 
     wrapped = params.runnable.make_local_command(
         mesh=params.mesh,
+        resources=params.resources,
         sidecars=params.sidecars,
         env=params.env or [],
         training_dir=training_dir,

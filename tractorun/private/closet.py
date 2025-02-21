@@ -17,6 +17,7 @@ from tractorun.private.helpers import AttrSerializer
 from tractorun.private.training_dir import TrainingDir
 from tractorun.private.worker import WorkerConfig
 from tractorun.private.yt_cluster import TractorunClusterConfig
+from tractorun.resources import Resources
 
 
 @attrs.define
@@ -29,6 +30,7 @@ class TrainingMetadata:
 @attrs.define
 class Closet:
     mesh: Mesh
+    resources: Resources
     coordinator: Coordinator
     yt_client: YtClient
     checkpoint_manager: CheckpointManager
@@ -83,6 +85,7 @@ def get_closet() -> Closet:
         checkpoint_manager=checkpoint_manager,
         cluster_config=config.cluster_config,
         description_manager=description_manager,
+        resources=config.resources,
     )
 
 

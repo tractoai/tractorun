@@ -65,6 +65,26 @@ RUN python3 -m pip install \
 EOT
 }
 
+target "ray_tests" {
+  platforms = ["linux/amd64"]
+  contexts = {
+    base_image = "target:jammy_python_sys"
+  }
+  context           = "${PROJECT_ROOT}"
+  tags = [
+    "${DOCKER_REPO}/tractorun-ray-tests:${DOCKER_TAG}"
+  ]
+  dockerfile-inline = <<EOT
+FROM base_image
+COPY requirements.txt requirements_tests.txt requirements_ray.txt /tmp
+RUN python3 -m pip install \
+  -r /tmp/requirements.txt \
+  -r /tmp/requirements_tests.txt \
+  -r /tmp/requirements_ray.txt
+RUN apt install net-tools telnet -y
+EOT
+}
+
 target "tensorproxy_tests" {
   platforms = ["linux/amd64"]
   contexts = {

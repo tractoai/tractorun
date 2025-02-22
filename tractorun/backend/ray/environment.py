@@ -32,8 +32,8 @@ class Environment(EnvironmentBase):
                 "--head",
                 "--port",
                 str(parsed_coordinator_address.port),
-                "--node-ip-address",
-                "0.0.0.0",
+                # "--node-ip-address",
+                # "127.0.0.1",
                 "--node-manager-port",
                 os.environ["YT_PORT_2"],
                 "--object-manager-port",
@@ -68,7 +68,7 @@ class Environment(EnvironmentBase):
                 closet.coordinator.get_self_endpoint().split(":")[0],
                 cpu_limit=closet.resources.cpu_limit,
             )
-        time.sleep(20)
+        # time.sleep(20)
 
 
 def check_ray() -> bool:

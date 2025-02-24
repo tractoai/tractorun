@@ -41,7 +41,7 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
         mesh=mesh,
         yt_client=yt_client,
         docker_image=RAY_DOCKER_IMAGE,
-        resources=Resources(cpu_limit=1, memory_limit=17179869184),
+        resources=Resources(cpu_limit=2, memory_limit=17179869184),
         env=[
             # EnvVariable(
             #     name="RAY_BACKEND_LOG_LEVEL",

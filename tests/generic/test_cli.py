@@ -10,4 +10,4 @@ def test_version_argument() -> None:
     )
     op_run = tracto_cli.run()
     op_run.validate_exit_code()
-    assert op_run.stdout.decode("utf-8").strip() == f"tractorun {__version__}"
+    assert op_run.stdout.decode().strip() == f"tractorun {__version__}"

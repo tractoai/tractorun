@@ -47,10 +47,10 @@ class TractoCliRun:
     def is_exitcode_valid(self, exit_code: int = 0) -> bool:
         return self._process.returncode == exit_code
 
-    def validate_exit_code(self, exit_code: int = 0):
+    def validate_exit_code(self, exit_code: int = 0) -> None:
         assert self.is_exitcode_valid(
             exit_code
-        ), f"Expected exit code {exit_code}, but got {self._process.returncode}\nstdout:\n{self.stdout}\nstderr:\n{self.stderr}"
+        ), f"Expected exit code {exit_code}, but got {self._process.returncode}\nstdout:\n{self.stdout.decode()}\nstderr:\n{self.stderr.decode()}"
 
     def get_operation_info(self, yt_client: yt.YtClient) -> dict:
         operations = []

@@ -29,18 +29,19 @@ Install tractorun into your python3 environment:
 
 `pip install --upgrade tractorun`
 
-Configure the client to work with your cluster:
+Put your actual Tracto.ai cluster address to `$YT_PROXY` and your token to `$YT_TOKEN` and configure the client:
+
 ```shell
 mkdir ~/.yt
-cat <<EOF > ~/.yt
-"proxy"={
-  "url"="$YT_PROXY";
-};
-"token"="$YT_TOKEN";
+cat <<EOF > ~/.yt/config
+{
+  "proxy"={
+    "url"="$YT_PROXY";
+  };
+  "token"="$YT_TOKEN";
+}
 EOF
 ```
-
-Please put your actual Tracto.ai cluster address to `$YT_PROXY` and your token to `$YT_TOKEN`.
 
 # How to try
 

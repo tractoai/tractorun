@@ -24,6 +24,7 @@ WorkerIndex = NewType("WorkerIndex", int)
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class WorkerConfig:
+    command: list[str]
     mesh: Mesh
     port: int
     node_index: int
@@ -38,7 +39,7 @@ class WorkerConfig:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class WorkerRun:
-    worker_config: WorkerConfig
+    config: WorkerConfig
     _process: subprocess.Popen
 
     @classmethod
@@ -57,6 +58,7 @@ class WorkerRun:
         sandbox_path: Path,
     ) -> "WorkerRun":
         worker_config = WorkerConfig(
+            command=command,
             mesh=mesh,
             node_index=node_index,
             proc_index=proc_index,
@@ -97,7 +99,7 @@ class WorkerRun:
         os.set_blocking(process.stdout.fileno(), False)
         os.set_blocking(process.stderr.fileno(), False)
         return WorkerRun(
-            worker_config=worker_config,
+            config=worker_config,
             process=process,
         )
 

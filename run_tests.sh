@@ -60,6 +60,7 @@ run_tests() {
     -e YT_MODE=external \
     -e YT_PROXY="${YT_PROXY}" \
     -e YT_TOKEN="${YT_TOKEN}" \
+    -e YT_LOG_LEVEL="${YT_LOG_LEVEL}" \
     -e PYTHONPATH="/src:$PYTHONPATH" \
     -e PYTHONDONTWRITEBYTECODE=1 \
     "$image" \

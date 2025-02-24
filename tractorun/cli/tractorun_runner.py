@@ -17,6 +17,7 @@ import attrs
 from cattrs import ClassValidationError
 import yaml
 
+from tractorun import __version__
 from tractorun.bind import (
     BindAttributes,
     BindCypress,
@@ -476,6 +477,7 @@ def make_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--dry-run", help="get internal information without running an operation", action="store_true")
+    parser.add_argument("--version", help="show version", action="version", version=f"tractorun {__version__}")
     parser.add_argument("command", nargs="*", help="command to run")
     return parser
 

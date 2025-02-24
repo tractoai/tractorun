@@ -47,6 +47,11 @@ class TractoCliRun:
     def is_exitcode_valid(self, exit_code: int = 0) -> bool:
         return self._process.returncode == exit_code
 
+    def validate_exit_code(self, exit_code: int = 0) -> None:
+        assert self.is_exitcode_valid(
+            exit_code
+        ), f"Expected exit code {exit_code}, but got {self._process.returncode}\nstdout:\n{self.stdout.decode()}\nstderr:\n{self.stderr.decode()}"
+
     def get_operation_info(self, yt_client: yt.YtClient) -> dict:
         operations = []
         for _ in range(OPERATION_INFO_RETRIES):
@@ -81,7 +86,7 @@ class TractoCliRun:
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)
 class TractoCli:
-    _command: list[str | Path]
+    _command: list[str | Path] = attrs.field(default=[])
     _docker_image: str | None = attrs.field(default=GENERIC_DOCKER_IMAGE)
     _args: list[str]
     _task_spec: dict[str, Any] = attrs.field(default={})

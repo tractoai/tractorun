@@ -24,6 +24,8 @@ class Environment(EnvironmentBase):
         if coordinator_address == closet.coordinator.get_self_endpoint():
             coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
             logging.debug("Replace coordinator address %s by %s", original_coordinator_address, coordinator_address)
+        with open("/etc/hosts", "a") as f:
+            f.write(f"127.0.0.1\t{closet.coordinator.get_self_endpoint().split(':')[0]}")
         if closet.coordinator.is_primary():
             _LOGGER.info("Starting ray main process")
             command = [

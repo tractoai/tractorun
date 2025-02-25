@@ -5,6 +5,11 @@
 2. Create and activate new env `pyenv virtualenv 3.10 tractorun && pyenv activate tractorun`
 3. Install all dependencies: `pip install ."[all]`
 
+## Run linters
+
+```shell
+make all-fix && make all-check
+```
 
 ## Build new image for tests
 ```shell

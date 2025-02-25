@@ -76,12 +76,27 @@ target "ray_tests" {
   ]
   dockerfile-inline = <<EOT
 FROM base_image
+
 COPY requirements.txt requirements_tests.txt requirements_ray.txt /tmp
 RUN python3 -m pip install \
   -r /tmp/requirements.txt \
   -r /tmp/requirements_tests.txt \
   -r /tmp/requirements_ray.txt
-RUN apt install net-tools telnet -y
+RUN apt install net-tools telnet --yes
+
+RUN apt install wget --yes
+RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+
+RUN dpkg -i cuda-keyring_1.1-1_all.deb
+RUN apt-get update
+RUN apt-get -y install cuda-toolkit-12-4 --yes
+
+ENV PATH /usr/local/cuda-12.4/bin:$PATH
+ENV CUDA_HOME /usr/local/cuda-12.4
+
+RUN pip3 install --upgrade pip setuptools wheel
+RUN pip3 install torchvision==0.19.0
+RUN pip install torch==2.4.0
 EOT
 }
 

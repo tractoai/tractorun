@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.61.0 (2025-02-25)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.60.0...0.61.0)
+
+### Changes
+
+- Rebiuld test images (#199). [473e03c](https://github.com/tractoai/tractorun/commit/473e03c175ee094dca7bcb23a0649ec408b90722)
+    
+- Add linters to doc (#198). [1d0ebda](https://github.com/tractoai/tractorun/commit/1d0ebdada9e7b5626fa1593336a2cf187c2a0e16)
+    
+- Improve logs in boostrap process (#195). [12a7291](https://github.com/tractoai/tractorun/commit/12a7291a75bfedbbc5a8649859dc7aa124dd21ac)
+    
+- Fix getting started in doc (#197). [d044996](https://github.com/tractoai/tractorun/commit/d0449963baead137fadc641b86ca54a62f8b3349)
+    
+- Add --version argument (#196). [39adde8](https://github.com/tractoai/tractorun/commit/39adde85d8f5115d98cec9c2aa3ef9c4d2884856)
+    
+- NYT-951: use YT_LOG_LEVEL to manage logs (#194). [201a2ee](https://github.com/tractoai/tractorun/commit/201a2ee1f017e3665e2e9ed4b0f8f64a6311b098)
+    
+- NYT-952: add defaults for all tractorun's parameters (#193). [223e829](https://github.com/tractoai/tractorun/commit/223e829c2a3a0458bd5400b5efbda10f36e6705f)
+    
+
 ## 0.60.0 (2025-02-17)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.59.0...0.60.0)

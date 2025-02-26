@@ -34,7 +34,6 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
                 print(result, file=sys.stderr)
         else:
             ray.init(address="auto", logging_level=1)
-        time.sleep(60)
         print("End", file=sys.stderr)
 
     mesh = Mesh(node_count=2, process_per_node=1, gpu_per_process=8, pool_trees=["gpu_h200"])

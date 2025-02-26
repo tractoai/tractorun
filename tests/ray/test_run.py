@@ -3,7 +3,6 @@ import sys
 from tests.utils import RAY_DOCKER_IMAGE
 from tests.yt_instances import YtInstance
 from tractorun.backend.ray import Ray
-from tractorun.env import EnvVariable
 from tractorun.mesh import Mesh
 from tractorun.resources import Resources
 from tractorun.run import run
@@ -20,14 +19,13 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
 
         print("Hello from train_func", file=sys.stderr)
         if toolbox.coordinator.is_primary():
-            time.sleep(10)
             ray.init(address="auto", logging_level=1)
             print(ray.nodes(), file=sys.stderr)
 
             @ray.remote
-            def remote_task(i):
+            def remote_task(i: int) -> str:
                 time.sleep(2)
-                return f"Задача {i} выполнена на хосте {ray.get_runtime_context().node_id}"
+                return f"Task {i} has been completed on host {ray.get_runtime_context().node_id}"
 
             tasks = [remote_task.remote(i) for i in range(10)]
 
@@ -35,8 +33,8 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
             for result in results:
                 print(result, file=sys.stderr)
         else:
-            # ray.init(address="auto", logging_level=1)
-            pass
+            ray.init(address="auto", logging_level=1)
+        time.sleep(60)
         print("End", file=sys.stderr)
 
     mesh = Mesh(node_count=2, process_per_node=1, gpu_per_process=8, pool_trees=["gpu_h200"])

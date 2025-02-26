@@ -1,130 +1,97 @@
 import logging
-import os
 import subprocess
 import time
 from urllib.parse import urlparse
 
+import ray
 from tractorun.base_backend import EnvironmentBase
+from tractorun.exception import (
+    TractorunBootstrapError,
+    TractorunConfigurationError,
+)
 from tractorun.private.closet import Closet as _Closet
 
 
 __all__ = ["Environment"]
 
 
+RAY_CHECK_TIMEOUT = 5
 _LOGGER = logging.getLogger(__name__)
 
 
 class Environment(EnvironmentBase):
     def prepare(self, closet: _Closet) -> None:
+        if closet.mesh.process_per_node != 1:
+            raise TractorunConfigurationError("process per node should be == 1 for ray")
         coordinator_address = closet.coordinator.get_primary_endpoint()
         logging.debug("Coordinator address: %s", coordinator_address)
-        parsed_coordinator_address = urlparse(f"schema://{coordinator_address}")
-        # because of overlay problems
-        original_coordinator_address = coordinator_address
-        if coordinator_address == closet.coordinator.get_self_endpoint():
-            coordinator_address = f"127.0.0.1:{parsed_coordinator_address.port}"
-            logging.debug("Replace coordinator address %s by %s", original_coordinator_address, coordinator_address)
         with open("/etc/hosts", "a") as f:
             f.write(f"127.0.0.1\t{closet.coordinator.get_self_endpoint().split(':')[0]}")
         if closet.coordinator.is_primary():
+            time.sleep(30)
             _LOGGER.info("Starting ray main process")
-            command = [
-                "ray",
-                "start",
-                "--head",
-                "--port",
-                str(parsed_coordinator_address.port),
-                # "--node-ip-address",
-                # "127.0.0.1",
-                "--node-manager-port",
-                os.environ["YT_PORT_2"],
-                "--object-manager-port",
-                os.environ["YT_PORT_3"],
-                "--runtime-env-agent-port",
-                os.environ["YT_PORT_4"],
-                "--dashboard-port",
-                os.environ["YT_PORT_5"],
-                "--dashboard-agent-grpc-port",
-                os.environ["YT_PORT_6"],
-                "--dashboard-agent-listen-port",
-                os.environ["YT_PORT_7"],
-                "--ray-client-server-port",
-                os.environ["YT_PORT_8"],
-                "--worker-port-list",
-                ",".join([os.environ[f"YT_PORT_{i}"] for i in range(9, 50)]),
-                "--include-dashboard",
-                "false",
-                "--num-cpus",
-                str(int(closet.resources.cpu_limit)),
-                # "--temp-dir", "/slot/sandbox",
-                "-v",
-            ]
-            _LOGGER.info("Master command %s", command)
-            process = subprocess.Popen(command)
-            process.wait()
+            self._run_main(closet)
             _LOGGER.info("Ray main process started")
         else:
             _LOGGER.info("Starting ray worker process")
-            run_ray_worker(
-                coordinator_address,
-                closet.coordinator.get_self_endpoint().split(":")[0],
-                cpu_limit=closet.resources.cpu_limit,
+            self._run_worker(
+                closet,
             )
-        # time.sleep(20)
+            _LOGGER.info("Ray worker process started")
 
-
-def check_ray() -> bool:
-    while True:
-        process = subprocess.Popen(
-            ["ray", "status"],
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-        )
-        stdout, stderr = process.communicate()
-        _LOGGER.info("Ray status stdout: %s", stdout)
-        _LOGGER.info("Ray status stderr: %s", stderr)
-        if process.returncode != 0:
-            _LOGGER.info("Ray status failed")
-            return False
-        if b"Node status" in stdout:
-            _LOGGER.info("Ray status ok!")
-            return True
-        time.sleep(5)
-        _LOGGER.info("Check ray again")
-
-
-def run_ray_worker(coordinator_address: str, node_address: str, cpu_limit: float) -> None:
-    while True:
+    def _run_main(self, closet: _Closet) -> None:
+        parsed_coordinator_address = urlparse(f"schema://{closet.coordinator.get_primary_endpoint()}")
         command = [
             "ray",
             "start",
-            "--node-ip-address",
-            node_address,
-            "--address",
-            coordinator_address,
-            "--node-manager-port",
-            os.environ["YT_PORT_2"],
-            "--object-manager-port",
-            os.environ["YT_PORT_3"],
-            "--runtime-env-agent-port",
-            os.environ["YT_PORT_4"],
-            "--ray-client-server-port",
-            os.environ["YT_PORT_5"],
-            "--dashboard-port",
-            os.environ["YT_PORT_6"],
-            "--dashboard-agent-grpc-port",
-            os.environ["YT_PORT_7"],
-            "--dashboard-agent-listen-port",
-            os.environ["YT_PORT_8"],
-            "--worker-port-list",
-            ",".join([os.environ[f"YT_PORT_{i}"] for i in range(9, 50)]),
+            "--head",
+            "--port",
+            str(parsed_coordinator_address.port),
+            "--include-dashboard",
+            "false",
             "--num-cpus",
-            str(int(cpu_limit)),
+            str(int(closet.resources.cpu_limit)),
             "-v",
         ]
-        _LOGGER.info("Worker command %s", command)
+        _LOGGER.info("Master command %s", command)
         process = subprocess.Popen(command)
         process.wait()
-        assert process.returncode == 0
-        if check_ray():
-            break
+        if process.returncode != 0:
+            raise TractorunBootstrapError("Can't start head node")
+        ray.init(address="auto")
+        nodes = ray.nodes()
+        while len(nodes) != closet.mesh.node_count:
+            _LOGGER.info("Waiting for all nodes to join, now %s", nodes)
+            _LOGGER.info("Now we have %s nodes instead of %s", len(nodes), closet.mesh.node_count)
+            nodes = ray.nodes()
+            time.sleep(RAY_CHECK_TIMEOUT)
+        ray.shutdown()
+
+    def _run_worker(self, closet: _Closet) -> None:
+        parsed_worker_address = urlparse(f"schema://{closet.coordinator.get_self_endpoint()}")
+        assert parsed_worker_address.hostname
+        exit_code = -1
+        while exit_code != 0:
+            command = [
+                "ray",
+                "start",
+                "--node-ip-address",
+                parsed_worker_address.hostname,
+                "--address",
+                closet.coordinator.get_primary_endpoint(),
+                "--num-cpus",
+                str(int(closet.resources.cpu_limit)),
+                "-v",
+            ]
+            _LOGGER.info("Run worker command %s", command)
+            process = subprocess.Popen(command)
+            process.wait()
+            exit_code = process.returncode
+        ray.init(address="auto")
+        nodes = ray.nodes()
+        while len(nodes) != closet.mesh.node_count:
+            _LOGGER.info("Waiting for all nodes to join, now %s", nodes)
+            _LOGGER.info("Now we have %s nodes instead of %s", len(nodes), closet.mesh.node_count)
+            nodes = ray.nodes()
+            time.sleep(RAY_CHECK_TIMEOUT)
+        ray.shutdown()

@@ -19,10 +19,10 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
 
         print("Hello from train_func", file=sys.stderr)
         if toolbox.coordinator.is_primary():
-            ray.init(address="auto", logging_level=1)
+            ray.init(address="auto", ignore_reinit_error=True, logging_level=1)
             print(ray.nodes(), file=sys.stderr)
 
-            @ray.remote
+            @ray.remote(scheduling_strategy="SPREAD")
             def remote_task(i: int) -> str:
                 time.sleep(2)
                 return f"Task {i} has been completed on host {ray.get_runtime_context().node_id}"
@@ -33,11 +33,10 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
             for result in results:
                 print(result, file=sys.stderr)
         else:
-            ray.init(address="auto", logging_level=1)
+            ray.init(address="auto", ignore_reinit_error=True, logging_level=1)
         print("End", file=sys.stderr)
 
     mesh = Mesh(node_count=2, process_per_node=1, gpu_per_process=8, pool_trees=["gpu_h200"])
-    # mesh = Mesh(node_count=2, process_per_node=1, gpu_per_process=0, pool_trees=["default"])
     # The operation did not fail => success!
     run(
         train_func,
@@ -46,7 +45,7 @@ def test_run_pickle(yt_instance: YtInstance, yt_path: str, mnist_ds_path: str) -
         mesh=mesh,
         yt_client=yt_client,
         docker_image=RAY_DOCKER_IMAGE,
-        resources=Resources(cpu_limit=1, memory_limit=17179869184),
+        resources=Resources(cpu_limit=100, memory_limit=17179869184),
         env=[
             # EnvVariable(
             #     name="RAY_BACKEND_LOG_LEVEL",

@@ -13,6 +13,7 @@ def setup_logging() -> str | None:
 
         tracto_logger = logging.getLogger("tractorun")
         tracto_logger.setLevel(log_level)
+        tracto_logger.propagate = False
         if not tracto_logger.handlers:
             tracto_logger.addHandler(handler)
         yt_logger = logging.getLogger("Yt")

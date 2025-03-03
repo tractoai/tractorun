@@ -2,12 +2,10 @@ import atexit
 import logging
 import subprocess
 import time
-from typing import Callable
 from urllib.parse import urlparse
 
 import attrs
 import ray
-from ray.util import state as ray_state
 from tractorun.base_backend import EnvironmentBase
 from tractorun.exception import (
     TractorunBootstrapError,
@@ -30,7 +28,7 @@ class Environment(EnvironmentBase):
         coordinator_address = closet.coordinator.get_primary_endpoint()
         logging.debug("Coordinator address: %s", coordinator_address)
         with open("/etc/hosts", "a") as f:
-            f.write(f"127.0.0.1\t{closet.coordinator.get_self_endpoint().split(':')[0]}")
+            f.write(f"\n127.0.0.1\t{closet.coordinator.get_self_endpoint().split(':')[0]}")
         if closet.coordinator.is_primary():
             _LOGGER.info("Starting ray main process")
             self._run_main(closet)
@@ -63,7 +61,7 @@ class Environment(EnvironmentBase):
             raise TractorunBootstrapError("Can't start head node")
         ray.init(address="auto")
         self._wait_for_nodes(closet)
-        # ray.shutdown()
+        ray.shutdown()
         atexit.register(stop_main_callback)
 
     def _run_worker(self, closet: _Closet) -> None:
@@ -88,7 +86,7 @@ class Environment(EnvironmentBase):
             exit_code = process.returncode
         ray.init(address="auto")
         self._wait_for_nodes(closet)
-        # ray.shutdown()
+        ray.shutdown()
         atexit.register(StopWorkerCallback(node_count=closet.mesh.node_count))
 
     def _wait_for_nodes(self, closet: _Closet) -> None:
@@ -116,6 +114,21 @@ def stop_main_callback() -> None:
     if process.returncode != 0:
         raise TractorunBootstrapError("Can't stop head node")
     _LOGGER.info("Head node stopped")
+
+
+def stop_worker_callback() -> None:
+    command = [
+        "ray",
+        "status",
+    ]
+    _LOGGER.info("Stopping worker node %s", command)
+    while True:
+        process = subprocess.Popen(command)
+        process.wait()
+        if process.returncode != 0:
+            break
+        time.sleep(RAY_CHECK_TIMEOUT)
+    _LOGGER.info("Worker node stopped")
 
 
 @attrs.define(kw_only=True, slots=True, auto_attribs=True)

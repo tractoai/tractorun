@@ -1,6 +1,6 @@
 command: ["python3", "/lightning_mnist_ddp_script_config.py"]
 mesh:
-  mode_count: 1
+  node_count: 1
   process_per_node: 4
   gpu_per_process: 0
 resources:

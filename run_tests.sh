@@ -2,12 +2,12 @@
 
 set -x
 
-_CURRENT_DOCKER_TAG="2025-02-25-18-24-08"
+_CURRENT_DOCKER_TAG="2025-07-02-17-34-55"
 IMAGE_GENERIC="ghcr.io/tractoai/tractorun-generic-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORCH="ghcr.io/tractoai/tractorun-tractorch-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORAX="ghcr.io/tractoai/tractorun-tractorax-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TENSORPROXY="ghcr.io/tractoai/tractorun-tensorproxy-tests:$_CURRENT_DOCKER_TAG"
-IMAGE_EXAMPLES="ghcr.io/tractoai/tractorun-examples-tests:$_CURRENT_DOCKER_TAG"
+IMAGE_EXAMPLES="ghcr.io/tractoai/tractorun-examples-runtime:$_CURRENT_DOCKER_TAG"
 
 PATH_GENERIC="/src/tests/generic"
 PATH_TRACTORCH="/src/tests/tractorch"
@@ -60,6 +60,7 @@ run_tests() {
     -e YT_MODE=external \
     -e YT_PROXY="${YT_PROXY}" \
     -e YT_TOKEN="${YT_TOKEN}" \
+    -e YT_CONFIG_PATCHES="${YT_CONFIG_PATCHES}" \
     -e YT_LOG_LEVEL="${YT_LOG_LEVEL}" \
     -e PYTHONPATH="/src:$PYTHONPATH" \
     -e PYTHONDONTWRITEBYTECODE=1 \

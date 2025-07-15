@@ -1,6 +1,6 @@
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 TRACTORUN_PATH=$(realpath "$SCRIPT_DIR/../../../tractorun")
-_CURRENT_DOCKER_TAG="2025-07-02-17-34-55"
+_CURRENT_DOCKER_TAG="2025-07-15-16-20-06"
 DOCKER_IMAGE=${DOCKER_IMAGE:-"ghcr.io/tractoai/tractorun-examples-runtime:$_CURRENT_DOCKER_TAG"}
 
 tractorun \

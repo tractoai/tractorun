@@ -2,7 +2,7 @@
 
 set -x
 
-_CURRENT_DOCKER_TAG="2025-07-02-17-34-55"
+_CURRENT_DOCKER_TAG="2025-07-15-16-43-46"
 IMAGE_GENERIC="ghcr.io/tractoai/tractorun-generic-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORCH="ghcr.io/tractoai/tractorun-tractorch-tests:$_CURRENT_DOCKER_TAG"
 IMAGE_TRACTORAX="ghcr.io/tractoai/tractorun-tractorax-tests:$_CURRENT_DOCKER_TAG"

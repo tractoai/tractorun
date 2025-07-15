@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-and-upload:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     environment:
       name: pypi
       url: https://pypi.org/p/tractorun

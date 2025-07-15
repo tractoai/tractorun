@@ -3,7 +3,7 @@ on: [pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4

@@ -5,7 +5,7 @@ on:
 
 jobs:
   generic:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -19,7 +19,7 @@ jobs:
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
 
   tractorch:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -34,7 +34,7 @@ jobs:
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
 
   tractorax:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -48,7 +48,7 @@ jobs:
           TRACTORUN_YT_CONFIG_FOR_JOB_PATCH: '{proxy={url="http://localhost:80"}}'
 
   examples:
-    runs-on: ubuntu-latest
+    runs-on: tractoai-runners-no-underlay
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4

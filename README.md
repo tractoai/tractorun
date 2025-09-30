@@ -52,7 +52,7 @@ tractorun \
     --yt-path "//tmp/$USER/tractorun_getting_started" \
     --bind-local './examples/pytorch/lightning_mnist_ddp_script/lightning_mnist_ddp_script.py:/lightning_mnist_ddp_script.py' \
     --bind-local-lib ./tractorun \
-    --docker-image ghcr.io/tractoai/tractorun-examples-runtime:2025-07-15-16-43-46 \
+    --docker-image ghcr.io/tractoai/tractorun-examples-runtime:2025-09-30-15-26-34 \
     python3 /lightning_mnist_ddp_script.py
 ```
 

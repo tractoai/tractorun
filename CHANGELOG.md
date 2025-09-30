@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.62.0 (2025-09-30)
+
+[Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.61.0...0.62.0)
+
+### Changes
+
+- Update docker images (#203). [56a9613](https://github.com/tractoai/tractorun/commit/56a961361b056aa6f588d3df341d74bc09096da4)
+    
+- Change github workers to internal (#202). [e667156](https://github.com/tractoai/tractorun/commit/e6671567562780f5c8787fc6654f7945926c665a)
+    
+- Actualize tests (#201). [801e014](https://github.com/tractoai/tractorun/commit/801e014a038d57150d1255b06fa98c3dfc259b1a)
+    
+
 ## 0.61.0 (2025-02-25)
 
 [Compare the full difference.](https://github.com/tractoai/tractorun/compare/0.60.0...0.61.0)
